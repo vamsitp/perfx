@@ -11,6 +11,22 @@ Azure API Performance benchmarking tool
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**
 
+> **PRE-REQ**: Populate the following JSON and save it to your `Documents` folder (`Token` is auto-populated, so leave it blank)
+> ```json
+> {
+>    "Token": "",
+>    "UserId": "",
+>    "Password": "",
+>    "Authority": "",
+>    "ClientId": "",
+>    "ApiScopes": [
+>      ""
+>    ],
+>    "Endpoints": [
+>      ""
+>    ]
+> }
+```
 ---
 
 ```batch
