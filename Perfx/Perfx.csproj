@@ -7,16 +7,16 @@
     <LangVersion>preview</LangVersion>
     <PackAsTool>true</PackAsTool>
     <IsTool>true</IsTool>
-    <ToolCommandName>Perfx</ToolCommandName>
+    <ToolCommandName>perfx</ToolCommandName>
     <PackageOutputPath>./bin</PackageOutputPath>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <Authors>Vamsi TP</Authors>
     <Title>Perfx</Title>
-    <PackageDescription>API Performance benchmarking tool</PackageDescription>
+    <PackageDescription>Azure API Performance benchmarking tool</PackageDescription>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageProjectUrl>https://github.com/vamsitp/perfx</PackageProjectUrl>
     <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
-    <PackageTags>Azure Resources;Excel;xlsx</PackageTags>
+    <PackageTags>Azure;API;Perf;Performance;Benchmark;Throughput;SLA</PackageTags>
     <Company>Microsoft</Company>
     <Version>1.0.0</Version>
     <StartupObject>Perfx.Program</StartupObject>
@@ -27,6 +27,7 @@
   <ItemGroup>
     <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
     <PackageReference Include="ColoredConsole" Version="1.0.0" />
+    <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.7" />
     <PackageReference Include="Microsoft.Toolkit.Wpf.UI.Controls.WebView" Version="6.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="16.153.0" />

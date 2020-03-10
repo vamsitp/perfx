@@ -2,12 +2,19 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.IO;
     using System.Linq;
+    using System.Security;
     using System.Threading.Tasks;
 
     using ColoredConsole;
 
+    using Microsoft.Identity.Client;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
+
+    using Newtonsoft.Json;
+
+    using AuthenticationResult = Microsoft.Identity.Client.AuthenticationResult;
 
     class AuthHelper
     {
@@ -17,6 +24,41 @@
 
         internal static readonly ConcurrentDictionary<string, Lazy<Task<string>>> AuthTokens = new ConcurrentDictionary<string, Lazy<Task<string>>>();
 
+        public static async Task<string> GetAuthTokenSilentAsync(Input input)
+        {
+            var app = PublicClientApplicationBuilder.Create(input.ClientId).WithAuthority(input.Authority).Build();
+            var accounts = await app.GetAccountsAsync().ConfigureAwait(continueOnCapturedContext: false);
+            AuthenticationResult result = null;
+            if (accounts?.Any() ?? false)
+            {
+                result = await app.AcquireTokenSilent(input.ApiScopes, accounts.FirstOrDefault()).ExecuteAsync();
+            }
+            else
+            {
+                try
+                {
+                    var securePassword = new SecureString();
+                    var pwd = input.Password;
+                    foreach (char c in pwd)
+                    {
+                        securePassword.AppendChar(c);
+                    }
+                    result = await app.AcquireTokenByUsernamePassword(input.ApiScopes, input.UserId, securePassword).ExecuteAsync();
+                }
+                catch (MsalException mex)
+                {
+                    ColorConsole.WriteLine(mex.Message.White().OnRed());
+                }
+                catch (Exception ex)
+                {
+                    ColorConsole.WriteLine(ex.Message.White().OnRed());
+                }
+            }
+
+            ColorConsole.WriteLine("\n", result.Account.Username.Green(), "\n");
+            return result.AccessToken;
+        }
+
         public static async Task<string> GetAuthToken(string tenantId)
         {
             var accessToken = await AuthTokens.GetOrAdd(tenantId ?? string.Empty, k =>
@@ -24,7 +66,7 @@
                 return new Lazy<Task<string>>(async () =>
                 {
                     var ctx = GetAuthenticationContext(tenantId);
-                    AuthenticationResult result = null;
+                    Microsoft.IdentityModel.Clients.ActiveDirectory.AuthenticationResult result = null;
                     var promptBehavior = new PlatformParameters(PromptBehavior.SelectAccount, new CustomWebUi());
                     ColorConsole.Write("Authenticating...\n");
                     try

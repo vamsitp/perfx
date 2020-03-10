@@ -1,12 +1,15 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
+
     using BenchmarkDotNet.Configs;
     using BenchmarkDotNet.Running;
+
     using ColoredConsole;
 
     using Newtonsoft.Json;
@@ -47,22 +50,34 @@
                     }
                     else if (key.Equals("r", StringComparison.OrdinalIgnoreCase) || key.Equals("a", StringComparison.OrdinalIgnoreCase))
                     {
-                        ColorConsole.Write("> ".Green(), $"Azure (AD) Tenant/Directory name to login (e.g. ", "abc".Green(), $" in 'abc.onmicrosoft.com'): ");
-                        tenant = Console.ReadLine();
-                        if (!Guid.TryParse(tenant, out var tenantId))
+                        var input = new Input();
+                        if (!File.Exists(Utils.InputFile))
                         {
-                            var tenantName = tenant.ToLowerInvariant().Replace(".onmicrosoft.com", string.Empty);
-                            var response = await Client.GetAsync(string.Format(TenantInfoUrl, tenantName));
-                            var result = await response.Content.ReadAsStringAsync();
-                            var json = JsonConvert.DeserializeObject<JObject>(result);
-                            tenant = json?.SelectToken(".issuer")?.Value<string>()?.Split(new[] { '/' }, StringSplitOptions.RemoveEmptyEntries)?.LastOrDefault();
-                            ColorConsole.WriteLine("ID: ", tenant.Green());
+                            foreach (var prop in input.Properties.Where(p => p.Name != nameof(input.Token)))
+                            {
+                                var value = prop.GetValue(input) ?? string.Empty;
+                                ColorConsole.Write($"{prop.Name}".Green(), ": ");
+                                var val = Console.ReadLine();
+                                if (!string.IsNullOrEmpty(val) && value.ToString() != val.Trim())
+                                {
+                                    var isCollection = prop.PropertyType.Namespace.Equals("System.Collections.Generic");
+                                    prop.SetValue(input, isCollection ? val.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()) : Convert.ChangeType(val, prop.PropertyType));
+                                }
+                            }
+                        }
+                        else
+                        {
+                            input = JsonConvert.DeserializeObject<Input>(File.ReadAllText(Utils.InputFile));
+                            if (input.Endpoints?.Count() <= 0)
+                            {
+                                ColorConsole.WriteLine("> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
+                                var urls = Console.ReadLine();
+                                input.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+                            }
                         }
 
-                        var token = await AuthHelper.GetAuthToken(tenant);
-                        ColorConsole.WriteLine("> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
-                        var urls = Console.ReadLine();
-                        var input = new Input { Token = token, Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries) };
+                        // input.Token = await AuthHelper.GetAuthToken(tenant);
+                        input.Token = await AuthHelper.GetAuthTokenSilentAsync(input);
                         File.WriteAllText(Utils.InputFile, JsonConvert.SerializeObject(input, Formatting.Indented));
 
                         // https://benchmarkdotnet.org/articles/configs/configoptions.html

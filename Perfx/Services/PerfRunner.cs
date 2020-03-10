@@ -5,7 +5,9 @@
     using System.IO;
     using System.Net.Http;
     using System.Threading.Tasks;
+
     using BenchmarkDotNet.Attributes;
+
     using ColoredConsole;
 
     using Newtonsoft.Json;
@@ -14,7 +16,10 @@
     public class PerfRunner
     {
         private const string AuthHeader = "Authorization";
+        private const string RequestId = "Request-Id";
+        private const string OperationId = "operation_Id";
         private const string Bearer = "Bearer ";
+        private const int MaxLength = 50;
 
         private HttpClient Client = new HttpClient();
 
@@ -30,16 +35,20 @@
         [ArgumentsSource(nameof(Endpoints))]
         public async Task Execute(string endpoint)
         {
-            var response = await GetJson<dynamic>(endpoint);
-            ColorConsole.WriteLine(response);
+            var traceId = Guid.NewGuid().ToString();
+            var response = await GetJson<dynamic>(endpoint, traceId);
+            string result = JsonConvert.SerializeObject(response);
+            ColorConsole.WriteLine("\nResponse received for ", traceId.Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green());
         }
 
-        private async Task<T> GetJson<T>(string path)
+        private async Task<T> GetJson<T>(string endpoint, string traceId)
         {
             var token = this.input.Token;
             this.Client.DefaultRequestHeaders.Remove(AuthHeader);
             this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            var response = await this.Client.GetAsync(path);
+            this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
+            this.Client.DefaultRequestHeaders.Add(OperationId, traceId);
+            var response = await this.Client.GetAsync(endpoint);
             var result = await response.Content.ReadAsStringAsync();
             if (!response.IsSuccessStatusCode)
             {
@@ -66,22 +75,5 @@
 
             return this.input.Endpoints;
         }
-    }
-
-    public class Input
-    {
-        public string Token { get; set; }
-        public IEnumerable<string> Endpoints { get; set; }
-    }
-
-    public class InvalidAuthTokenError
-    {
-        public Error error { get; set; }
-    }
-
-    public class Error
-    {
-        public string code { get; set; }
-        public string message { get; set; }
     }
 }
