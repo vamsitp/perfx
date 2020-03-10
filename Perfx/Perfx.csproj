@@ -1,0 +1,48 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <Platforms>x64</Platforms>
+    <LangVersion>preview</LangVersion>
+    <PackAsTool>true</PackAsTool>
+    <IsTool>true</IsTool>
+    <ToolCommandName>Perfx</ToolCommandName>
+    <PackageOutputPath>./bin</PackageOutputPath>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <Authors>Vamsi TP</Authors>
+    <Title>Perfx</Title>
+    <PackageDescription>API Performance benchmarking tool</PackageDescription>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/vamsitp/perfx</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
+    <PackageTags>Azure Resources;Excel;xlsx</PackageTags>
+    <Company>Microsoft</Company>
+    <Version>1.0.0</Version>
+    <StartupObject>Perfx.Program</StartupObject>
+    <ApplicationIcon />
+    <Deterministic>false</Deterministic>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
+    <PackageReference Include="ColoredConsole" Version="1.0.0" />
+    <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.7" />
+    <PackageReference Include="Microsoft.Toolkit.Wpf.UI.Controls.WebView" Version="6.0.0" />
+    <PackageReference Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="16.153.0" />
+    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="WindowsBase">
+      <HintPath>C:\Program Files (x86)\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.1\WindowsBase.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+  </ItemGroup>
+
+  <!--https://github.com/NuGet/Home/issues/7001-->
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="powershell -Command &quot;&amp; {Get-ChildItem -Path '.\bin\x64\Debug\netcoreapp3.1' -File -Recurse | foreach-object {$_.LastWriteTime = (Get-Date)}}&quot;" />
+  </Target>
+
+</Project>
