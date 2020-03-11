@@ -69,8 +69,10 @@
                         authInfo.Token = await AuthHelper.GetAuthTokenSilentAsync(authInfo);
                         File.WriteAllText(Utils.AuthInfoFile, JsonConvert.SerializeObject(authInfo, Formatting.Indented));
 
-                        var perf = new PerfRunner();
-                        await perf.Execute(authInfo);
+                        using (var perf = new PerfRunner())
+                        {
+                            await perf.Execute(authInfo);
+                        }
                     }
                     else // (string.IsNullOrWhiteSpace(key))
                     {

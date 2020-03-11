@@ -11,16 +11,18 @@
 
     using Newtonsoft.Json;
 
-    // https://benchmarkdotnet.org/articles/overview.html
-    public class PerfRunner
+    public class PerfRunner : IDisposable
     {
         private const string AuthHeader = "Authorization";
         private const string RequestId = "Request-Id";
         private const string OperationId = "operation_Id";
         private const string Bearer = "Bearer ";
         private const int MaxLength = 50;
+        private const double Magic = 0.00;
 
-        private HttpClient Client = new HttpClient();
+        private bool disposedValue = false;
+
+        private HttpClient Client = HttpClientFactory.Create();
 
         private AuthInfo authInfo;
 
@@ -36,7 +38,7 @@
             {
                 foreach (var result in r)
                 {
-                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ")");
+                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", ((result.duration / 1000.00) - Magic).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ")");
                 }
             }
         }
@@ -46,20 +48,18 @@
             var result = await Task.WhenAll(Enumerable.Range(0, interations).Select(async i =>
             {
                 var traceId = Guid.NewGuid().ToString();
-                var taskWatch = new Stopwatch();
-                taskWatch.Start();
                 var response = await GetJson<dynamic>(endpoint, traceId);
-                taskWatch.Stop();
-                string result = JsonConvert.SerializeObject(response);
+                string result = JsonConvert.SerializeObject(response.value);
                 ColorConsole.WriteLine($"{i + 1}. ".Green(), endpoint, " (", traceId.Green(), ")", ":".Green(), $" {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green());
-                return (i, endpoint, traceId, taskWatch.Elapsed.TotalMilliseconds);
+                return (i, endpoint, traceId, response.duration);
             }));
 
             return result;
         }
 
-        private async Task<T> GetJson<T>(string endpoint, string traceId)
+        private async Task<(T value, double duration)> GetJson<T>(string endpoint, string traceId)
         {
+            var taskWatch = new Stopwatch();
             var result = string.Empty;
             try
             {
@@ -68,7 +68,9 @@
                 this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
                 this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
                 this.Client.DefaultRequestHeaders.Add(OperationId, traceId);
+                taskWatch.Start();
                 var response = await this.Client.GetAsync(endpoint);
+                taskWatch.Stop();
                 result = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
@@ -88,7 +90,25 @@
                 ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
 
-            return JsonConvert.DeserializeObject<T>(result);
+            return (JsonConvert.DeserializeObject<T>(result), taskWatch.Elapsed.TotalMilliseconds);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!disposedValue)
+            {
+                if (disposing)
+                {
+                    this.Client.Dispose();
+                }
+
+                disposedValue = true;
+            }
+        }
+
+        public void Dispose()
+        {
+            Dispose(true);
         }
     }
 }
