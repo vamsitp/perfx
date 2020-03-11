@@ -6,7 +6,9 @@ Azure API Performance benchmarking tool
 #### USAGE
 `perfx`
 
-- Enter **`r`** to **run** the performance benchmarks
+  ![Screenshot](Screenshot.png)
+
+- Enter **`r`** to **run** the benchmarks
 - Enter **`c`** to **clear** the console
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**

@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Concurrent;
-    using System.IO;
     using System.Linq;
     using System.Security;
     using System.Threading.Tasks;
@@ -11,8 +10,6 @@
 
     using Microsoft.Identity.Client;
     using Microsoft.IdentityModel.Clients.ActiveDirectory;
-
-    using Newtonsoft.Json;
 
     using AuthenticationResult = Microsoft.Identity.Client.AuthenticationResult;
 
@@ -55,7 +52,6 @@
                 }
             }
 
-            ColorConsole.WriteLine("\n", result.Account.Username.Green(), "\n");
             return result.AccessToken;
         }
 

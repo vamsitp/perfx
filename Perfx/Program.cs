@@ -94,7 +94,7 @@
                 new[]
                 {
                     "--------------------------------------------------------------".Green(),
-                    "\nEnter ", "r".Green(), " to run the performance benchmarks",
+                    "\nEnter ", "r".Green(), " to run the benchmarks",
                     "\nEnter ", "c".Green(), " to clear the console",
                     "\nEnter ", "q".Green(), " to quit",
                     "\nEnter ", "?".Green(), " to print this help"

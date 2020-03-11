@@ -27,8 +27,12 @@
 
         public async Task Execute(AuthInfo authInfo)
         {
+            ColorConsole.WriteLine("\nauth: ", authInfo.UserId.Green());
+            ColorConsole.WriteLine("endpoints: ", authInfo.Endpoints.Count().ToString().Green());
+            ColorConsole.WriteLine("iterations: ", authInfo.Iterations.ToString().Green(), "\n");
+
             this.authInfo = authInfo;
-            var endpointTasks = authInfo.Endpoints.Select((ep, i) => Execute(ep, i, authInfo.Iterations));
+            var endpointTasks = authInfo.Endpoints.Select((ep, i) => Execute(ep, i + 1, authInfo.Iterations));
             var results = await Task.WhenAll(endpointTasks);
 
             ////await foreach (var results in await tasks.WhenEach())
