@@ -37,7 +37,7 @@ Azure API Performance benchmarking tool
 
 ```batch
 # Install from nuget.org
-dotnet tool install -g perfx
+dotnet tool install -g perfx --no-cache
 
 # Upgrade to latest version from nuget.org
 dotnet tool update -g perfx --no-cache
