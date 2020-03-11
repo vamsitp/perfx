@@ -5,9 +5,6 @@
     using System.Linq;
     using System.Threading.Tasks;
 
-    using BenchmarkDotNet.Configs;
-    using BenchmarkDotNet.Running;
-
     using ColoredConsole;
 
     using Newtonsoft.Json;
@@ -40,7 +37,7 @@
                     {
                         Console.Clear();
                     }
-                    else if (key.Equals("r", StringComparison.OrdinalIgnoreCase) || key.Equals("a", StringComparison.OrdinalIgnoreCase))
+                    else if (key.Equals("r", StringComparison.OrdinalIgnoreCase) || key.Equals("run", StringComparison.OrdinalIgnoreCase))
                     {
                         var authInfo = new AuthInfo();
                         if (!File.Exists(Utils.AuthInfoFile))
@@ -72,10 +69,8 @@
                         authInfo.Token = await AuthHelper.GetAuthTokenSilentAsync(authInfo);
                         File.WriteAllText(Utils.AuthInfoFile, JsonConvert.SerializeObject(authInfo, Formatting.Indented));
 
-                        // https://benchmarkdotnet.org/articles/configs/configoptions.html
-                        var config = ManualConfig.Create(DefaultConfig.Instance).With(ConfigOptions.DisableOptimizationsValidator);
-                        var summary = BenchmarkRunner.Run<PerfRunner>(config);
-                        ColorConsole.WriteLine(summary.ToString());
+                        var perf = new PerfRunner();
+                        await perf.Execute(authInfo);
                     }
                     else // (string.IsNullOrWhiteSpace(key))
                     {

@@ -17,6 +17,8 @@
 
         public IEnumerable<string> Endpoints { get; set; }
 
+        public int Iterations { get; set; } = 5;
+
         [JsonIgnore]
         public PropertyInfo[] Properties
         {

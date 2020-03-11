@@ -18,14 +18,13 @@
     <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
     <PackageTags>Azure;API;Perf;Performance;Benchmark;Throughput;SLA</PackageTags>
     <Company>Microsoft</Company>
-    <Version>1.0.1</Version>
+    <Version>1.0.2</Version>
     <StartupObject>Perfx.Program</StartupObject>
     <ApplicationIcon />
     <Deterministic>false</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.12.0" />
     <PackageReference Include="ColoredConsole" Version="1.0.0" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.7" />

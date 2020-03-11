@@ -1,12 +1,11 @@
 ﻿namespace Perfx
 {
     using System;
-    using System.Collections.Generic;
-    using System.IO;
+    using System.Diagnostics;
+    using System.Globalization;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading.Tasks;
-
-    using BenchmarkDotNet.Attributes;
 
     using ColoredConsole;
 
@@ -25,55 +24,71 @@
 
         private AuthInfo authInfo;
 
-        [GlobalSetup]
-        public void Setup()
+        public async Task Execute(AuthInfo authInfo)
         {
-            this.authInfo = JsonConvert.DeserializeObject<AuthInfo>(File.ReadAllText(Utils.AuthInfoFile));
+            this.authInfo = authInfo;
+            var endpoints = authInfo.Endpoints.Select(ep => Execute(ep, authInfo.Iterations));
+            var tasks = endpoints.ToArray();
+            var results = await Task.WhenAll(tasks);
+
+            ColorConsole.WriteLine("\n", " RESULTS ".White().OnGreen());
+            foreach (var r in results)
+            {
+                foreach (var result in r)
+                {
+                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ")");
+                }
+            }
         }
 
-        [Benchmark]
-        [ArgumentsSource(nameof(Endpoints))]
-        public async Task Execute(string endpoint)
+        private async Task<(int index, string endpoint, string traceId, double duration)[]> Execute(string endpoint, int interations)
         {
-            var traceId = Guid.NewGuid().ToString();
-            var response = await GetJson<dynamic>(endpoint, traceId);
-            string result = JsonConvert.SerializeObject(response);
-            ColorConsole.WriteLine("\nResponse received for ", traceId.Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green());
+            var result = await Task.WhenAll(Enumerable.Range(0, interations).Select(async i =>
+            {
+                var traceId = Guid.NewGuid().ToString();
+                var taskWatch = new Stopwatch();
+                taskWatch.Start();
+                var response = await GetJson<dynamic>(endpoint, traceId);
+                taskWatch.Stop();
+                string result = JsonConvert.SerializeObject(response);
+                ColorConsole.WriteLine($"{i + 1}. ".Green(), endpoint, " (", traceId.Green(), ")", ":".Green(), $" {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green());
+                return (i, endpoint, traceId, taskWatch.Elapsed.TotalMilliseconds);
+            }));
+
+            return result;
         }
 
         private async Task<T> GetJson<T>(string endpoint, string traceId)
         {
-            var token = this.authInfo.Token;
-            this.Client.DefaultRequestHeaders.Remove(AuthHeader);
-            this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
-            this.Client.DefaultRequestHeaders.Add(OperationId, traceId);
-            var response = await this.Client.GetAsync(endpoint);
-            var result = await response.Content.ReadAsStringAsync();
-            if (!response.IsSuccessStatusCode)
+            var result = string.Empty;
+            try
             {
-                var err = JsonConvert.DeserializeObject<InvalidAuthTokenError>(result);
-                if (err == null)
+                var token = this.authInfo.Token;
+                this.Client.DefaultRequestHeaders.Clear();
+                this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
+                this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
+                this.Client.DefaultRequestHeaders.Add(OperationId, traceId);
+                var response = await this.Client.GetAsync(endpoint);
+                result = await response.Content.ReadAsStringAsync();
+                if (!response.IsSuccessStatusCode)
                 {
-                    ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{result}");
+                    var err = JsonConvert.DeserializeObject<InvalidAuthTokenError>(result);
+                    if (err == null)
+                    {
+                        ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{result}");
+                    }
+                    else
+                    {
+                        ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{err.error.code}: {err.error.message}".White().OnRed());
+                    }
                 }
-                else
-                {
-                    ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{err.error.code}: {err.error.message}".White().OnRed());
-                }
+            }
+            catch (Exception ex)
+            {
+                ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
 
             return JsonConvert.DeserializeObject<T>(result);
-        }
-
-        public IEnumerable<object> Endpoints()
-        {
-            if (this.authInfo == null)
-            {
-                this.authInfo = JsonConvert.DeserializeObject<AuthInfo>(File.ReadAllText(Utils.AuthInfoFile));
-            }
-
-            return this.authInfo.Endpoints;
         }
     }
 }
