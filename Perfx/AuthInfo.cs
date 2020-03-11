@@ -4,7 +4,7 @@
     using System.Reflection;
     using Newtonsoft.Json;
 
-    public class Input
+    public class AuthInfo
     {
         private PropertyInfo[] properties;
 

@@ -5,6 +5,6 @@
 
     public static class Utils
     {
-        public static string InputFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Perfx.json");
+        public static string AuthInfoFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Perfx.json");
     }
 }

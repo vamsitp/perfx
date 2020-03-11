@@ -24,7 +24,7 @@
 
         internal static readonly ConcurrentDictionary<string, Lazy<Task<string>>> AuthTokens = new ConcurrentDictionary<string, Lazy<Task<string>>>();
 
-        public static async Task<string> GetAuthTokenSilentAsync(Input input)
+        public static async Task<string> GetAuthTokenSilentAsync(AuthInfo input)
         {
             var app = PublicClientApplicationBuilder.Create(input.ClientId).WithAuthority(input.Authority).Build();
             var accounts = await app.GetAccountsAsync().ConfigureAwait(continueOnCapturedContext: false);

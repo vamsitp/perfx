@@ -23,12 +23,12 @@
 
         private HttpClient Client = new HttpClient();
 
-        private Input input;
+        private AuthInfo authInfo;
 
         [GlobalSetup]
         public void Setup()
         {
-            this.input = JsonConvert.DeserializeObject<Input>(File.ReadAllText(Utils.InputFile));
+            this.authInfo = JsonConvert.DeserializeObject<AuthInfo>(File.ReadAllText(Utils.AuthInfoFile));
         }
 
         [Benchmark]
@@ -43,7 +43,7 @@
 
         private async Task<T> GetJson<T>(string endpoint, string traceId)
         {
-            var token = this.input.Token;
+            var token = this.authInfo.Token;
             this.Client.DefaultRequestHeaders.Remove(AuthHeader);
             this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
             this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
@@ -68,12 +68,12 @@
 
         public IEnumerable<object> Endpoints()
         {
-            if (this.input == null)
+            if (this.authInfo == null)
             {
-                this.input = JsonConvert.DeserializeObject<Input>(File.ReadAllText(Utils.InputFile));
+                this.authInfo = JsonConvert.DeserializeObject<AuthInfo>(File.ReadAllText(Utils.AuthInfoFile));
             }
 
-            return this.input.Endpoints;
+            return this.authInfo.Endpoints;
         }
     }
 }
