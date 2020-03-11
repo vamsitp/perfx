@@ -28,29 +28,49 @@
         public async Task Execute(AuthInfo authInfo)
         {
             this.authInfo = authInfo;
-            var endpoints = authInfo.Endpoints.Select(ep => Execute(ep, authInfo.Iterations));
-            var tasks = endpoints.ToArray();
-            var results = await Task.WhenAll(tasks);
+            var endpointTasks = authInfo.Endpoints.Select((ep, i) => Execute(ep, i, authInfo.Iterations));
+            var results = await Task.WhenAll(endpointTasks);
 
-            ColorConsole.WriteLine("\n", " RESULTS ".White().OnGreen());
-            foreach (var r in results)
-            {
-                foreach (var result in r)
-                {
-                    var bar = string.Empty.PadLeft((int)Math.Round(result.duration / 1000, MidpointRounding.AwayFromZero), ' ');
-                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ") ", bar.OnGreen());
-                }
-            }
+            ////await foreach (var results in await tasks.WhenEach())
+            //foreach (var results in await Task.WhenAll(tasks))
+            //{
+            //    foreach (var result in results)
+            //    {
+            //        var bar = string.Empty.PadLeft((int)Math.Round(result.duration / 1000, MidpointRounding.AwayFromZero), ' ');
+            //        ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ") ", bar.OnGreen());
+            //    }
+            //}
         }
 
-        private async Task<(int index, string endpoint, string traceId, double duration)[]> Execute(string endpoint, int interations)
+        private async Task<(int index, string endpoint, string traceId, double duration)[]> Execute(string endpoint, float topIndex, int interations)
         {
             var result = await Task.WhenAll(Enumerable.Range(0, interations).Select(async i =>
             {
                 var traceId = Guid.NewGuid().ToString();
                 var response = await GetJson<dynamic>(endpoint, traceId);
                 string result = JsonConvert.SerializeObject(response.value);
-                ColorConsole.WriteLine($"{i + 1}. ".Green(), endpoint, " (", traceId.Green(), ")", ":".Green(), $" {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green());
+                var sec = (int)Math.Round(response.duration / 1000);
+                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, ' ');
+                var id = $"{topIndex}.{i + 1}";
+                ColorToken coloredBar = bar.OnGreen();
+                if (sec <= 2)
+                {
+                    coloredBar = bar.OnGreen();
+                }
+                else if (sec > 2 && sec <= 5)
+                {
+                    coloredBar = bar.OnDarkYellow();
+                }
+                else if (sec > 5 && sec <= 8)
+                {
+                    coloredBar = bar.OnMagenta();
+                }
+                else if (sec > 8)
+                {
+                    coloredBar = bar.OnRed();
+                }
+
+                ColorConsole.WriteLine($"{id} ".Green(), endpoint, " (", traceId.Green(), ")", ": ".Green(), response.duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (response.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n", "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n");
                 return (i, endpoint, traceId, response.duration);
             }));
 
