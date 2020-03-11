@@ -26,7 +26,10 @@ Azure API Performance benchmarking tool
 >      ""
 >    ]
 > }
-```
+> ```
+
+> Also, see [`"allowPublicClient": true`](https://stackoverflow.com/a/57274706)
+
 ---
 
 ```batch
