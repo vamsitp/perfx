@@ -24,7 +24,8 @@ Azure API Performance benchmarking tool
 >    ],
 >    "Endpoints": [
 >      ""
->    ]
+>    ],
+>    "Iterations": 5
 > }
 > ```
 
