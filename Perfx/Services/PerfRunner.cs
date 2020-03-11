@@ -18,7 +18,6 @@
         private const string OperationId = "operation_Id";
         private const string Bearer = "Bearer ";
         private const int MaxLength = 50;
-        private const double Magic = 0.00;
 
         private bool disposedValue = false;
 
@@ -38,7 +37,8 @@
             {
                 foreach (var result in r)
                 {
-                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", ((result.duration / 1000.00) - Magic).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ")");
+                    var bar = string.Empty.PadLeft((int)Math.Round(result.duration / 1000, MidpointRounding.AwayFromZero), ' ');
+                    ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ") ", bar.OnGreen());
                 }
             }
         }
