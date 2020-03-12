@@ -5,6 +5,7 @@
     using System.Globalization;
     using System.Linq;
     using System.Net.Http;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using ColoredConsole;
@@ -13,17 +14,24 @@
 
     public class PerfRunner : IDisposable
     {
-        private const string AuthHeader = "Authorization";
-        private const string RequestId = "Request-Id";
         private const string OperationId = "operation_Id";
+        private const string RequestId = "Request-Id";
+        private const string AuthHeader = "Authorization";
         private const string Bearer = "Bearer ";
         private const int MaxLength = 50;
 
         private bool disposedValue = false;
 
-        private HttpClient Client = HttpClientFactory.Create();
+        private HttpClient client;
 
         private AuthInfo authInfo;
+
+        private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
+
+        public PerfRunner(IHttpClientFactory httpClientFactory)
+        {
+            client = httpClientFactory.CreateClient(nameof(Perfx));
+        }
 
         public async Task Execute(AuthInfo authInfo)
         {
@@ -53,52 +61,58 @@
                 var traceId = Guid.NewGuid().ToString();
                 var response = await GetJson<dynamic>(endpoint, traceId);
                 string result = JsonConvert.SerializeObject(response.value);
-                var sec = (int)Math.Round(response.duration / 1000);
-                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '.');
-                var id = $"{topIndex}.{i + 1}";
-                ColorToken coloredBar = bar.OnGreen();
-                if (sec <= 2)
-                {
-                    coloredBar = bar.OnGreen();
-                }
-                else if (sec > 2 && sec <= 5)
-                {
-                    coloredBar = bar.OnDarkYellow();
-                }
-                else if (sec > 5 && sec <= 8)
-                {
-                    coloredBar = bar.OnMagenta();
-                }
-                else if (sec > 8)
-                {
-                    coloredBar = bar.OnRed();
-                }
-
-                ColorConsole.WriteLine($"{id} ", endpoint.Green(), "\n",
-                    "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n",
-                    "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
-                    "time".PadLeft(id.Length + 5).Green(), ": ", response.duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (response.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n");
+                await Lock.WaitAsync();
+                Log(endpoint, topIndex, i, traceId, response.duration, result);
+                Lock.Release();
                 return (i, endpoint, traceId, response.duration);
             }));
 
             return result;
         }
 
+        private void Log(string endpoint, float topIndex, int i, string traceId, double duration, string result)
+        {
+            var sec = (int)Math.Round(duration / 1000);
+            var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '.');
+            var id = $"{topIndex}.{i + 1}";
+            var coloredBar = bar.OnGreen();
+            if (sec <= 2)
+            {
+                coloredBar = bar.OnGreen();
+            }
+            else if (sec > 2 && sec <= 5)
+            {
+                coloredBar = bar.OnDarkYellow();
+            }
+            else if (sec > 5 && sec <= 8)
+            {
+                coloredBar = bar.OnMagenta();
+            }
+            else if (sec > 8)
+            {
+                coloredBar = bar.OnRed();
+            }
+
+            ColorConsole.WriteLine($"{id} ", endpoint.Green(), "\n",
+                "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n",
+                "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
+                "time".PadLeft(id.Length + 5).Green(), ": ", duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n");
+        }
+
         private async Task<(T value, double duration)> GetJson<T>(string endpoint, string traceId)
         {
             // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
-            var taskWatch = new Stopwatch();
+            var elapsedTime = 0.00;
             var result = string.Empty;
             try
             {
                 var token = this.authInfo.Token;
-                this.Client.DefaultRequestHeaders.Clear();
-                this.Client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-                this.Client.DefaultRequestHeaders.Add(RequestId, traceId);
-                this.Client.DefaultRequestHeaders.Add(OperationId, traceId);
-                taskWatch.Start();
-                var response = await this.Client.GetAsync(endpoint);
-                taskWatch.Stop();
+                this.client.DefaultRequestHeaders.Clear();
+                this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
+                this.client.DefaultRequestHeaders.Add(RequestId, traceId);
+                var taskWatch = Stopwatch.StartNew();
+                var response = await this.client.GetAsync(endpoint);
+                elapsedTime = taskWatch.ElapsedMilliseconds;
                 result = await response.Content.ReadAsStringAsync();
                 if (!response.IsSuccessStatusCode)
                 {
@@ -118,7 +132,7 @@
                 ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
 
-            return (JsonConvert.DeserializeObject<T>(result), taskWatch.Elapsed.TotalMilliseconds);
+            return (JsonConvert.DeserializeObject<T>(result), elapsedTime);
         }
 
         protected virtual void Dispose(bool disposing)
@@ -127,7 +141,7 @@
             {
                 if (disposing)
                 {
-                    this.Client.Dispose();
+                    this.client.Dispose();
                 }
 
                 disposedValue = true;
