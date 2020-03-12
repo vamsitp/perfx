@@ -65,8 +65,12 @@
                             }
                         }
 
-                        // input.Token = await AuthHelper.GetAuthToken(tenant);
-                        authInfo.Token = await AuthHelper.GetAuthTokenSilentAsync(authInfo);
+                        if (!string.IsNullOrEmpty(authInfo.UserId) && !string.IsNullOrEmpty(authInfo.Password))
+                        {
+                            // input.Token = await AuthHelper.GetAuthToken(tenant);
+                            authInfo.Token = await AuthHelper.GetAuthTokenSilentAsync(authInfo);
+                        }
+
                         File.WriteAllText(Utils.AuthInfoFile, JsonConvert.SerializeObject(authInfo, Formatting.Indented));
 
                         using (var perf = new PerfRunner())

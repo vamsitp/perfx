@@ -27,7 +27,7 @@
 
         public async Task Execute(AuthInfo authInfo)
         {
-            ColorConsole.WriteLine("\nauth: ", authInfo.UserId.Green());
+            ColorConsole.WriteLine("\nauth: ", (string.IsNullOrWhiteSpace(authInfo.UserId) ? "none" : authInfo.UserId).Green());
             ColorConsole.WriteLine("endpoints: ", authInfo.Endpoints.Count().ToString().Green());
             ColorConsole.WriteLine("iterations: ", authInfo.Iterations.ToString().Green(), "\n");
 
@@ -54,7 +54,7 @@
                 var response = await GetJson<dynamic>(endpoint, traceId);
                 string result = JsonConvert.SerializeObject(response.value);
                 var sec = (int)Math.Round(response.duration / 1000);
-                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, ' ');
+                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '_');
                 var id = $"{topIndex}.{i + 1}";
                 ColorToken coloredBar = bar.OnGreen();
                 if (sec <= 2)
@@ -74,7 +74,10 @@
                     coloredBar = bar.OnRed();
                 }
 
-                ColorConsole.WriteLine($"{id} ".Green(), endpoint, " (", traceId.Green(), ")", ": ".Green(), response.duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (response.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n", "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n");
+                ColorConsole.WriteLine($"{id} ", endpoint.Blue(), "\n",
+                    "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n",
+                    "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
+                    "time".PadLeft(id.Length + 5).Green(), ": ", response.duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (response.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n");
                 return (i, endpoint, traceId, response.duration);
             }));
 
