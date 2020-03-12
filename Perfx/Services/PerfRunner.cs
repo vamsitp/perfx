@@ -54,7 +54,7 @@
                 var response = await GetJson<dynamic>(endpoint, traceId);
                 string result = JsonConvert.SerializeObject(response.value);
                 var sec = (int)Math.Round(response.duration / 1000);
-                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '_');
+                var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '.');
                 var id = $"{topIndex}.{i + 1}";
                 ColorToken coloredBar = bar.OnGreen();
                 if (sec <= 2)
@@ -74,7 +74,7 @@
                     coloredBar = bar.OnRed();
                 }
 
-                ColorConsole.WriteLine($"{id} ", endpoint.Blue(), "\n",
+                ColorConsole.WriteLine($"{id} ", endpoint.Green(), "\n",
                     "resp".PadLeft(id.Length + 5).Green(), $": {result.Substring(0, result.Length > MaxLength ? MaxLength : result.Length)}", " ...".Green(), "\n",
                     "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
                     "time".PadLeft(id.Length + 5).Green(), ": ", response.duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (response.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n");
@@ -86,6 +86,7 @@
 
         private async Task<(T value, double duration)> GetJson<T>(string endpoint, string traceId)
         {
+            // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
             var taskWatch = new Stopwatch();
             var result = string.Empty;
             try
