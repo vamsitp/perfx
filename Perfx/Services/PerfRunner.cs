@@ -24,7 +24,7 @@
 
         private HttpClient client;
 
-        private AuthInfo authInfo;
+        private Settings authInfo;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
@@ -33,7 +33,7 @@
             client = httpClientFactory.CreateClient(nameof(Perfx));
         }
 
-        public async Task Execute(AuthInfo authInfo)
+        public async Task Execute(Settings authInfo)
         {
             ColorConsole.WriteLine("\nauth: ", (string.IsNullOrWhiteSpace(authInfo.UserId) ? "none" : authInfo.UserId).Green());
             ColorConsole.WriteLine("endpoints: ", authInfo.Endpoints.Count().ToString().Green());

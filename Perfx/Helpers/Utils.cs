@@ -9,7 +9,7 @@
 
     public static class Utils
     {
-        public static string AuthInfoFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Perfx.json");
+        public static string SettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Perfx.json");
 
         // Credits: https://devblogs.microsoft.com/pfxteam/processing-tasks-as-they-complete, https://stackoverflow.com/a/58194681
         public static Task<Task<T>>[] Interleaved<T>(this IEnumerable<Task<T>> tasks)
