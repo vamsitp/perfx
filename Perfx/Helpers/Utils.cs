@@ -47,5 +47,29 @@
                 yield return await t;
             }
         }
+
+        public static ConsoleColor GetColor(this double duration)
+        {
+            var sec = (int)Math.Round(duration / 1000);
+            var color = ConsoleColor.White;
+            if (sec <= 2)
+            {
+                color = ConsoleColor.Green;
+            }
+            else if (sec > 2 && sec <= 5)
+            {
+                color = ConsoleColor.DarkYellow;
+            }
+            else if (sec > 5 && sec <= 8)
+            {
+                color = ConsoleColor.Magenta;
+            }
+            else if (sec > 8)
+            {
+                color = ConsoleColor.Red;
+            }
+
+            return color;
+        }
     }
 }

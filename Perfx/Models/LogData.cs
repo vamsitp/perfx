@@ -25,10 +25,10 @@
         public long id { get; set; }
         public DateTime timestamp { get; set; }
         public string url { get; set; }
-        public string resultCode { get; set; }
+        public double duration { get; set; }
         public string operation_Id { get; set; }
         public string operation_ParentId { get; set; }
-        public string duration { get; set; }
+        public string resultCode { get; set; }
         public string performanceBucket { get; set; }
         public string client_IP { get; set; }
         public string client_City { get; set; }

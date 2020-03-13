@@ -16,18 +16,36 @@ Azure API Performance benchmarking tool
 > **PRE-REQ**: Populate the following JSON and save it to your `Documents` folder (`Token` is auto-populated, so leave it blank)
 > ```json
 > {
->    "Token": "",
->    "UserId": "",
->    "Password": "",
->    "Authority": "",
->    "ClientId": "",
->    "ApiScopes": [
->      ""
->    ],
->    "Endpoints": [
->      ""
->    ],
->    "Iterations": 5
+>     "UserId": "",
+>     "Password": "",
+>     "Authority": "https://login.microsoftonline.com/YOUR_COMPANY.onmicrosoft.com",
+>     "ClientId": "",
+>     "ApiScopes": [
+>         "api://YOUR-API-SCOPES"
+>     ],
+>     "Endpoints": [
+>         "https://YOUR-API.COM/route1",
+>         "https://YOUR-API.COM/route2"
+>     ],
+>     "Iterations": 5,
+>     "AppInsightsAppId": "",
+>     "AppInsightsApiKey": "",
+>     "Logging": {
+>         "LogLevel": {
+>             "Default": "Warning"
+>         },
+>         "Console": {
+>             "IncludeScopes": true,
+>             "LogLevel": {
+>                 "Default": "Warning"
+>             }
+>         },
+>         "Debug": {
+>             "LogLevel": {
+>                 "Default": "Information"
+>             }
+>         }
+>     }
 > }
 > ```
 

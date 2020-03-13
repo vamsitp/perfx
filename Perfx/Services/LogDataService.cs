@@ -19,7 +19,7 @@
         private const string Query = "requests " +
             "| where timestamp between(ago({0}) .. now()) {1}" +
             "| order by timestamp asc " +
-            "| project id=row_number(), timestamp, url, resultCode, operation_Id, operation_ParentId, duration, performanceBucket, client_IP, client_City";
+            "| project id=row_number(), timestamp, url, duration, operation_Id, operation_ParentId, resultCode, performanceBucket, client_IP, client_City";
         private const string Url = "https://api.applicationinsights.io/v1/apps/{0}/query";
         private readonly IConfiguration config;
         private readonly ILogger<LogDataService> logger;
@@ -31,13 +31,15 @@
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<LogRecord>> GetLogs(string traceId, string timeframe = "5m")
+        public async Task<IEnumerable<LogRecord>> GetLogs(IEnumerable<string> traceIds, string timeframe = "60m")
         {
-            logger.LogInformation($"{ this.GetType().Name } - GetLogs()");
-            var query = string.IsNullOrWhiteSpace(traceId) ? string.Format(Query, timeframe, string.Empty) : string.Format(Query, timeframe, $"and * contains '{traceId}' ");
-            var req = string.Format(Url, config.GetValue<string>("AppInsights_AppId"), query);
-            var response = await req.WithHeader("x-api-key", config.GetValue<string>("AppInsights_ApiKey"))
+            var subquery = "and (" + string.Join(" ", traceIds.Select((t, i) => (i == 0 ? string.Empty : "or ") + $"* contains '{t}'")) + ") ";
+            var query = string.Format(Query, timeframe, subquery);
+            logger.LogInformation(query);
+            var req = string.Format(Url, config.GetValue<string>("AppInsightsAppId"), query);
+            var response = await req.WithHeader("x-api-key", config.GetValue<string>("AppInsightsApiKey"))
                 .WithHeader("Accept", "application/json")
+                .WithHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
                 .PostJsonAsync(new { query })
                 .ReceiveJson<LogData>();
 

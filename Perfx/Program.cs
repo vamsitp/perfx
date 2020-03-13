@@ -1,12 +1,15 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.Text;
     using System.Threading.Tasks;
 
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
+
+    using Newtonsoft.Json;
 
     public class Program
     {
@@ -15,6 +18,7 @@
         {
             // Credit: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
+            Console.OutputEncoding = Encoding.UTF8;
             IConfiguration settings = null;
             var builder = Host
                             .CreateDefaultBuilder(args)
@@ -29,15 +33,19 @@
                                     .Configure<Settings>(settings)
                                     .AddScoped<PerfRunner>()
                                     .AddHostedService<WorkerService>()
-                                    //.AddTransient<TimingHandler>()
-                                    .AddHttpClient(nameof(Perfx)); //.AddHttpMessageHandler<TimingHandler>();
+                                    .AddSingleton<LogDataService>()
+                                    .AddTransient<TimingHandler>()
+                                    .AddSingleton<JsonSerializer>()
+                                    .AddHttpClient(nameof(Perfx))
+                                    .AddHttpMessageHandler<TimingHandler>();
                             })
-                            .ConfigureLogging((hostContext, logging) =>
-                            {
-                                logging.ClearProviders()
-                                    .SetMinimumLevel(LogLevel.Warning)
-                                    .AddConsole(c => c.IncludeScopes = true);
-                            })
+                            //.ConfigureLogging((hostContext, logging) =>
+                            //{
+                            //    logging.ClearProviders()
+                            //        .AddDebug();
+                            //        //.AddConsole(c => c.IncludeScopes = true)
+                            //        //.SetMinimumLevel(LogLevel.Warning);
+                            //})
                             .UseConsoleLifetime();
             await builder.RunConsoleAsync();
         }

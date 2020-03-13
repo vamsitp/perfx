@@ -18,13 +18,14 @@
     <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
     <PackageTags>Azure;API;Perf;Performance;Benchmark;Throughput;SLA</PackageTags>
     <Company>Microsoft</Company>
-    <Version>1.0.4</Version>
+    <Version>1.0.5</Version>
     <StartupObject>Perfx.Program</StartupObject>
     <ApplicationIcon />
     <Deterministic>false</Deterministic>
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Alba.CsConsoleFormat.ColorfulConsole-NoXaml" Version="1.0.0" />
     <PackageReference Include="ColoredConsole" Version="1.0.0" />
     <PackageReference Include="Flurl.Http" Version="2.4.2" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="3.1.2" />
@@ -33,6 +34,7 @@
     <PackageReference Include="Microsoft.Extensions.Logging" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="3.1.2" />
     <PackageReference Include="Microsoft.Extensions.Logging.Console" Version="3.1.2" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.1.2" />
     <PackageReference Include="Microsoft.Identity.Client" Version="4.9.0" />
     <PackageReference Include="Microsoft.IdentityModel.Clients.ActiveDirectory" Version="5.2.7" />
     <PackageReference Include="Microsoft.Toolkit.Wpf.UI.Controls.WebView" Version="6.0.0" />

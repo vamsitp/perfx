@@ -84,7 +84,7 @@
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                            await perf.Execute(settings);
+                            await perf.Execute();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))

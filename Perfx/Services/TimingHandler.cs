@@ -21,9 +21,9 @@
         {
             var uri = request.RequestUri.OriginalString;
             var sw = Stopwatch.StartNew();
-            logger.LogWarning($"START: {uri}");
+            logger.LogInformation($"Begin: {uri}");
             var response = await base.SendAsync(request, cancellationToken);
-            logger.LogWarning($"FINISH: {uri} ({sw.ElapsedMilliseconds}ms)");
+            logger.LogInformation($"Finish: {uri} ({sw.ElapsedMilliseconds}ms)");
             return response;
         }
     }

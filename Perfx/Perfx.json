@@ -1,0 +1,32 @@
+{
+  "UserId": "",
+  "Password": "",
+  "Authority": "https://login.microsoftonline.com/your-api.com.onmicrosoft.com",
+  "ClientId": "",
+  "ApiScopes": [
+    "api://"
+  ],
+  "Endpoints": [
+    "https://your-api.com/route1",
+    "https://your-api.com/route2"
+  ],
+  "Iterations": 5,
+  "AppInsightsAppId": "",
+  "AppInsightsApiKey": "",
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    },
+    "Console": {
+      "IncludeScopes": true,
+      "LogLevel": {
+        "Default": "Warning"
+      }
+    },
+    "Debug": {
+      "LogLevel": {
+        "Default": "Information"
+      }
+    }
+  }
+}
