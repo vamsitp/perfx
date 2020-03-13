@@ -65,11 +65,11 @@
                             settings.Save();
                         }
 
-                        if (settings.Endpoints == null || settings.Endpoints.Count() == 0)
+                        if (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0))
                         {
                             ColorConsole.WriteLine("\n> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
                             var urls = Console.ReadLine();
-                            settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+                            settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries)?.Select(x => x?.Trim());
                             if (settings.Endpoints?.Count() > 0)
                             {
                                 settings.Save();
