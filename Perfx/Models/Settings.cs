@@ -16,15 +16,15 @@
 
         private PropertyInfo[] properties;
 
-        public string UserId { get; set; }
-        public string Password { get; set; }
-        public string Authority { get; set; }
-        public string ClientId { get; set; }
-        public IEnumerable<string> ApiScopes { get; set; }
-        public IEnumerable<string> Endpoints { get; set; }
+        public string UserId { get; set; } = string.Empty;
+        public string Password { get; set; } = string.Empty;
+        public string Authority { get; set; } = string.Empty;
+        public string ClientId { get; set; } = string.Empty;
+        public IEnumerable<string> ApiScopes { get; set; } = new List<string>();
+        public IEnumerable<string> Endpoints { get; set; } = new List<string>();
         public int Iterations { get; set; } = 5;
-        public string AppInsightsAppId { get; set; }
-        public string AppInsightsApiKey { get; set; }
+        public string AppInsightsAppId { get; set; } = string.Empty;
+        public string AppInsightsApiKey { get; set; } = string.Empty;
         //public object Logging { get; set; }
 
         [JsonIgnore]
@@ -51,6 +51,7 @@
         public void Save()
         {
             File.WriteAllText(AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
+            // (this as IConfigurationRoot).Reload();
         }
     }
 

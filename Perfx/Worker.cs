@@ -50,7 +50,7 @@
                     {
                         if (!File.Exists(Settings.AppSettingsFile))
                         {
-                            foreach (var prop in settings.Properties) //.Where(p => p.Name != nameof(settings.Logging)))
+                            foreach (var prop in settings.Properties.Where(p => p.Name != nameof(settings.Properties) && p.Name != nameof(settings.Token)))
                             {
                                 var value = prop.GetValue(settings) ?? string.Empty;
                                 ColorConsole.Write($"{prop.Name}".Green(), ": ");
@@ -64,14 +64,19 @@
 
                             settings.Save();
                         }
-                        else
+
+                        if (settings.Endpoints == null || settings.Endpoints.Count() == 0)
                         {
-                            if (settings.Endpoints?.Count() <= 0)
+                            ColorConsole.WriteLine("\n> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
+                            var urls = Console.ReadLine();
+                            settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+                            if (settings.Endpoints?.Count() > 0)
                             {
-                                ColorConsole.WriteLine("> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
-                                var urls = Console.ReadLine();
-                                settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
                                 settings.Save();
+                            }
+                            else
+                            {
+                                continue;
                             }
                         }
 

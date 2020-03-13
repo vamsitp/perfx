@@ -193,7 +193,7 @@
                 var taskWatch = Stopwatch.StartNew();
                 var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, endpoint), HttpCompletionOption.ResponseHeadersRead);
                 elapsedTime = taskWatch.ElapsedMilliseconds;
-                result = $"{response.StatusCode}: {response.ReasonPhrase}";
+                result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
                 //using (var responseStream = await response.Content.ReadAsStreamAsync())
                 //{
                 //    using (var streamReader = new StreamReader(responseStream))
