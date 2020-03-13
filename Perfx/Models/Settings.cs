@@ -1,12 +1,19 @@
 ﻿namespace Perfx
 {
+    using System;
     using System.Collections.Generic;
+    using System.IO;
     using System.Reflection;
 
     using Newtonsoft.Json;
 
     public class Settings
     {
+        [JsonIgnore]
+        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.json");
+        [JsonIgnore]
+        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.Defaults.json");
+
         private PropertyInfo[] properties;
 
         public string UserId { get; set; }
@@ -39,6 +46,11 @@
             {
                 properties = value;
             }
+        }
+
+        public void Save()
+        {
+            File.WriteAllText(AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
         }
     }
 

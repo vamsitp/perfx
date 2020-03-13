@@ -1,0 +1,18 @@
+{
+  "Logging": {
+    "LogLevel": {
+      "Default": "Warning"
+    },
+    "Console": {
+      "IncludeScopes": true,
+      "LogLevel": {
+        "Default": "Warning" //,"System.Net.Http.HttpClient": "Information"
+      }
+    },
+    "Debug": {
+      "LogLevel": {
+        "Default": "Information"
+      }
+    }
+  }
+}

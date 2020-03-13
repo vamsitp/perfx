@@ -11,14 +11,13 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Options;
-    using Newtonsoft.Json;
 
-    public class WorkerService : BackgroundService
+    public class Worker : BackgroundService
     {
         private readonly Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
 
-        public WorkerService(IOptions<Settings> settings, IServiceScopeFactory serviceScopeFactory)
+        public Worker(IOptions<Settings> settings, IServiceScopeFactory serviceScopeFactory)
         {
             this.settings = settings.Value;
             this.serviceScopeFactory = serviceScopeFactory;
@@ -49,7 +48,7 @@
                     }
                     else if (key.Equals("r", StringComparison.OrdinalIgnoreCase) || key.Equals("run", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!File.Exists(Utils.SettingsFile))
+                        if (!File.Exists(Settings.AppSettingsFile))
                         {
                             foreach (var prop in settings.Properties) //.Where(p => p.Name != nameof(settings.Logging)))
                             {
@@ -62,6 +61,8 @@
                                     prop.SetValue(settings, isCollection ? val.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim()) : Convert.ChangeType(val, prop.PropertyType));
                                 }
                             }
+
+                            settings.Save();
                         }
                         else
                         {
@@ -70,6 +71,7 @@
                                 ColorConsole.WriteLine("> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
                                 var urls = Console.ReadLine();
                                 settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
+                                settings.Save();
                             }
                         }
 
@@ -78,8 +80,6 @@
                             // input.Token = await AuthHelper.GetAuthToken(tenant);
                             settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
                         }
-
-                        File.WriteAllText(Utils.SettingsFile, JsonConvert.SerializeObject(settings, Formatting.Indented));
 
                         using (var scope = serviceScopeFactory.CreateScope())
                         {

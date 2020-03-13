@@ -12,21 +12,5 @@
   ],
   "Iterations": 5,
   "AppInsightsAppId": "",
-  "AppInsightsApiKey": "",
-  "Logging": {
-    "LogLevel": {
-      "Default": "Warning"
-    },
-    "Console": {
-      "IncludeScopes": true,
-      "LogLevel": {
-        "Default": "Warning"
-      }
-    },
-    "Debug": {
-      "LogLevel": {
-        "Default": "Information"
-      }
-    }
-  }
+  "AppInsightsApiKey": ""
 }

@@ -24,7 +24,8 @@
                             .CreateDefaultBuilder(args)
                             .ConfigureAppConfiguration((hostContext, config) =>
                             {
-                                config.AddJsonFile(Utils.SettingsFile, optional: true, reloadOnChange: true);
+                                config.AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true);
+                                config.AddJsonFile(Settings.DefaultSettingsFile, optional: true, reloadOnChange: true);
                                 settings = config.Build();
                             })
                             .ConfigureServices((hostContext, services) =>
@@ -32,20 +33,21 @@
                                 services
                                     .Configure<Settings>(settings)
                                     .AddScoped<PerfRunner>()
-                                    .AddHostedService<WorkerService>()
+                                    .AddHostedService<Worker>()
                                     .AddSingleton<LogDataService>()
                                     .AddTransient<TimingHandler>()
                                     .AddSingleton<JsonSerializer>()
                                     .AddHttpClient(nameof(Perfx))
                                     .AddHttpMessageHandler<TimingHandler>();
                             })
-                            //.ConfigureLogging((hostContext, logging) =>
-                            //{
-                            //    logging.ClearProviders()
-                            //        .AddDebug();
-                            //        //.AddConsole(c => c.IncludeScopes = true)
-                            //        //.SetMinimumLevel(LogLevel.Warning);
-                            //})
+                            .ConfigureLogging((hostContext, logging) =>
+                            {
+                                logging
+                                .ClearProviders()
+                                .SetMinimumLevel(LogLevel.Warning)
+                                .AddDebug()
+                                .AddConsole();
+                            })
                             .UseConsoleLifetime();
             await builder.RunConsoleAsync();
         }

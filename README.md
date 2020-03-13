@@ -13,7 +13,7 @@ Azure API Performance benchmarking tool
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**
 
-> **PRE-REQ**: Populate the following JSON and save it to your `Documents` folder (`Token` is auto-populated, so leave it blank)
+> **PRE-REQ**: Populate the following JSON and save it to your `Documents` folder with the name: **`Perfx.json`**
 > ```json
 > {
 >     "UserId": "",
@@ -29,7 +29,13 @@ Azure API Performance benchmarking tool
 >     ],
 >     "Iterations": 5,
 >     "AppInsightsAppId": "",
->     "AppInsightsApiKey": "",
+>     "AppInsightsApiKey": ""
+> }
+> ```
+
+> **OPTIONAL**: Populate the following JSON and save it to your `Documents` folder with the name: **`Perfx.Settings.json`**
+> ```json
+> {
 >     "Logging": {
 >         "LogLevel": {
 >             "Default": "Warning"
@@ -37,7 +43,7 @@ Azure API Performance benchmarking tool
 >         "Console": {
 >             "IncludeScopes": true,
 >             "LogLevel": {
->                 "Default": "Warning"
+>                 "Default": "Warning" //,"System.Net.Http.HttpClient": "Information"
 >             }
 >         },
 >         "Debug": {
