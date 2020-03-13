@@ -19,19 +19,19 @@
             // Credit: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
             Console.OutputEncoding = Encoding.UTF8;
-            IConfiguration settings = null;
+            IConfiguration configuration = null;
             var builder = Host
                             .CreateDefaultBuilder(args)
                             .ConfigureAppConfiguration((hostContext, config) =>
                             {
                                 config.AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true);
                                 config.AddJsonFile(Settings.DefaultSettingsFile, optional: true, reloadOnChange: true);
-                                settings = config.Build();
+                                configuration = config.Build();
                             })
                             .ConfigureServices((hostContext, services) =>
                             {
                                 services
-                                    .Configure<Settings>(settings)
+                                    .Configure<Settings>(configuration)
                                     .AddScoped<PerfRunner>()
                                     .AddHostedService<Worker>()
                                     .AddSingleton<LogDataService>()

@@ -8,18 +8,20 @@
 
     using ColoredConsole;
 
+    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
-    using Microsoft.Extensions.Options;
 
     public class Worker : BackgroundService
     {
-        private readonly Settings settings;
+        private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly IConfigurationRoot config;
 
-        public Worker(IOptions<Settings> settings, IServiceScopeFactory serviceScopeFactory)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IConfiguration config)
         {
-            this.settings = settings.Value;
+            this.config = config as ConfigurationRoot;
+            this.settings = this.config.Get<Settings>();
             this.serviceScopeFactory = serviceScopeFactory;
         }
 
@@ -33,7 +35,12 @@
                 {
                     ColorConsole.Write("\n> ".Green());
                     var key = Console.ReadLine()?.Trim();
-                    if (key.Equals("q", StringComparison.OrdinalIgnoreCase) || key.StartsWith("quit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("exit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("close", StringComparison.OrdinalIgnoreCase))
+                    if (string.IsNullOrWhiteSpace(key))
+                    {
+                        PrintHelp();
+                        continue;
+                    }
+                    else if (key.Equals("q", StringComparison.OrdinalIgnoreCase) || key.StartsWith("quit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("exit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("close", StringComparison.OrdinalIgnoreCase))
                     {
                         ColorConsole.WriteLine("DONE!".White().OnDarkGreen());
                         break;
@@ -64,14 +71,19 @@
 
                             settings.Save();
                         }
+                        else
+                        {
+                            // this.config.Reload();
+                            this.settings = this.config.Get<Settings>();
+                        }
 
                         if (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0))
                         {
                             ColorConsole.WriteLine("\n> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
                             var urls = Console.ReadLine();
-                            settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries)?.Select(x => x?.Trim());
-                            if (settings.Endpoints?.Count() > 0)
+                            if (!string.IsNullOrWhiteSpace(urls))
                             {
+                                settings.Endpoints = urls.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(x => x.Trim());
                                 settings.Save();
                             }
                             else

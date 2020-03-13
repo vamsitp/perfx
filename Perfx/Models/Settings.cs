@@ -20,8 +20,8 @@
         public string Password { get; set; } = string.Empty;
         public string Authority { get; set; } = string.Empty;
         public string ClientId { get; set; } = string.Empty;
-        public IEnumerable<string> ApiScopes { get; set; } = new List<string>();
-        public IEnumerable<string> Endpoints { get; set; } = new List<string>();
+        public IEnumerable<string> ApiScopes { get; set; }
+        public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
         public string AppInsightsAppId { get; set; } = string.Empty;
         public string AppInsightsApiKey { get; set; } = string.Empty;

@@ -34,7 +34,7 @@
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
-        public PerfRunner(IHttpClientFactory httpClientFactory, JsonSerializer jsonSerializer, IOptions<Settings> settings, LogDataService logDataService)
+        public PerfRunner(IHttpClientFactory httpClientFactory, JsonSerializer jsonSerializer, IOptionsSnapshot<Settings> settings, LogDataService logDataService)
         {
             client = httpClientFactory.CreateClient(nameof(Perfx));
             this.jsonSerializer = jsonSerializer;
