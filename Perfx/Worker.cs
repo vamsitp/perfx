@@ -8,20 +8,19 @@
 
     using ColoredConsole;
 
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Options;
 
     public class Worker : BackgroundService
     {
         private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
-        private readonly IConfigurationRoot config;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IConfiguration config)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor)
         {
-            this.config = config as ConfigurationRoot;
-            this.settings = this.config.Get<Settings>();
+            this.settings = settingsMonitor.CurrentValue;
+            settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
         }
 
@@ -70,11 +69,6 @@
                             }
 
                             settings.Save();
-                        }
-                        else
-                        {
-                            // this.config.Reload();
-                            this.settings = this.config.Get<Settings>();
                         }
 
                         if (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0))

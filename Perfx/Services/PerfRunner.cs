@@ -30,16 +30,17 @@
 
         private readonly HttpClient client;
 
-        private readonly Settings settings;
+        private Settings settings;
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
-        public PerfRunner(IHttpClientFactory httpClientFactory, JsonSerializer jsonSerializer, IOptionsSnapshot<Settings> settings, LogDataService logDataService)
+        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer)
         {
             client = httpClientFactory.CreateClient(nameof(Perfx));
-            this.jsonSerializer = jsonSerializer;
+            this.settings = settingsMonitor.CurrentValue;
+            settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.logDataService = logDataService;
-            this.settings = settings.Value;
+            this.jsonSerializer = jsonSerializer;
         }
 
         public async Task Execute()

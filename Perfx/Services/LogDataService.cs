@@ -1,15 +1,14 @@
 ﻿namespace Perfx
 {
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Reflection;
     using System.Threading.Tasks;
 
     using Flurl.Http;
 
-    using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.Logging;
+    using Microsoft.Extensions.Options;
 
     public class LogDataService
     {
@@ -21,13 +20,14 @@
             "| order by timestamp asc " +
             "| project id=row_number(), timestamp, url, duration, operation_Id, operation_ParentId, resultCode, performanceBucket, client_IP, client_City";
         private const string Url = "https://api.applicationinsights.io/v1/apps/{0}/query";
-        private readonly IConfiguration config;
-        private readonly ILogger<LogDataService> logger;
         private static readonly List<PropertyInfo> props = typeof(LogRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
+        private readonly ILogger<LogDataService> logger;
+        private Settings settings;
 
-        public LogDataService(IConfiguration config, ILogger<LogDataService> logger)
+        public LogDataService(IOptionsMonitor<Settings> settingsMonitor, ILogger<LogDataService> logger)
         {
-            this.config = config;
+            this.settings = settingsMonitor.CurrentValue;
+            settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.logger = logger;
         }
 
@@ -36,8 +36,8 @@
             var subquery = "and (" + string.Join(" ", traceIds.Select((t, i) => (i == 0 ? string.Empty : "or ") + $"* contains '{t}'")) + ") ";
             var query = string.Format(Query, timeframe, subquery);
             logger.LogInformation(query);
-            var req = string.Format(Url, config.GetValue<string>("AppInsightsAppId"), query);
-            var response = await req.WithHeader("x-api-key", config.GetValue<string>("AppInsightsApiKey"))
+            var req = string.Format(Url, this.settings.AppInsightsAppId, query);
+            var response = await req.WithHeader("x-api-key", this.settings.AppInsightsApiKey)
                 .WithHeader("Accept", "application/json")
                 .WithHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
                 .PostJsonAsync(new { query })
