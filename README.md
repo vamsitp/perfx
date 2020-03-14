@@ -29,6 +29,7 @@ Azure API Performance benchmarking tool
 >         "https://YOUR-API.COM/route2"
 >     ],
 >     "Iterations": 5,
+>     "ReadResponseHeadersOnly": false,
 >     "AppInsightsAppId": "",
 >     "AppInsightsApiKey": ""
 > }

@@ -169,7 +169,8 @@
                 ColorConsole.WriteLine(Math.Round(item.duration / 1000).ToString(), "s".Green());
             }
 
-            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 2), string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength : maxDurationLength, '̅'), "[".Green(), "100", "]".Green());
+            // ColorConsole.WriteLine("|".PadLeft(maxIdLength + 2).Green());
+            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 1), string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 1 : maxDurationLength, '-'), "[".Green(), "100", "]".Green()); // '̅'
         }
 
         public static void SaveToFile(this IEnumerable<(string traceId, double duration)> items, string fileName = ResultsFileName)
