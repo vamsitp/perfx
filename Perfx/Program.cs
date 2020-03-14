@@ -3,7 +3,7 @@
     using System;
     using System.Text;
     using System.Threading.Tasks;
-
+    using ColoredConsole;
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -49,7 +49,15 @@
                                 .AddConsole();
                             })
                             .UseConsoleLifetime();
-            await builder.RunConsoleAsync(options => options.SuppressStatusMessages = true);
+
+            try
+            {
+                await builder.RunConsoleAsync(options => options.SuppressStatusMessages = true);
+            }
+            catch (Exception ex)
+            {
+                ColorConsole.WriteLine(ex.Message.White().OnRed());
+            }
         }
     }
 }

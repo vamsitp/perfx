@@ -1,6 +1,5 @@
 ﻿namespace Perfx
 {
-    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
@@ -10,9 +9,9 @@
     public class Settings
     {
         [JsonIgnore]
-        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.json");
+        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.json".GetFullPath();
         [JsonIgnore]
-        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.Defaults.json");
+        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Defaults.json".GetFullPath();
 
         private PropertyInfo[] properties;
 
@@ -23,7 +22,7 @@
         public IEnumerable<string> ApiScopes { get; set; }
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
-        public bool ReadResponseHeadersOnly { get; set; } = true;
+        public bool ReadResponseHeadersOnly { get; set; } = false;
         public string AppInsightsAppId { get; set; } = string.Empty;
         public string AppInsightsApiKey { get; set; } = string.Empty;
 

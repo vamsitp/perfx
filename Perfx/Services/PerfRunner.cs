@@ -60,7 +60,7 @@
             //}
 
             var traceIds = results.SelectMany(e => e.Select(r => (r.traceId, r.duration))).ToList();
-            traceIds.DrawChart();
+            traceIds.SaveToFile();
             return traceIds;
         }
 
@@ -83,11 +83,10 @@
         private void Log(string endpoint, float topIndex, int i, string traceId, double duration, string result)
         {
             var id = $"{topIndex}.{i + 1}";
-            var coloredBar = duration.GetColorToken();
             ColorConsole.WriteLine($"{id} ", endpoint.Green(), "\n",
                 "stat".PadLeft(id.Length + 5).Green(), $": {result}", "\n",
                 "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
-                "time".PadLeft(id.Length + 5).Green(), ": ", duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", coloredBar, "\n");
+                "time".PadLeft(id.Length + 5).Green(), ": ", duration.GetColorToken(" "), " ", duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", "\n");
         }
 
         public async Task LogAppInsights(List<(string traceId, double duration)> traceIds)

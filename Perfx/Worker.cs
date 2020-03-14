@@ -1,7 +1,6 @@
 ﻿namespace Perfx
 {
     using System;
-    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -29,7 +28,11 @@
         {
             var tenant = string.Empty;
             PrintHelp();
-            List<(string traceId, double duration)> results = null;
+            var results = Utils.ReadResults<dynamic>()?.Select(x =>
+            {
+                (string traceId, double duration) r = (x.traceId, double.Parse(x.duration));
+                return r;
+            })?.ToList();
             while (!stopToken.IsCancellationRequested)
             {
                 try
@@ -63,6 +66,13 @@
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
                                 await perf.LogAppInsights(results);
                             }
+                        }
+                    }
+                    else if (key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (results?.Count > 0)
+                        {
+                            results.DrawChart();
                         }
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
@@ -114,8 +124,11 @@
                             ColorConsole.WriteLine();
                             if (result.Key == ConsoleKey.Y)
                             {
+                                ColorConsole.WriteLine();
                                 await perf.LogAppInsights(results);
                             }
+
+                            results.DrawChart();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))

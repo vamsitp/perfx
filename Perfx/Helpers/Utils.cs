@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Globalization;
+    using System.IO;
     using System.Linq;
     using System.Threading;
     using System.Threading.Tasks;
@@ -11,8 +12,14 @@
 
     using ColoredConsole;
 
+    using CsvHelper;
+    using CsvHelper.Configuration;
+
     public static class Utils
     {
+        private const string ResultsFileName = "Perfx.csv";
+        private const int MaxBarLength = 100;
+
         // Credits: https://devblogs.microsoft.com/pfxteam/processing-tasks-as-they-complete, https://stackoverflow.com/a/58194681
         public static Task<Task<T>>[] Interleaved<T>(this IEnumerable<Task<T>> tasks)
         {
@@ -74,26 +81,32 @@
             return color;
         }
 
-        public static ColorToken GetColorToken(this double duration)
+        public static ColorToken GetColorToken(this double duration, char padChar = '.', int max = MaxBarLength)
         {
             var sec = (int)Math.Round(duration / 1000);
-            var bar = string.Empty.PadLeft(sec > 1 ? sec : 1, '.');
-            var coloredBar = bar.OnGreen();
+            var bar = string.Empty.PadLeft(sec > 1 ? (sec > max ? max : sec) : 1, padChar);
+            return duration.GetColorToken(bar);
+        }
+
+        public static ColorToken GetColorToken(this double duration, string barText)
+        {
+            var sec = (int)Math.Round(duration / 1000);
+            var coloredBar = barText.OnGreen();
             if (sec <= 2)
             {
-                coloredBar = bar.OnGreen();
+                coloredBar = barText.OnDarkGreen();
             }
             else if (sec > 2 && sec <= 5)
             {
-                coloredBar = bar.OnDarkYellow();
+                coloredBar = barText.OnDarkYellow();
             }
             else if (sec > 5 && sec <= 8)
             {
-                coloredBar = bar.OnMagenta();
+                coloredBar = barText.OnMagenta();
             }
             else if (sec > 8)
             {
-                coloredBar = bar.OnRed();
+                coloredBar = barText.OnRed();
             }
 
             return coloredBar;
@@ -144,15 +157,54 @@
 
         public static void DrawChart(this List<(string traceId, double duration)> traceIds)
         {
-            var maxLength = traceIds.Max(x => x.traceId.Length);
+            var maxIdLength = traceIds.Max(x => x.traceId.Length);
+            var maxDurationLength = (int)Math.Round(traceIds.Max(x => x.duration / 1000));
             foreach (var item in traceIds)
             {
-                ColorConsole.Write(item.traceId.PadLeft(maxLength));
+                ColorConsole.WriteLine("|".PadLeft(maxIdLength + 2).Green());
+                ColorConsole.Write(item.traceId.PadLeft(maxIdLength));
                 ColorConsole.Write(" ");
-                ColorConsole.Write(item.duration.GetColorToken());
+                ColorConsole.Write("|".Green(), item.duration.GetColorToken(' '));
                 ColorConsole.Write(" ");
-                ColorConsole.WriteLine(item.duration.ToString());
+                ColorConsole.WriteLine(Math.Round(item.duration / 1000).ToString(), "s".Green());
             }
+
+            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 2), string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength : maxDurationLength, '̅'), "[".Green(), "100", "]".Green());
+        }
+
+        public static void SaveToFile(this IEnumerable<(string traceId, double duration)> items, string fileName = ResultsFileName)
+        {
+            var file = fileName.GetFullPath();
+            using (var reader = File.CreateText(file))
+            {
+                using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                {
+                    csvWriter.WriteRecords(items.Select(r => new { r.traceId, r.duration }));
+                }
+            }
+        }
+
+        public static IEnumerable<T> ReadResults<T>(string fileName = ResultsFileName)
+        {
+            var file = fileName.GetFullPath();
+            if (File.Exists(file))
+            {
+                var textReader = new StreamReader(file);
+                using (var csvReader = new CsvReader(textReader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                {
+                    csvReader.Configuration.HeaderValidated = null;
+                    csvReader.Configuration.MissingFieldFound = null;
+                    var results = csvReader.GetRecords<T>().ToList();
+                    return results;
+                }
+            }
+
+            return null;
+        }
+
+        public static string GetFullPath(this string fileName)
+        {
+            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
         }
     }
 }
