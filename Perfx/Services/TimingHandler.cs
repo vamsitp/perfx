@@ -1,6 +1,7 @@
 ﻿namespace Perfx
 {
     using System.Diagnostics;
+    using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
@@ -20,11 +21,18 @@
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri.OriginalString;
+            var traceId = request.Headers.GetValues(PerfRunner.RequestId).FirstOrDefault();
+            logger.LogInformation($"Begin: {uri} ({traceId})");
             var sw = Stopwatch.StartNew();
-            logger.LogInformation($"Begin: {uri}");
-            var response = await base.SendAsync(request, cancellationToken);
-            logger.LogInformation($"Finish: {uri} ({sw.ElapsedMilliseconds}ms)");
-            return response;
+            try
+            {
+                var response = await base.SendAsync(request, cancellationToken);
+                return response;
+            }
+            finally
+            {
+                logger.LogInformation($"Finish: {uri} ({traceId}): {sw.ElapsedMilliseconds}ms");
+            }
         }
     }
 }

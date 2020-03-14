@@ -19,8 +19,8 @@
 
     public class PerfRunner : IDisposable
     {
+        public const string RequestId = "Request-Id";
         private const string OperationId = "operation_Id";
-        private const string RequestId = "Request-Id";
         private const string AuthHeader = "Authorization";
         private const string Bearer = "Bearer ";
 
@@ -45,9 +45,8 @@
 
         public async Task Execute()
         {
-            ColorConsole.WriteLine("\nauth: ", (string.IsNullOrWhiteSpace(settings.UserId) ? "none" : settings.UserId).Green());
-            ColorConsole.WriteLine("endpoints: ", settings.Endpoints.Count().ToString().Green());
-            ColorConsole.WriteLine("iterations: ", settings.Iterations.ToString().Green(), "\n");
+            ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
+            ColorConsole.WriteLine("Iterations: ", settings.Iterations.ToString().Green(), "\n");
 
             var endpointTasks = settings.Endpoints.Select((ep, i) => Execute(ep, i + 1, settings.Iterations));
             var results = await Task.WhenAll(endpointTasks);
@@ -181,17 +180,17 @@
 
         private async Task<(string status, double duration)> ProcessRequest(string endpoint, string traceId)
         {
-            // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
-            // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-            var elapsedTime = 0.00;
+            double elapsedTime;
             var result = string.Empty;
+            var token = this.settings.Token;
+            this.client.DefaultRequestHeaders.Clear();
+            this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
+            this.client.DefaultRequestHeaders.Add(RequestId, traceId);
+            var taskWatch = Stopwatch.StartNew();
             try
             {
-                var token = this.settings.Token;
-                this.client.DefaultRequestHeaders.Clear();
-                this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-                this.client.DefaultRequestHeaders.Add(RequestId, traceId);
-                var taskWatch = Stopwatch.StartNew();
+                // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+                // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
                 var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, endpoint), HttpCompletionOption.ResponseHeadersRead);
                 elapsedTime = taskWatch.ElapsedMilliseconds;
                 result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
@@ -221,6 +220,7 @@
             }
             catch (Exception ex)
             {
+                elapsedTime = taskWatch.ElapsedMilliseconds;
                 ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
 

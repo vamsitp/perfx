@@ -23,6 +23,7 @@
 
         public static async Task<string> GetAuthTokenSilentAsync(Settings input)
         {
+            ColorConsole.WriteLine("Acquiring token for ", input.UserId.Green(), " ...");
             var app = PublicClientApplicationBuilder.Create(input.ClientId).WithAuthority(input.Authority).Build();
             var accounts = await app.GetAccountsAsync().ConfigureAwait(continueOnCapturedContext: false);
             AuthenticationResult result = null;

@@ -49,7 +49,7 @@
                                 .AddConsole();
                             })
                             .UseConsoleLifetime();
-            await builder.RunConsoleAsync();
+            await builder.RunConsoleAsync(options => options.SuppressStatusMessages = true);
         }
     }
 }
