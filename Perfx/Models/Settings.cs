@@ -23,9 +23,9 @@
         public IEnumerable<string> ApiScopes { get; set; }
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
+        public bool ReadResponseHeadersOnly { get; set; } = true;
         public string AppInsightsAppId { get; set; } = string.Empty;
         public string AppInsightsApiKey { get; set; } = string.Empty;
-        //public object Logging { get; set; }
 
         [JsonIgnore]
         public string Token { get; set; }

@@ -1,6 +1,7 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -28,6 +29,7 @@
         {
             var tenant = string.Empty;
             PrintHelp();
+            List<(string traceId, double duration)> results = null;
             while (!stopToken.IsCancellationRequested)
             {
                 try
@@ -39,7 +41,7 @@
                         PrintHelp();
                         continue;
                     }
-                    else if (key.Equals("q", StringComparison.OrdinalIgnoreCase) || key.StartsWith("quit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("exit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("close", StringComparison.OrdinalIgnoreCase))
+                    else if (key.StartsWith("q", StringComparison.OrdinalIgnoreCase) || key.StartsWith("exit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("close", StringComparison.OrdinalIgnoreCase))
                     {
                         ColorConsole.WriteLine("DONE!".White().OnDarkGreen());
                         break;
@@ -48,18 +50,29 @@
                     {
                         PrintHelp();
                     }
-                    else if (key.Equals("c", StringComparison.OrdinalIgnoreCase) || key.StartsWith("cls", StringComparison.OrdinalIgnoreCase) || key.StartsWith("clear", StringComparison.OrdinalIgnoreCase))
+                    else if (key.StartsWith("c", StringComparison.OrdinalIgnoreCase))
                     {
                         Console.Clear();
                     }
-                    else if (key.Equals("r", StringComparison.OrdinalIgnoreCase) || key.Equals("run", StringComparison.OrdinalIgnoreCase))
+                    else if (key.StartsWith("l", StringComparison.OrdinalIgnoreCase) || key.StartsWith("a", StringComparison.OrdinalIgnoreCase))
+                    {
+                        if (results?.Count > 0)
+                        {
+                            using (var scope = serviceScopeFactory.CreateScope())
+                            {
+                                var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
+                                await perf.LogAppInsights(results);
+                            }
+                        }
+                    }
+                    else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
                     {
                         if (!File.Exists(Settings.AppSettingsFile))
                         {
                             foreach (var prop in settings.Properties.Where(p => p.Name != nameof(settings.Properties) && p.Name != nameof(settings.Token)))
                             {
                                 var value = prop.GetValue(settings) ?? string.Empty;
-                                ColorConsole.Write($"{prop.Name}".Green(), ": ");
+                                ColorConsole.Write($"{prop.Name}".Green(), $"({prop.PropertyType}): ");
                                 var val = Console.ReadLine();
                                 if (!string.IsNullOrEmpty(val) && value.ToString() != val.Trim())
                                 {
@@ -73,7 +86,7 @@
 
                         if (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0))
                         {
-                            ColorConsole.WriteLine("\n> ".Green(), $"Enter the Urls to benchmark (comma-separated): ");
+                            ColorConsole.WriteLine("\n> ".Green(), "Enter the Urls to benchmark (comma-separated): ");
                             var urls = Console.ReadLine();
                             if (!string.IsNullOrWhiteSpace(urls))
                             {
@@ -95,7 +108,14 @@
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                            await perf.Execute();
+                            results = await perf.Execute();
+                            ColorConsole.Write("\n> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
+                            var result = Console.ReadKey();
+                            ColorConsole.WriteLine();
+                            if (result.Key == ConsoleKey.Y)
+                            {
+                                await perf.LogAppInsights(results);
+                            }
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))
@@ -120,6 +140,7 @@
                 {
                     "--------------------------------------------------------------".Green(),
                     "\nEnter ", "r".Green(), " to run the benchmarks",
+                    "\nEnter ", "l".Green(), " to fetch logs for the previous run (app-insights durations)",
                     "\nEnter ", "c".Green(), " to clear the console",
                     "\nEnter ", "q".Green(), " to quit",
                     "\nEnter ", "?".Green(), " to print this help"
