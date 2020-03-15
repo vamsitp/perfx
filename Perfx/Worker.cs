@@ -29,7 +29,9 @@
             var tenant = string.Empty;
             PrintHelp();
             var records = Utils.ReadResults<Record>()?.ToList();
-            while (!stopToken.IsCancellationRequested)
+            var breakLoop = false;
+            Console.CancelKeyPress += (sender, e) => breakLoop = true;
+            while (!stopToken.IsCancellationRequested && !breakLoop)
             {
                 try
                 {
