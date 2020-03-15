@@ -19,6 +19,9 @@
     {
         private const string ResultsFileName = "Perfx.csv";
         private const int MaxBarLength = 100;
+        private const string VerticalChar = "│"; // "┃"
+        private const char HorizontalChar = '─'; // '━'
+        private const string BroderChar = "└"; // "┗"
 
         // Credits: https://devblogs.microsoft.com/pfxteam/processing-tasks-as-they-complete, https://stackoverflow.com/a/58194681
         public static Task<Task<T>>[] Interleaved<T>(this IEnumerable<Task<T>> tasks)
@@ -84,7 +87,7 @@
         public static ColorToken GetColorToken(this double duration, char padChar = '.', int max = MaxBarLength)
         {
             var sec = (int)Math.Round(duration / 1000);
-            var bar = string.Empty.PadLeft(sec > 1 ? (sec > max ? max : sec) : 1, padChar);
+            var bar = string.Empty.PadLeft(sec >= 1 ? (sec > max ? max : sec) : 1, padChar);
             return duration.GetColorToken(bar);
         }
 
@@ -112,7 +115,7 @@
             return coloredBar;
         }
 
-        public static void DrawTable(this List<LogRecord> aiLogs, List<(string traceId, double duration)> traceIds)
+        public static void DrawTable(this List<Record> records)
         {
             // Credit: https://stackoverflow.com/a/49032729
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
@@ -139,14 +142,14 @@
                                         new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " result " } },
                                         new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " ai_duration " } },
                                         new Cell { Stroke = headerThickness, Color = ConsoleColor.DarkGreen, Background = ConsoleColor.White, Children = { " perfx_duration " } },
-                                        aiLogs.Select(log => new[]
+                                        records.Select(record => new[]
                                         {
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { log.id } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { log.url } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { log.operation_ParentId } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { log.resultCode } },
-                                            new Cell { Stroke = rowThickness, Color = log.duration.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { log.duration.ToString("F2") + "ms / " + $"{(log.duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture)}s" } },
-                                            new Cell { Stroke = rowThickness, Color = traceIds.SingleOrDefault(t => t.traceId.Equals(log.operation_ParentId, StringComparison.OrdinalIgnoreCase)).duration.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { traceIds.SingleOrDefault(t => t.traceId.Equals(log.operation_ParentId, StringComparison.OrdinalIgnoreCase)).duration.ToString("F2") + "ms / " + $"{(traceIds.SingleOrDefault(t => t.traceId.Equals(log.operation_ParentId, StringComparison.OrdinalIgnoreCase)).duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture)}s" } }
+                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { record.id } },
+                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
+                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.traceId } },
+                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result } },
+                                            new Cell { Stroke = rowThickness, Color = record.ai_duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(true, true) + " / " + record.GetDurationInSecString(true, true) } },
+                                            new Cell { Stroke = rowThickness, Color = record.duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(suffixUnit: true) + " / " + record.GetDurationInSecString(suffixUnit: true) } }
                                         })
                             }
                         }
@@ -155,32 +158,34 @@
             ConsoleRenderer.RenderDocument(doc);
         }
 
-        public static void DrawChart(this List<(string traceId, double duration)> traceIds)
+        public static void DrawChart(this List<Record> records)
         {
-            var maxIdLength = traceIds.Max(x => x.traceId.Length);
-            var maxDurationLength = (int)Math.Round(traceIds.Max(x => x.duration / 1000));
-            foreach (var item in traceIds)
+            var maxIdLength = records.Max(x => $"{x.id.ToString()} {x.url}".Length);
+            var maxDurationLength = records.Max(x => x.GetDurationInSec());
+            foreach (var record in records)
             {
-                ColorConsole.WriteLine("|".PadLeft(maxIdLength + 2).Green());
-                ColorConsole.Write(item.traceId.PadLeft(maxIdLength));
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan()); // , record.traceId
+                ColorConsole.Write(record.id.ToString().Green(), record.url.PadLeft(maxIdLength - record.id.ToString().Length));
                 ColorConsole.Write(" ");
-                ColorConsole.Write("|".Green(), item.duration.GetColorToken(' '));
+                ColorConsole.Write(VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '));
                 ColorConsole.Write(" ");
-                ColorConsole.WriteLine(Math.Round(item.duration / 1000).ToString(), "s".Green());
+                ColorConsole.WriteLine(record.GetDurationInSecString(), "s".Green());
             }
 
-            // ColorConsole.WriteLine("|".PadLeft(maxIdLength + 2).Green());
-            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 1), string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 1 : maxDurationLength, '-'), "[".Green(), "100", "]".Green()); // '̅'
+            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 1),
+                BroderChar.DarkCyan(),
+                string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
+                "[", "100".DarkCyan(), "]");
         }
 
-        public static void SaveToFile(this IEnumerable<(string traceId, double duration)> items, string fileName = ResultsFileName)
+        public static void SaveToFile(this IEnumerable<Record> items, string fileName = ResultsFileName)
         {
             var file = fileName.GetFullPath();
             using (var reader = File.CreateText(file))
             {
                 using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
                 {
-                    csvWriter.WriteRecords(items.Select(r => new { r.traceId, r.duration }));
+                    csvWriter.WriteRecords(items);
                 }
             }
         }

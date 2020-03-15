@@ -28,11 +28,7 @@
         {
             var tenant = string.Empty;
             PrintHelp();
-            var results = Utils.ReadResults<dynamic>()?.Select(x =>
-            {
-                (string traceId, double duration) r = (x.traceId, double.Parse(x.duration));
-                return r;
-            })?.ToList();
+            var records = Utils.ReadResults<Record>()?.ToList();
             while (!stopToken.IsCancellationRequested)
             {
                 try
@@ -59,20 +55,22 @@
                     }
                     else if (key.StartsWith("l", StringComparison.OrdinalIgnoreCase) || key.StartsWith("a", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (results?.Count > 0)
+                        if (records?.Count > 0)
                         {
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                                await perf.LogAppInsights(results);
+                                await perf.ExecuteAppInsights(records);
+                                records.SaveToFile();
+                                records.DrawChart();
                             }
                         }
                     }
                     else if (key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (results?.Count > 0)
+                        if (records?.Count > 0)
                         {
-                            results.DrawChart();
+                            records.DrawChart();
                         }
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
@@ -118,17 +116,18 @@
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                            results = await perf.Execute();
-                            ColorConsole.Write("\n> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
+                            records = await perf.Execute();
+                            ColorConsole.Write("> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadKey();
                             ColorConsole.WriteLine();
                             if (result.Key == ConsoleKey.Y)
                             {
                                 ColorConsole.WriteLine();
-                                await perf.LogAppInsights(results);
+                                await perf.ExecuteAppInsights(records);
                             }
 
-                            results.DrawChart();
+                            records.SaveToFile();
+                            records.DrawChart();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))

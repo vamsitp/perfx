@@ -6,7 +6,10 @@ Azure API Performance benchmarking tool
 #### USAGE
 `perfx`
 
+> Results are saved to your `Documents` folder with the name: **`Perfx.csv`**
+
   ![Screenshot](Screenshot.png)
+  ![Screenshot2](Screenshot2.png)
 
 - Enter **`r`** to **run** the benchmarks
 - Enter **`l`** to fetch **logs** for the previous run (app-insights `durations`) 

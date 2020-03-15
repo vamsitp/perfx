@@ -42,54 +42,42 @@
             this.jsonSerializer = jsonSerializer;
         }
 
-        public async Task<List<(string traceId, double duration)>> Execute()
+        public async Task<List<Record>> Execute()
         {
             ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
             ColorConsole.WriteLine("Iterations: ", settings.Iterations.ToString().Green(), "\n");
 
             var endpointTasks = settings.Endpoints.Select((ep, i) => Execute(ep, i + 1, settings.Iterations));
             var results = await Task.WhenAll(endpointTasks);
-            ////await foreach (var results in await tasks.WhenEach())
-            //foreach (var results in await Task.WhenAll(tasks))
-            //{
-            //    foreach (var result in results)
-            //    {
-            //        var bar = string.Empty.PadLeft((int)Math.Round(result.duration / 1000, MidpointRounding.AwayFromZero), ' ');
-            //        ColorConsole.WriteLine($"{result.index + 1}. ".Green(), result.endpoint, " (", result.traceId.Green(), ")", ": ".Green(), result.duration.ToString("F2", CultureInfo.InvariantCulture), " ms".Green(), " (~", (result.duration / 1000.00).ToString("F2", CultureInfo.InvariantCulture), " s".Green(), ") ", bar.OnGreen());
-            //    }
-            //}
-
-            var traceIds = results.SelectMany(e => e.Select(r => (r.traceId, r.duration))).ToList();
-            traceIds.SaveToFile();
-            return traceIds;
+            var records = results.SelectMany(e => e).ToList();
+            return records;
         }
 
-        private async Task<(int index, string endpoint, string traceId, double duration)[]> Execute(string endpoint, float topIndex, int interations)
+        private async Task<IEnumerable<Record>> Execute(string endpoint, float topIndex, int interations)
         {
             var result = await Task.WhenAll(Enumerable.Range(0, interations).Select(async i =>
             {
-                var traceId = Guid.NewGuid().ToString();
-                var response = await ProcessRequest(endpoint, traceId);
-                string result = response.status;
+                var record = new Record {id = float.Parse($"{topIndex}.{i + 1}"), traceId = Guid.NewGuid().ToString(), url = endpoint };
+                var response = await ProcessRequest(record);
                 await Lock.WaitAsync();
-                Log(endpoint, topIndex, i, traceId, response.duration, result);
+                Log(record);
                 Lock.Release();
-                return (i, endpoint, traceId, response.duration);
+                return record;
             }));
 
             return result;
         }
 
-        private void Log(string endpoint, float topIndex, int i, string traceId, double duration, string result)
+        private void Log(Record record)
         {
-            var id = $"{topIndex}.{i + 1}";
-            ColorConsole.WriteLine($"{id} ", endpoint.Green(), "\n",
-                "stat".PadLeft(id.Length + 5).Green(), $": {result}", "\n",
-                "opid".PadLeft(id.Length + 5).Green(), ": ", traceId, "\n",
-                "time".PadLeft(id.Length + 5).Green(), ": ", duration.GetColorToken(" "), " ", duration.ToString("F2", CultureInfo.InvariantCulture), "ms".Green(), " (~", (duration / 1000.00).ToString("F1", CultureInfo.InvariantCulture), "s".Green(), ") ", "\n");
+            var id = record.id.ToString();
+            ColorConsole.WriteLine($"{id} ", record.url.Green(), "\n",
+                "stat".PadLeft(id.Length + 5).Green(), $": {record.result}", "\n",
+                "opid".PadLeft(id.Length + 5).Green(), ": ", record.traceId, "\n",
+                "time".PadLeft(id.Length + 5).Green(), ": ", record.duration_ms.GetColorToken(" "), " ", record.GetDurationString(), "ms".Green(), " (~", record.GetDurationInSecString(), "s".Green(), ") ", "\n");
         }
 
-        public async Task LogAppInsights(List<(string traceId, double duration)> traceIds)
+        public async Task ExecuteAppInsights(List<Record> records)
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
@@ -100,8 +88,8 @@
                 do
                 {
                     i++;
-                    aiLogs = (await logDataService.GetLogs(traceIds.Select(t => t.traceId)))?.ToList();
-                    found = aiLogs?.Count >= traceIds.Count;
+                    aiLogs = (await logDataService.GetLogs(records.Select(t => t.traceId)))?.ToList();
+                    found = aiLogs?.Count >= records.Count;
                     ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
                     await Task.Delay(1000);
                 }
@@ -109,8 +97,15 @@
 
                 if (aiLogs?.Count > 0)
                 {
+                    aiLogs.ForEach(ai =>
+                    {
+                        var record = records.SingleOrDefault(t => t.traceId.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
+                        record.ai_duration_ms = ai.duration;
+                        record.ai_op_Id = ai.operation_Id;
+                        // TODO: Rest of the props
+                    });
                     ColorConsole.WriteLine();
-                    aiLogs.DrawTable(traceIds);
+                    records.DrawTable();
                 }
                 else
                 {
@@ -119,22 +114,20 @@
             }
         }
 
-        private async Task<(string status, double duration)> ProcessRequest(string endpoint, string traceId)
+        private async Task<Record> ProcessRequest(Record record)
         {
-            double elapsedTime;
-            var result = string.Empty;
             var token = this.settings.Token;
             this.client.DefaultRequestHeaders.Clear();
             this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            this.client.DefaultRequestHeaders.Add(RequestId, traceId);
+            this.client.DefaultRequestHeaders.Add(RequestId, record.traceId);
             var taskWatch = Stopwatch.StartNew();
             try
             {
                 // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
                 // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-                var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, endpoint), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
-                elapsedTime = taskWatch.ElapsedMilliseconds;
-                result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
+                var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
+                record.duration_ms = taskWatch.ElapsedMilliseconds;
+                record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
                 //using (var responseStream = await response.Content.ReadAsStreamAsync())
                 //{
                 //    using (var streamReader = new StreamReader(responseStream))
@@ -161,11 +154,11 @@
             }
             catch (Exception ex)
             {
-                elapsedTime = taskWatch.ElapsedMilliseconds;
+                record.duration_ms = taskWatch.ElapsedMilliseconds;
                 ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
 
-            return (result, elapsedTime);
+            return record;
         }
 
         protected virtual void Dispose(bool disposing)
