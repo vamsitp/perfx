@@ -64,7 +64,7 @@
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
                                 await perf.ExecuteAppInsights(records);
                                 records.SaveToFile();
-                                records.DrawChart();
+                                records.DrawCharts();
                             }
                         }
                     }
@@ -72,7 +72,7 @@
                     {
                         if (records?.Count > 0)
                         {
-                            records.DrawChart();
+                            records.DrawCharts();
                         }
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
@@ -129,7 +129,7 @@
                             }
 
                             records.SaveToFile();
-                            records.DrawChart();
+                            records.DrawCharts();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))

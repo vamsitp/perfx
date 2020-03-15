@@ -15,6 +15,8 @@
     using CsvHelper;
     using CsvHelper.Configuration;
 
+    using MathNet.Numerics.Statistics;
+
     public static class Utils
     {
         private const string ResultsFileName = "Perfx.csv";
@@ -158,8 +160,15 @@
             ConsoleRenderer.RenderDocument(doc);
         }
 
+        public static void DrawCharts(this List<Record> records)
+        {
+            records.DrawChart();
+            records.DrawPercentilesChart();
+        }
+
         public static void DrawChart(this List<Record> records)
         {
+            ColorConsole.WriteLine("\n", " RESPONSES ".White().OnDarkCyan(), " ");
             var maxIdLength = records.Max(x => $"{x.id.ToString()} {x.url}".Length);
             var maxDurationLength = records.Max(x => x.GetDurationInSec());
             foreach (var record in records)
@@ -172,7 +181,40 @@
                 ColorConsole.WriteLine(record.GetDurationInSecString(), "s".Green());
             }
 
-            ColorConsole.Write(string.Empty.PadLeft(maxIdLength + 1),
+            ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
+                BroderChar.DarkCyan(),
+                string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
+                "[", "100".DarkCyan(), "]");
+        }
+
+        public static void DrawPercentilesChart(this List<Record> records)
+        {
+            ColorConsole.WriteLine("\n", " STATS ".White().OnDarkCyan(), " ");
+            var maxIdLength = 7;
+            var maxDurationLength = records.Max(x => x.GetDurationInSec());
+            var stats = new Dictionary<string, double>
+            {
+                { "min", records.Min(x => x.duration_ms) },
+                { "max", records.Max(x => x.duration_ms) },
+                { "avg", records.Average(x => x.duration_ms) },
+                { "std-dev", records.Select(x => x.duration_ms).StandardDeviation() },
+                { "50%", records.Select(x => x.duration_ms).Percentile(50) },
+                { "90%", records.Select(x => x.duration_ms).Percentile(90) },
+                { "95%", records.Select(x => x.duration_ms).Percentile(95) },
+                { "99%", records.Select(x => x.duration_ms).Percentile(99) },
+            };
+
+            foreach (var record in stats)
+            {
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan()); // , record.traceId
+                ColorConsole.Write(record.Key.PadLeft(maxIdLength).Green());
+                ColorConsole.Write(" ");
+                ColorConsole.Write(VerticalChar.DarkCyan(), record.Value.GetColorToken(' '));
+                ColorConsole.Write(" ");
+                ColorConsole.WriteLine((record.Value / 1000).ToString("F1"), "s".Green());
+            }
+
+            ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
                 BroderChar.DarkCyan(),
                 string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
                 "[", "100".DarkCyan(), "]");

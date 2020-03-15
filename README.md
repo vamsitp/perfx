@@ -88,3 +88,16 @@ dotnet tool install -g --add-source ./bin perfx
 # Publish package to nuget.org
 nuget push ./bin/Perfx.1.0.0.nupkg -ApiKey <key> -Source https://api.nuget.org/v3/index.json
 ```
+
+---
+
+**NOTICES**
+
+ | Package-ID                                        | Package-Version  | License-Type         | License-Url                                                                           |
+ |---------------------------------------------------|------------------|----------------------|-----------------------------------------------------------------------------------|
+ | Alba.CsConsoleFormat.ColorfulConsole-NoXaml       | 1.0.0            | Apache-2.0           | https://github.com/Athari/CsConsoleFormat/blob/master/License.md                  |
+ | ColoredConsole                                    | 1.0.0            | MIT                  | https://github.com/colored-console/colored-console/blob/dev/license.txt           |
+ | CsvHelper                                         | 15.0.1           | MS-PL / Apache-2.0   | https://licenses.nuget.org/MS-PL%20OR%20Apache-2.0                                |
+ | Flurl.Http                                        | 2.4.2            | MIT                  | https://licenses.nuget.org/MIT                                                    |
+ | MathNet.Numerics                                  | 4.9.0            | MIT / X11            | https://numerics.mathdotnet.com/License.html                                      |
+ | Newtonsoft.Json                                   | 12.0.3           | MIT                  | https://licenses.nuget.org/MIT                                                    |
