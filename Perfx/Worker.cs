@@ -44,7 +44,7 @@
                     }
                     else if (key.StartsWith("q", StringComparison.OrdinalIgnoreCase) || key.StartsWith("exit", StringComparison.OrdinalIgnoreCase) || key.StartsWith("close", StringComparison.OrdinalIgnoreCase))
                     {
-                        ColorConsole.WriteLine("DONE!".White().OnDarkGreen());
+                        // ColorConsole.WriteLine(" Quiting... ".White().OnDarkGreen());
                         break;
                     }
                     else if (key.Equals("?") || key.StartsWith("help", StringComparison.OrdinalIgnoreCase))
