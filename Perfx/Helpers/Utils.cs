@@ -99,13 +99,23 @@
             return coloredBar;
         }
 
+        public static ColorToken GetColorToken(this string result)
+        {
+            return result.Color(result.GetColor());
+        }
+
+        public static ConsoleColor GetColor(this string result)
+        {
+            return result.Contains("200") ? ConsoleColor.DarkGreen : (result.Contains(": ") ? ConsoleColor.DarkYellow : ConsoleColor.Red);
+        }
+
         public static void DrawTable(this List<Record> records)
         {
             // Credit: https://stackoverflow.com/a/49032729
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
             var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
             var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
-            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " ai_duration ", " perfx_duration " };
+            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " ai ", " perfx " };
             var doc = new Document(
                         new Grid
                         {
@@ -117,13 +127,13 @@
                             },
                             Children =
                             {
-                                headers.Select(header => new Cell { Stroke = headerThickness, Color = header.Equals(" perfx_duration ") ? ConsoleColor.DarkGreen : ConsoleColor.White, Background = header.Equals(" perfx_duration ") ? ConsoleColor.White : ConsoleColor.DarkGreen, Children = { header } }),
+                                headers.Select(header => new Cell { Stroke = headerThickness, Color = header.Equals(" perfx ") ? ConsoleColor.DarkGreen : ConsoleColor.White, Background = header.Equals(" perfx ") ? ConsoleColor.White : ConsoleColor.DarkGreen, Children = { header } }),
                                 records.Select(record => new[]
                                 {
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { record.id } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.traceId } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.op_Id } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result }, Color = record.result.GetColor() },
                                     new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_ms_str + "ms / " + record.ai_s_str + "s" } },
                                     new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_ms_str + "ms / " + record.local_s_str + "s" } }
                                 })
@@ -136,6 +146,7 @@
 
         public static void DrawStats(this List<Record> records)
         {
+            records.DrawTable();
             records.DrawChart();
             records.DrawPercentilesTable();
         }
@@ -148,7 +159,7 @@
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.traceId.DarkGray(), " / ".Green(), record.result.DarkGray(), " / ".Green(), record.url.DarkGray());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ".Green(), record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
                 ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.duration_s_str, "s".Green());
             }
 

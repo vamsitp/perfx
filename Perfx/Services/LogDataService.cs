@@ -3,6 +3,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Threading;
     using System.Threading.Tasks;
 
     using Flurl.Http;
@@ -31,7 +32,7 @@
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<LogRecord>> GetLogs(IEnumerable<string> traceIds, string timeframe = "60m")
+        public async Task<IEnumerable<LogRecord>> GetLogs(IEnumerable<string> traceIds, CancellationToken stopToken = default, string timeframe = "60m")
         {
             var subquery = "and (" + string.Join(" ", traceIds.Select((t, i) => (i == 0 ? string.Empty : "or ") + $"* contains '{t}'")) + ") ";
             var query = string.Format(Query, timeframe, subquery);
@@ -40,7 +41,7 @@
             var response = await req.WithHeader("x-api-key", this.settings.AppInsightsApiKey)
                 .WithHeader("Accept", "application/json")
                 .WithHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-                .PostJsonAsync(new { query })
+                .PostJsonAsync(new { query }, stopToken)
                 .ReceiveJson<LogData>();
 
             var results = new List<LogRecord>();

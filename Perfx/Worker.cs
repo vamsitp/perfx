@@ -1,6 +1,7 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -10,18 +11,21 @@
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     public class Worker : BackgroundService
     {
         private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
+        private readonly ILogger<Worker> logger;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger)
         {
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
+            this.logger = logger;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stopToken)
@@ -29,15 +33,7 @@
             var tenant = string.Empty;
             PrintHelp();
             var records = Utils.ReadResults<Record>()?.ToList();
-            var breakLoop = false;
-            Console.CancelKeyPress += (sender, e) =>
-            {
-                // System.Diagnostics.Debug.WriteLine("IsCancellationRequested: " + stopToken.IsCancellationRequested);
-                // e.Cancel = true;
-                breakLoop = true;
-            };
-
-            while (!stopToken.IsCancellationRequested && !breakLoop)
+            while (!stopToken.IsCancellationRequested)
             {
                 try
                 {
@@ -68,9 +64,7 @@
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                                var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
-                                var timeframe = split.Length > 1 ? split[1] : "60m";
-                                await perf.ExecuteAppInsights(records, timeframe);
+                                await ExecuteAppInsights(records, key, perf, stopToken);
                                 records.SaveToFile();
                                 records.DrawStats();
                             }
@@ -126,14 +120,13 @@
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                            records = await perf.Execute();
+                            records = await perf.Execute(stopToken);
                             ColorConsole.Write("> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
-                            var result = Console.ReadKey();
-                            ColorConsole.WriteLine();
-                            if (result.Key == ConsoleKey.Y)
+                            var result = Console.ReadLine();
+                            if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
                             {
                                 ColorConsole.WriteLine();
-                                await perf.ExecuteAppInsights(records);
+                                await ExecuteAppInsights(records, result, perf, stopToken);
                             }
 
                             records.SaveToFile();
@@ -155,6 +148,14 @@
             // Clean-up on cancellation
         }
 
+        private static async Task ExecuteAppInsights(List<Record> records, string key, PerfRunner perf, CancellationToken stopToken)
+        {
+            var split = key.Split(new[] { ':', '=', '-', '/' }, 3);
+            var timeframe = split.Length > 1 ? split[1] : "60m";
+            var retries = split.Length > 2 && int.TryParse(split[2], out var r) ? r : 60;
+            await perf.ExecuteAppInsights(records, timeframe, retries, stopToken);
+        }
+
         private static void PrintHelp()
         {
             ColorConsole.WriteLine(
@@ -163,7 +164,7 @@
                     "--------------------------------------------------------------".Green(),
                     "\nEnter ", "r".Green(), " to run the benchmarks",
                     "\nEnter ", "s".Green(), " to print the stats/details for the previous run",
-                    "\nEnter ", "l".Green(), ":1h".DarkGray(), " to fetch logs for the previous run in the last ", "1 hour".DarkGray(), " (app-insights durations)",
+                    "\nEnter ", "l".Green(), ":1h".DarkGray(), ":10".DarkGray(), " to fetch logs for the previous run in the last ", "1 hour".DarkGray(), " with", " 10 retries".DarkGray(), " (app-insights durations)",
                     "\nEnter ", "c".Green(), " to clear the console",
                     "\nEnter ", "q".Green(), " to quit",
                     "\nEnter ", "?".Green(), " to print this help"

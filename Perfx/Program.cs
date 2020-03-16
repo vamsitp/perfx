@@ -3,7 +3,9 @@
     using System;
     using System.Text;
     using System.Threading.Tasks;
+
     using ColoredConsole;
+
     using Microsoft.Extensions.Configuration;
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Hosting;
@@ -22,6 +24,7 @@
             IConfiguration configuration = null;
             var builder = Host
                             .CreateDefaultBuilder(args)
+                            //.ConfigureHostConfiguration(configHost => { })
                             .ConfigureAppConfiguration((hostContext, config) =>
                             {
                                 config.AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true);
@@ -39,6 +42,7 @@
                                     .AddSingleton<JsonSerializer>()
                                     .AddHttpClient(nameof(Perfx))
                                     .AddHttpMessageHandler<TimingHandler>();
+                                //services.AddOptions<HostOptions>().Configure(o => o.ShutdownTimeout = TimeSpan.FromSeconds(10));
                             })
                             .ConfigureLogging((hostContext, logging) =>
                             {
@@ -49,9 +53,26 @@
                                 .AddConsole();
                             })
                             .UseConsoleLifetime();
+                            //.UseSystemd();
 
             try
             {
+                //var build = builder.Build();
+                //using (var cancellationTokenSource = new CancellationTokenSource())
+                //{
+                //    Console.CancelKeyPress += (sender, e) =>
+                //    {
+                //        //ColorConsole.Write("\n> ".Green(), "Quit? ", " (Y/N) ".Green());
+                //        //var quit = Console.ReadKey();
+                //        //if (quit.Key != ConsoleKey.Y)
+                //        //{
+                //        e.Cancel = true;
+                //        cancellationTokenSource.Cancel();
+                //        //}
+                //    };
+
+                //    await build.StartAsync(cancellationTokenSource.Token);
+                //}
                 await builder.RunConsoleAsync(options => options.SuppressStatusMessages = true);
             }
             catch (Exception ex)
