@@ -3,7 +3,6 @@
     using System;
     using System.Collections.Generic;
     using System.Diagnostics;
-    using System.Globalization;
     using System.Linq;
     using System.Net.Http;
     using System.Threading;
@@ -11,6 +10,7 @@
 
     using ColoredConsole;
 
+    using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
     using Newtonsoft.Json;
@@ -23,6 +23,7 @@
         private const string Bearer = "Bearer ";
 
         private readonly JsonSerializer jsonSerializer;
+        private readonly ILogger<PerfRunner> logger;
         private readonly LogDataService logDataService;
         private bool disposedValue = false;
 
@@ -32,7 +33,7 @@
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
-        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer)
+        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer, ILogger<PerfRunner> logger)
         {
             client = httpClientFactory.CreateClient(nameof(Perfx));
             client.Timeout = Timeout.InfiniteTimeSpan;
@@ -40,6 +41,7 @@
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.logDataService = logDataService;
             this.jsonSerializer = jsonSerializer;
+            this.logger = logger;
         }
 
         public async Task<List<Record>> Execute()
@@ -155,7 +157,8 @@
             catch (Exception ex)
             {
                 record.duration_ms = taskWatch.ElapsedMilliseconds;
-                ColorConsole.WriteLine(ex.Message.White().OnRed());
+                ColorConsole.WriteLine(string.Empty.PadLeft(record.id.ToString().Length + 5), ex.Message.White().OnRed(), ": ", record.url.DarkGray(), $" (", record.traceId.DarkGray(), ")");
+                this.logger.LogError($"{ex.Message.White()}: {record.url} ({record.traceId})");
             }
 
             return record;

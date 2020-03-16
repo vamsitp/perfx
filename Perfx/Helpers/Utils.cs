@@ -148,7 +148,7 @@
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.traceId.DarkGray(), " / ".Green(), record.url.DarkGray());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.traceId.DarkGray(), " / ".Green(), record.result.DarkGray(), " / ".Green(), record.url.DarkGray());
                 ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.GetDurationInSecString(), "s".Green());
             }
 
