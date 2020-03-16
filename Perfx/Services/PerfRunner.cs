@@ -77,7 +77,7 @@
                 "time".PadLeft(id.Length + 5).Green(), ": ", record.duration_ms.GetColorToken(" "), " ", record.GetDurationString(), "ms".Green(), " (~", record.GetDurationInSecString(), "s".Green(), ") ", "\n");
         }
 
-        public async Task ExecuteAppInsights(List<Record> records)
+        public async Task ExecuteAppInsights(List<Record> records, string timeframe = "60m")
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
@@ -88,7 +88,7 @@
                 do
                 {
                     i++;
-                    aiLogs = (await logDataService.GetLogs(records.Select(t => t.traceId)))?.ToList();
+                    aiLogs = (await logDataService.GetLogs(records.Select(t => t.traceId), timeframe))?.ToList();
                     found = aiLogs?.Count >= records.Count;
                     ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
                     await Task.Delay(1000);

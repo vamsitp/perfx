@@ -134,7 +134,7 @@
             ConsoleRenderer.RenderDocument(doc);
         }
 
-        public static void DrawCharts(this List<Record> records)
+        public static void DrawStats(this List<Record> records)
         {
             records.DrawChart();
             records.DrawPercentilesTable();
@@ -142,14 +142,14 @@
 
         public static void DrawChart(this List<Record> records)
         {
-            ColorConsole.WriteLine("\n", " Responses ".White().OnGreen(), ":");
+            ColorConsole.WriteLine("\n\n", " Responses ".White().OnGreen());
             var maxIdLength = records.Max(x => x.id.ToString().Length);
             var maxDurationLength = records.Max(x => x.GetDurationInSec());
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.traceId, " / ".Green(), record.url);
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.GetDurationInSecString(), "s".Green());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.traceId.DarkGray(), " / ".Green(), record.url.DarkGray());
+                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.GetDurationInSecString(), "s".Green());
             }
 
             ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
@@ -160,73 +160,81 @@
 
         public static void DrawPercentilesChart(this List<Record> records)
         {
-            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen(), ":");
+            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             var maxIdLength = 7;
             var maxDurationLength = records.Max(x => x.GetDurationInSec());
-            var stats = new Dictionary<string, double>
+            foreach (var group in records.GroupBy(r => r.url))
             {
-                { "min", records.Min(x => x.duration_ms) },
-                { "max", records.Max(x => x.duration_ms) },
-                { "mean", records.Select(x => x.duration_ms).Mean() },
-                { "median", records.Select(x => x.duration_ms).Median() },
-                { "std-dev", records.Select(x => x.duration_ms).StandardDeviation() },
-                { "90%", records.Select(x => x.duration_ms).Percentile(90) },
-                { "95%", records.Select(x => x.duration_ms).Percentile(95) },
-                { "99%", records.Select(x => x.duration_ms).Percentile(99) },
-            };
+                ColorConsole.WriteLine("\n ", group.Key.Green());
+                var stats = new Dictionary<string, double>
+                {
+                    { "min", group.Min(x => x.duration_ms) },
+                    { "max", group.Max(x => x.duration_ms) },
+                    { "mean", group.Select(x => x.duration_ms).Mean() },
+                    { "median", group.Select(x => x.duration_ms).Median() },
+                    { "std-dev", group.Select(x => x.duration_ms).StandardDeviation() },
+                    { "90%", group.Select(x => x.duration_ms).Percentile(90) },
+                    { "95%", group.Select(x => x.duration_ms).Percentile(95) },
+                    { "99%", group.Select(x => x.duration_ms).Percentile(99) },
+                };
 
-            foreach (var record in stats)
-            {
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.Write(record.Key.PadLeft(maxIdLength).Green());
-                ColorConsole.Write(" ");
-                ColorConsole.Write(VerticalChar.DarkCyan(), record.Value.GetColorToken(' '));
-                ColorConsole.Write(" ");
-                ColorConsole.WriteLine((record.Value / 1000).ToString("F1"), "s".Green());
+                foreach (var record in stats)
+                {
+                    ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
+                    ColorConsole.Write(record.Key.PadLeft(maxIdLength).Green());
+                    ColorConsole.Write(" ");
+                    ColorConsole.Write(VerticalChar.DarkCyan(), record.Value.GetColorToken(' '));
+                    ColorConsole.Write(" ");
+                    ColorConsole.WriteLine((record.Value / 1000).ToString("F1"), "s".Green());
+                }
+
+                ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
+                    BroderChar.DarkCyan(),
+                    string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
+                    "[", "100".DarkCyan(), "]");
             }
-
-            ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
-                BroderChar.DarkCyan(),
-                string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
-                "[", "100".DarkCyan(), "]");
         }
 
         public static void DrawPercentilesTable(this List<Record> records)
         {
-            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen(), ":");
-            var stats = new Dictionary<string, double>
+            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
+            foreach (var group in records.GroupBy(r => r.url))
             {
-                { " min ", records.Min(x => x.duration_ms) },
-                { " max ", records.Max(x => x.duration_ms) },
-                { " mean ", records.Select(x => x.duration_ms).Mean() },
-                { " median ", records.Select(x => x.duration_ms).Median() },
-                { " std-dev ", records.Select(x => x.duration_ms).StandardDeviation() },
-                { " 90% ", records.Select(x => x.duration_ms).Percentile(90) },
-                { " 95% ", records.Select(x => x.duration_ms).Percentile(95) },
-                { " 99% ", records.Select(x => x.duration_ms).Percentile(99) },
-            };
+                ColorConsole.WriteLine("\n ", group.Key.Green());
+                var stats = new Dictionary<string, double>
+                {
+                    { " min ", group.Min(x => x.duration_ms) },
+                    { " max ", group.Max(x => x.duration_ms) },
+                    { " mean ", group.Select(x => x.duration_ms).Mean() },
+                    { " median ", group.Select(x => x.duration_ms).Median() },
+                    { " std-dev ", group.Select(x => x.duration_ms).StandardDeviation() },
+                    { " 90% ", group.Select(x => x.duration_ms).Percentile(90) },
+                    { " 95% ", group.Select(x => x.duration_ms).Percentile(95) },
+                    { " 99% ", group.Select(x => x.duration_ms).Percentile(99) },
+                };
 
-            var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
-            var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
-            var doc = new Document(
-                        new Grid
-                        {
-                            Stroke = new LineThickness(LineWidth.None),
-                            StrokeColor = ConsoleColor.DarkGray,
-                            Columns =
+                var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
+                var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
+                var doc = new Document(
+                            new Grid
                             {
-                                Enumerable.Range(0, stats.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
-                            },
-                            Children =
-                            {
-                                stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.White, Children = { stat.Key } }),
-                                stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {stat.Value.ToString("F2") }ms " } }),
-                                stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {(stat.Value / 1000).ToString("F1")}s " } })
+                                Stroke = new LineThickness(LineWidth.None),
+                                StrokeColor = ConsoleColor.DarkGray,
+                                Columns =
+                                {
+                                    Enumerable.Range(0, stats.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
+                                },
+                                Children =
+                                {
+                                    stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { stat.Key } }),
+                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {stat.Value.ToString("F2") }ms " } }),
+                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {(stat.Value / 1000).ToString("F1")}s " } })
+                                }
                             }
-                        }
-                     );
+                         );
 
-            ConsoleRenderer.RenderDocument(doc);
+                ConsoleRenderer.RenderDocument(doc);
+            }
         }
 
         public static void SaveToFile(this IEnumerable<Record> items, string fileName = ResultsFileName)

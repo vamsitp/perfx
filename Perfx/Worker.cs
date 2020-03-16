@@ -62,17 +62,19 @@
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                                await perf.ExecuteAppInsights(records);
+                                var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
+                                var timeframe = split.Length > 1 ? split[1] : "60m";
+                                await perf.ExecuteAppInsights(records, timeframe);
                                 records.SaveToFile();
-                                records.DrawCharts();
+                                records.DrawStats();
                             }
                         }
                     }
-                    else if (key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
+                    else if (key.StartsWith("s", StringComparison.OrdinalIgnoreCase) || key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
                     {
                         if (records?.Count > 0)
                         {
-                            records.DrawCharts();
+                            records.DrawStats();
                         }
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
@@ -129,7 +131,7 @@
                             }
 
                             records.SaveToFile();
-                            records.DrawCharts();
+                            records.DrawStats();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))
@@ -154,7 +156,8 @@
                 {
                     "--------------------------------------------------------------".Green(),
                     "\nEnter ", "r".Green(), " to run the benchmarks",
-                    "\nEnter ", "l".Green(), " to fetch logs for the previous run (app-insights durations)",
+                    "\nEnter ", "s".Green(), " to print the stats/details for the previous run",
+                    "\nEnter ", "l".Green(), ":1h".DarkGray(), " to fetch logs for the previous run in the last ", "1 hour".DarkGray(), " (app-insights durations)",
                     "\nEnter ", "c".Green(), " to clear the console",
                     "\nEnter ", "q".Green(), " to quit",
                     "\nEnter ", "?".Green(), " to print this help"
