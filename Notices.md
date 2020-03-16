@@ -1,0 +1,8 @@
+ | #  | Package                                                                                                  | Version  | License                                                                                   | 
+ | -- | -------------------------------------------------------------------------------------------------------- | -------- | ----------------------------------------------------------------------------------------- | 
+ | 1  | [Alba.CsConsoleFormat.ColorfulConsole-NoXaml](https://github.com/Athari/CsConsoleFormat)                 | 1.0.0    | [Apache-2.0](https://github.com/Athari/CsConsoleFormat/blob/master/License.md)                   | 
+ | 2  | [ColoredConsole](https://github.com/colored-console/colored-console)                                     | 1.0.0    | [MIT](https://github.com/colored-console/colored-console/blob/dev/license.txt)            | 
+ | 3  | [CsvHelper](https://joshclose.github.io/CsvHelper/)                                                      | 15.0.1   | [MS-PL / Apache-2.0](https://licenses.nuget.org/MS-PL%20OR%20Apache-2.0)                 | 
+ | 4  | [Flurl.Http](https://flurl.dev/)                                                                         | 2.4.2    | [MIT](https://licenses.nuget.org/MIT)                                                     | 
+ | 5  | [MathNet.Numerics](https://numerics.mathdotnet.com/)                                                     | 4.9.0    | [MIT / X11](https://numerics.mathdotnet.com/License.html)                                       | 
+ | 6  | [Newtonsoft.Json](https://www.newtonsoft.com/json)                                                       | 12.0.3   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
