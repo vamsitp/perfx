@@ -30,7 +30,13 @@
             PrintHelp();
             var records = Utils.ReadResults<Record>()?.ToList();
             var breakLoop = false;
-            Console.CancelKeyPress += (sender, e) => breakLoop = true;
+            Console.CancelKeyPress += (sender, e) =>
+            {
+                // System.Diagnostics.Debug.WriteLine("IsCancellationRequested: " + stopToken.IsCancellationRequested);
+                // e.Cancel = true;
+                breakLoop = true;
+            };
+
             while (!stopToken.IsCancellationRequested && !breakLoop)
             {
                 try

@@ -76,7 +76,7 @@
             ColorConsole.WriteLine($"{id} ", record.url.Green(), "\n",
                 "stat".PadLeft(id.Length + 5).Green(), $": {record.result}", "\n",
                 "opid".PadLeft(id.Length + 5).Green(), ": ", record.traceId, "\n",
-                "time".PadLeft(id.Length + 5).Green(), ": ", record.duration_ms.GetColorToken(" "), " ", record.GetDurationString(), "ms".Green(), " (~", record.GetDurationInSecString(), "s".Green(), ") ", "\n");
+                "time".PadLeft(id.Length + 5).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n");
         }
 
         public async Task ExecuteAppInsights(List<Record> records, string timeframe = "60m")
@@ -102,7 +102,7 @@
                     aiLogs.ForEach(ai =>
                     {
                         var record = records.SingleOrDefault(t => t.traceId.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
-                        record.ai_duration_ms = ai.duration;
+                        record.ai_ms = ai.duration;
                         record.ai_op_Id = ai.operation_Id;
                         // TODO: Rest of the props
                     });
@@ -128,7 +128,7 @@
                 // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
                 // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
                 var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead);
-                record.duration_ms = taskWatch.ElapsedMilliseconds;
+                record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
                 //using (var responseStream = await response.Content.ReadAsStreamAsync())
                 //{
@@ -156,7 +156,7 @@
             }
             catch (Exception ex)
             {
-                record.duration_ms = taskWatch.ElapsedMilliseconds;
+                record.local_ms = taskWatch.ElapsedMilliseconds;
                 ColorConsole.WriteLine(string.Empty.PadLeft(record.id.ToString().Length + 5), ex.Message.White().OnRed(), ": ", record.url.DarkGray(), $" (", record.traceId.DarkGray(), ")");
                 this.logger.LogError($"{ex.Message.White()}: {record.url} ({record.traceId})");
             }

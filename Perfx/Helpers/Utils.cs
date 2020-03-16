@@ -124,8 +124,8 @@
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.traceId } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result } },
-                                    new Cell { Stroke = rowThickness, Color = record.ai_duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(true, true) + " / " + record.GetDurationInSecString(true, true) } },
-                                    new Cell { Stroke = rowThickness, Color = record.duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(suffixUnit: true) + " / " + record.GetDurationInSecString(suffixUnit: true) } }
+                                    new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_ms_str + "ms / " + record.ai_s_str + "s" } },
+                                    new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_ms_str + "ms / " + record.local_s_str + "s" } }
                                 })
                             }
                         }
@@ -144,12 +144,12 @@
         {
             ColorConsole.WriteLine("\n\n", " Responses ".White().OnGreen());
             var maxIdLength = records.Max(x => x.id.ToString().Length);
-            var maxDurationLength = records.Max(x => x.GetDurationInSec());
+            var maxDurationLength = records.Max(x => x.duration_s_round);
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.traceId.DarkGray(), " / ".Green(), record.result.DarkGray(), " / ".Green(), record.url.DarkGray());
-                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.GetDurationInSecString(), "s".Green());
+                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.duration_s_str, "s".Green());
             }
 
             ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
@@ -162,7 +162,7 @@
         {
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             var maxIdLength = 7;
-            var maxDurationLength = records.Max(x => x.GetDurationInSec());
+            var maxDurationLength = records.Max(x => x.duration_s_round);
             foreach (var group in records.GroupBy(r => r.url))
             {
                 ColorConsole.WriteLine("\n ", group.Key.Green());
