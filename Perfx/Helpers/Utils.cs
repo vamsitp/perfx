@@ -68,7 +68,7 @@
             var color = ConsoleColor.White;
             if (sec <= 2)
             {
-                color = ConsoleColor.Green;
+                color = ConsoleColor.DarkGreen;
             }
             else if (sec > 2 && sec <= 5)
             {
@@ -95,25 +95,7 @@
 
         public static ColorToken GetColorToken(this double duration, string barText)
         {
-            var sec = (int)Math.Round(duration / 1000);
-            var coloredBar = barText.OnGreen();
-            if (sec <= 2)
-            {
-                coloredBar = barText.OnDarkGreen();
-            }
-            else if (sec > 2 && sec <= 5)
-            {
-                coloredBar = barText.OnDarkYellow();
-            }
-            else if (sec > 5 && sec <= 8)
-            {
-                coloredBar = barText.OnMagenta();
-            }
-            else if (sec > 8)
-            {
-                coloredBar = barText.OnRed();
-            }
-
+            var coloredBar = barText.On(duration.GetColor());
             return coloredBar;
         }
 
@@ -123,6 +105,7 @@
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
             var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
             var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
+            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " ai_duration ", " perfx_duration " };
             var doc = new Document(
                         new Grid
                         {
@@ -130,29 +113,20 @@
                             StrokeColor = ConsoleColor.DarkGray,
                             Columns =
                             {
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto },
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto, MaxWidth = 200 },
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto },
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto },
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto },
-                                        new Alba.CsConsoleFormat.Column { Width = GridLength.Auto }
+                                Enumerable.Range(0, headers.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
                             },
-                            Children = {
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " # " } },
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " url " } },
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " op_Id " } },
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " result " } },
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.White, Background = ConsoleColor.DarkGreen, Children = { " ai_duration " } },
-                                        new Cell { Stroke = headerThickness, Color = ConsoleColor.DarkGreen, Background = ConsoleColor.White, Children = { " perfx_duration " } },
-                                        records.Select(record => new[]
-                                        {
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { record.id } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.traceId } },
-                                            new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result } },
-                                            new Cell { Stroke = rowThickness, Color = record.ai_duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(true, true) + " / " + record.GetDurationInSecString(true, true) } },
-                                            new Cell { Stroke = rowThickness, Color = record.duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(suffixUnit: true) + " / " + record.GetDurationInSecString(suffixUnit: true) } }
-                                        })
+                            Children =
+                            {
+                                headers.Select(header => new Cell { Stroke = headerThickness, Color = header.Equals(" perfx_duration ") ? ConsoleColor.DarkGreen : ConsoleColor.White, Background = header.Equals(" perfx_duration ") ? ConsoleColor.White : ConsoleColor.DarkGreen, Children = { header } }),
+                                records.Select(record => new[]
+                                {
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { record.id } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.traceId } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result } },
+                                    new Cell { Stroke = rowThickness, Color = record.ai_duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(true, true) + " / " + record.GetDurationInSecString(true, true) } },
+                                    new Cell { Stroke = rowThickness, Color = record.duration_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.GetDurationString(suffixUnit: true) + " / " + record.GetDurationInSecString(suffixUnit: true) } }
+                                })
                             }
                         }
                      );
@@ -163,22 +137,19 @@
         public static void DrawCharts(this List<Record> records)
         {
             records.DrawChart();
-            records.DrawPercentilesChart();
+            records.DrawPercentilesTable();
         }
 
         public static void DrawChart(this List<Record> records)
         {
-            ColorConsole.WriteLine("\n", " RESPONSES ".White().OnDarkCyan(), " ");
-            var maxIdLength = records.Max(x => $"{x.id.ToString()} {x.url}".Length);
+            ColorConsole.WriteLine("\n", " Responses ".White().OnGreen(), ":");
+            var maxIdLength = records.Max(x => x.id.ToString().Length);
             var maxDurationLength = records.Max(x => x.GetDurationInSec());
             foreach (var record in records)
             {
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan()); // , record.traceId
-                ColorConsole.Write(record.id.ToString().Green(), record.url.PadLeft(maxIdLength - record.id.ToString().Length));
-                ColorConsole.Write(" ");
-                ColorConsole.Write(VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '));
-                ColorConsole.Write(" ");
-                ColorConsole.WriteLine(record.GetDurationInSecString(), "s".Green());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
+                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.traceId, " / ".Green(), record.url);
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.GetDurationInSecString(), "s".Green());
             }
 
             ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
@@ -189,16 +160,16 @@
 
         public static void DrawPercentilesChart(this List<Record> records)
         {
-            ColorConsole.WriteLine("\n", " STATS ".White().OnDarkCyan(), " ");
+            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen(), ":");
             var maxIdLength = 7;
             var maxDurationLength = records.Max(x => x.GetDurationInSec());
             var stats = new Dictionary<string, double>
             {
                 { "min", records.Min(x => x.duration_ms) },
                 { "max", records.Max(x => x.duration_ms) },
-                { "avg", records.Average(x => x.duration_ms) },
+                { "mean", records.Select(x => x.duration_ms).Mean() },
+                { "median", records.Select(x => x.duration_ms).Median() },
                 { "std-dev", records.Select(x => x.duration_ms).StandardDeviation() },
-                { "50%", records.Select(x => x.duration_ms).Percentile(50) },
                 { "90%", records.Select(x => x.duration_ms).Percentile(90) },
                 { "95%", records.Select(x => x.duration_ms).Percentile(95) },
                 { "99%", records.Select(x => x.duration_ms).Percentile(99) },
@@ -206,7 +177,7 @@
 
             foreach (var record in stats)
             {
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan()); // , record.traceId
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
                 ColorConsole.Write(record.Key.PadLeft(maxIdLength).Green());
                 ColorConsole.Write(" ");
                 ColorConsole.Write(VerticalChar.DarkCyan(), record.Value.GetColorToken(' '));
@@ -218,6 +189,44 @@
                 BroderChar.DarkCyan(),
                 string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
                 "[", "100".DarkCyan(), "]");
+        }
+
+        public static void DrawPercentilesTable(this List<Record> records)
+        {
+            ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen(), ":");
+            var stats = new Dictionary<string, double>
+            {
+                { " min ", records.Min(x => x.duration_ms) },
+                { " max ", records.Max(x => x.duration_ms) },
+                { " mean ", records.Select(x => x.duration_ms).Mean() },
+                { " median ", records.Select(x => x.duration_ms).Median() },
+                { " std-dev ", records.Select(x => x.duration_ms).StandardDeviation() },
+                { " 90% ", records.Select(x => x.duration_ms).Percentile(90) },
+                { " 95% ", records.Select(x => x.duration_ms).Percentile(95) },
+                { " 99% ", records.Select(x => x.duration_ms).Percentile(99) },
+            };
+
+            var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
+            var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
+            var doc = new Document(
+                        new Grid
+                        {
+                            Stroke = new LineThickness(LineWidth.None),
+                            StrokeColor = ConsoleColor.DarkGray,
+                            Columns =
+                            {
+                                Enumerable.Range(0, stats.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
+                            },
+                            Children =
+                            {
+                                stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.White, Children = { stat.Key } }),
+                                stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {stat.Value.ToString("F2") }ms " } }),
+                                stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {(stat.Value / 1000).ToString("F1")}s " } })
+                            }
+                        }
+                     );
+
+            ConsoleRenderer.RenderDocument(doc);
         }
 
         public static void SaveToFile(this IEnumerable<Record> items, string fileName = ResultsFileName)
