@@ -2,10 +2,13 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
 
     using ByteSizeLib;
-    using ColoredConsole;
+
     using CsvHelper.Configuration.Attributes;
+
+    using MathNet.Numerics.Statistics;
 
     public class Record
     {
@@ -60,7 +63,35 @@
 
     public class Run
     {
-        public DateTime timestamp { get; set; }
-        public List<Record> Records { get; set; }
+        public Run(IEnumerable<Record> records, string url)
+        {
+            this.records = records;
+            this.url = url;
+        }
+
+        [Ignore]
+        public IEnumerable<Record> records { get; set; }
+
+        [Ignore]
+        public List<Record> ok_records => this.records.Where(x => x.result.Contains("200"))?.ToList();
+
+        [Ignore]
+        public List<double> ok_records_durations_ms => this.ok_records.Select(x => x.duration_ms)?.ToList();
+
+        [Ignore]
+        public string url { get; set; }
+
+        public double dur_min => this.ok_records_durations_ms.Min();
+        public double dur_max => this.ok_records_durations_ms.Max();
+        public double dur_mean => this.ok_records_durations_ms.Mean();
+        public double dur_median => this.ok_records_durations_ms.Median();
+        public double dur_std_dev => this.ok_records_durations_ms.StandardDeviation();
+        public double dur_90 => this.ok_records_durations_ms.Percentile(90);
+        public double dur_95 => this.ok_records_durations_ms.Percentile(95);
+        public double dur_99 => this.ok_records_durations_ms.Percentile(99);
+        public double size_min => this.ok_records.Min(x => x.size.HasValue ? x.size.Value : 0);
+        public double size_max => this.ok_records.Max(x => x.size.HasValue ? x.size.Value : 0);
+        public double ok_200 => (int)Math.Round(((double)(this.ok_records.Count() / this.records.Count())) * 100);
+        public double other_xxx => 100 - this.ok_200;
     }
 }

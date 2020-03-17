@@ -214,14 +214,18 @@
                 var okRecords = group.Where(x => x.result.Contains("200"));
                 var stats = new Dictionary<string, double>
                 {
-                    { "min", okRecords.Min(x => x.duration_ms) },
-                    { "max", okRecords.Max(x => x.duration_ms) },
-                    { "mean", okRecords.Select(x => x.duration_ms).Mean() },
-                    { "median", okRecords.Select(x => x.duration_ms).Median() },
-                    { "std-dev", okRecords.Select(x => x.duration_ms).StandardDeviation() },
-                    { "90%", okRecords.Select(x => x.duration_ms).Percentile(90) },
-                    { "95%", okRecords.Select(x => x.duration_ms).Percentile(95) },
-                    { "99%", okRecords.Select(x => x.duration_ms).Percentile(99) }
+                    { " dur-min ", okRecords.Min(x => x.duration_ms) },
+                    { " dur-max ", okRecords.Max(x => x.duration_ms) },
+                    { " dur-mean ", okRecords.Select(x => x.duration_ms).Mean() },
+                    { " dur-median ", okRecords.Select(x => x.duration_ms).Median() },
+                    { " dur-std-dev ", okRecords.Select(x => x.duration_ms).StandardDeviation() },
+                    { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
+                    { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
+                    { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
+                    { " size-min ", okRecords.Min(x => x.size.HasValue ? x.size.Value : 0) },
+                    { " size-max ", okRecords.Max(x => x.size.HasValue ? x.size.Value : 0) },
+                    { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
+                    { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
                 };
 
                 foreach (var record in stats)

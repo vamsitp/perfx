@@ -96,6 +96,28 @@
 
                 ws.Columns().AdjustToContents();
                 ws.SheetView.Freeze(1, 3);
+
+                IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
+                var groups = records.Cast<Record>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (app-insights)"));
+                for (var i = 0; i < groups.Count(); i++)
+                {
+                    var group = groups.ElementAt(i);
+                    if (group.Key != null)
+                    {
+                        var run = new Run(group.ToList(), group.Key);
+                        var runDataTable = run.ToDataTable();
+                        var rowIndex = (i * 4) + 1;
+                        wsStats.Cell(rowIndex, 1).SetValue<string>(group.Key);
+                        var row = wsStats.Range($"A{rowIndex}:L{rowIndex}").Row(1);
+                        row.Merge();
+                        row.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
+                        row.Style.Font.SetFontColor(XLColor.RoyalBlue);
+                        var runTable = wsStats.Cell(rowIndex + 1, 1).InsertTable(runDataTable, $"Stats{i}");
+                        runTable.Theme = XLTableTheme.TableStyleLight8;
+                    }
+                }
+
+                wsStats.Columns().AdjustToContents();
                 wb.SaveAs(fileName.GetFullPath());
             }
         }
@@ -114,7 +136,7 @@
 
         public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName)
         {
-            var records = filename.GetDataTable("Perfx_Runs")?.GetList<T>();
+            var records = filename.ToDataTable("Perfx_Runs")?.ToList<T>();
             return records;
         }
 
@@ -150,8 +172,34 @@
             return table;
         }
 
+        public static DataTable ToDataTable<T>(this T item)
+        {
+            var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
+            var table = new DataTable();
+            foreach (var prop in properties)
+            {
+                table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+            }
+
+            var row = table.NewRow();
+            foreach (var prop in properties)
+            {
+                if (prop.PropertyType == typeof(DateTime) && (DateTime)prop.GetValue(item) == DateTime.MinValue)
+                {
+                    row[prop.Name] = new DateTime(1900, 01, 01);
+                }
+                else
+                {
+                    row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+                }
+            }
+
+            table.Rows.Add(row);
+            return table;
+        }
+
         // Credit: https://stackoverflow.com/a/53546001
-        public static DataTable GetDataTable(this string fileName, dynamic worksheet)
+        public static DataTable ToDataTable(this string fileName, dynamic worksheet)
         {
             var filePath = fileName.GetFullPath();
             if (!File.Exists(filePath))
@@ -207,7 +255,7 @@
             }
         }
 
-        private static List<T> GetList<T>(this DataTable dt)
+        private static List<T> ToList<T>(this DataTable dt)
         {
             if (dt == null)
             {
@@ -217,14 +265,14 @@
             var data = new List<T>();
             foreach (var row in dt.Rows.Cast<DataRow>())
             {
-                var item = row.GetItem<T>();
+                var item = row.ToItem<T>();
                 data.Add(item);
             }
 
             return data;
         }
 
-        private static T GetItem<T>(this DataRow dr)
+        private static T ToItem<T>(this DataRow dr)
         {
             var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
             var instance = Activator.CreateInstance<T>();
