@@ -8,6 +8,7 @@
     public class Record
     {
         public float id { get; set; }
+        public DateTime timestamp { get; set; }
         public string url { get; set; }
 
         [Ignore]

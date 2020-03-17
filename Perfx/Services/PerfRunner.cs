@@ -76,9 +76,9 @@
         private void Log(Record record)
         {
             var id = record.id.ToString();
-            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 5), record.url.Green(), "\n",
-                "stat".PadLeft(leftPadding).Green(), ": ", record.result.GetColorToken(), "\n",
+            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), record.url.Green(), "\n",
                 "opid".PadLeft(leftPadding).Green(), ": ", record.op_Id, "\n",
+                "stat".PadLeft(leftPadding).Green(), ": ", record.result.GetColorToken(" "), " ", record.result, "\n",
                 "time".PadLeft(leftPadding).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n");
         }
 
@@ -124,6 +124,7 @@
             this.client.DefaultRequestHeaders.Clear();
             this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
             this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
+            record.timestamp = DateTime.Now;
             var taskWatch = Stopwatch.StartNew();
             try
             {

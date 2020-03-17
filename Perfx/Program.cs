@@ -1,6 +1,7 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
 
@@ -35,6 +36,7 @@
                             {
                                 services
                                     .Configure<Settings>(configuration)
+                                    .PostConfigure<Settings>(config => { if (args?.Length > 0 && int.TryParse(args.FirstOrDefault(), out var iterations)) config.Iterations = iterations; })
                                     .AddScoped<PerfRunner>()
                                     .AddHostedService<Worker>()
                                     .AddSingleton<LogDataService>()

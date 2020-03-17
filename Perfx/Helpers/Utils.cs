@@ -99,9 +99,9 @@
             return coloredBar;
         }
 
-        public static ColorToken GetColorToken(this string result)
+        public static ColorToken GetColorToken(this string result, string text = null)
         {
-            return result.Color(result.GetColor());
+            return text == null ? result.Color(result.GetColor()) : text.On(result.GetColor());
         }
 
         public static ConsoleColor GetColor(this string result)
@@ -177,16 +177,17 @@
             foreach (var group in records.GroupBy(r => r.url))
             {
                 ColorConsole.WriteLine("\n ", group.Key.Green());
+                var okRecords = group.Where(x => x.result.Contains("200"));
                 var stats = new Dictionary<string, double>
                 {
-                    { "min", group.Min(x => x.duration_ms) },
-                    { "max", group.Max(x => x.duration_ms) },
-                    { "mean", group.Select(x => x.duration_ms).Mean() },
-                    { "median", group.Select(x => x.duration_ms).Median() },
-                    { "std-dev", group.Select(x => x.duration_ms).StandardDeviation() },
-                    { "90%", group.Select(x => x.duration_ms).Percentile(90) },
-                    { "95%", group.Select(x => x.duration_ms).Percentile(95) },
-                    { "99%", group.Select(x => x.duration_ms).Percentile(99) },
+                    { "min", okRecords.Min(x => x.duration_ms) },
+                    { "max", okRecords.Max(x => x.duration_ms) },
+                    { "mean", okRecords.Select(x => x.duration_ms).Mean() },
+                    { "median", okRecords.Select(x => x.duration_ms).Median() },
+                    { "std-dev", okRecords.Select(x => x.duration_ms).StandardDeviation() },
+                    { "90%", okRecords.Select(x => x.duration_ms).Percentile(90) },
+                    { "95%", okRecords.Select(x => x.duration_ms).Percentile(95) },
+                    { "99%", okRecords.Select(x => x.duration_ms).Percentile(99) }
                 };
 
                 foreach (var record in stats)
@@ -211,17 +212,19 @@
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             foreach (var group in records.GroupBy(r => r.url))
             {
-                ColorConsole.WriteLine("\n ", group.Key.Green());
+                ColorConsole.WriteLine("\n\n ", group.Key.Green());
+                var okRecords = group.Where(x => x.result.Contains("200"));
                 var stats = new Dictionary<string, double>
                 {
-                    { " min ", group.Min(x => x.duration_ms) },
-                    { " max ", group.Max(x => x.duration_ms) },
-                    { " mean ", group.Select(x => x.duration_ms).Mean() },
-                    { " median ", group.Select(x => x.duration_ms).Median() },
-                    { " std-dev ", group.Select(x => x.duration_ms).StandardDeviation() },
-                    { " 90% ", group.Select(x => x.duration_ms).Percentile(90) },
-                    { " 95% ", group.Select(x => x.duration_ms).Percentile(95) },
-                    { " 99% ", group.Select(x => x.duration_ms).Percentile(99) },
+                    { " min ", okRecords.Min(x => x.duration_ms) },
+                    { " max ", okRecords.Max(x => x.duration_ms) },
+                    { " mean ", okRecords.Select(x => x.duration_ms).Mean() },
+                    { " median ", okRecords.Select(x => x.duration_ms).Median() },
+                    { " std-dev ", okRecords.Select(x => x.duration_ms).StandardDeviation() },
+                    { " 90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
+                    { " 95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
+                    { " 99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
+                    { " ok / err ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) }
                 };
 
                 var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
@@ -238,8 +241,8 @@
                                 Children =
                                 {
                                     stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { stat.Key } }),
-                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {stat.Value.ToString("F2") }ms " } }),
-                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" {(stat.Value / 1000).ToString("F1")}s " } })
+                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkGreen : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? (((int)stat.Value).ToString() + "% ") : stat.Value.ToString("F2") + "ms ")}" } }),
+                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkYellow : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? ((100 - (int)stat.Value).ToString() + "% ") : (stat.Value / 1000).ToString("F1") + "s ")}" } })
                                 }
                             }
                          );
