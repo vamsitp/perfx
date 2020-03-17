@@ -11,9 +11,9 @@ Azure API Performance benchmarking tool based on **App-Insights**
   ![Screenshot](Screenshot.png)
   ![Screenshot2](Screenshot2.png)
 
-- Enter **`r`** to **run** the benchmarks
+- Enter **`r`**`:10` to **run** the benchmarks (`10` times)
 - Enter **`s`** to print the **stats**/details for the previous run
-- Enter **`l`**`:1h:10` to fetch **logs** for the previous run in the last `1 hour` with `10 retries` (app-insights `durations`) 
+- Enter **`l`**`:1h:10` to fetch **app-insights** `duration` **logs** for the previous run (in the last `1 hour` with `10 retries`) 
 - Enter **`c`** to **clear** the console
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**

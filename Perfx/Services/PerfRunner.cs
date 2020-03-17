@@ -47,12 +47,12 @@
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
         }
 
-        public async Task<List<Record>> Execute(CancellationToken stopToken = default)
+        public async Task<List<Record>> Execute(int? iterations = null, CancellationToken stopToken = default)
         {
             ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
-            ColorConsole.WriteLine("Iterations: ", settings.Iterations.ToString().Green(), "\n");
+            ColorConsole.WriteLine("Iterations: ", iterations?.ToString()?.Green() ?? settings.Iterations.ToString().Green(), "\n");
 
-            var endpointTasks = settings.Endpoints.Select((ep, i) => Execute(ep, i + 1, settings.Iterations, stopToken));
+            var endpointTasks = settings.Endpoints.Select((ep, i) => Execute(ep, i + 1, iterations ?? settings.Iterations, stopToken));
             var results = await Task.WhenAll(endpointTasks);
             var records = results.SelectMany(e => e).ToList();
             return records;
@@ -79,7 +79,8 @@
             ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), record.url.Green(), "\n",
                 "opid".PadLeft(leftPadding).Green(), ": ", record.op_Id, "\n",
                 "stat".PadLeft(leftPadding).Green(), ": ", record.result.GetColorToken(" "), " ", record.result, "\n",
-                "time".PadLeft(leftPadding).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n");
+                "time".PadLeft(leftPadding).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n",
+                "size".PadLeft(leftPadding).Green(), ": ", record.size.GetColorToken(" "), " ", record.size_num_str, record.size_unit.Green(),  "\n");
         }
 
         public async Task ExecuteAppInsights(List<Record> records, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
@@ -133,6 +134,7 @@
                 var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
                 record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
+                record.size = response.Content.Headers.ContentLength;
                 //using (var responseStream = await response.Content.ReadAsStreamAsync())
                 //{
                 //    using (var streamReader = new StreamReader(responseStream))

@@ -10,6 +10,8 @@
 
     using Alba.CsConsoleFormat;
 
+    using ByteSizeLib;
+
     using ColoredConsole;
 
     using CsvHelper;
@@ -99,14 +101,49 @@
             return coloredBar;
         }
 
-        public static ColorToken GetColorToken(this string result, string text = null)
+        public static ColorToken GetColorToken(this string result, string barText = null)
         {
-            return text == null ? result.Color(result.GetColor()) : text.On(result.GetColor());
+            return barText == null ? result.Color(result.GetColor()) : barText.On(result.GetColor());
         }
 
         public static ConsoleColor GetColor(this string result)
         {
             return result.Contains("200") ? ConsoleColor.DarkGreen : (result.Contains(": ") ? ConsoleColor.DarkYellow : ConsoleColor.Red);
+        }
+
+
+        public static ColorToken GetColorToken(this long? size, string barText)
+        {
+            return barText.On(size.GetColor());
+        }
+
+        public static ConsoleColor GetColor(this long? size)
+        {
+            if (!size.HasValue)
+            {
+                return ConsoleColor.DarkGray;
+            }
+
+            var kb = ByteSizeLib.ByteSize.FromBytes(size.Value).KiloBytes;
+            var color = ConsoleColor.White;
+            if (kb <= 200)
+            {
+                color = ConsoleColor.DarkGreen;
+            }
+            else if (kb > 200 && kb <= 500)
+            {
+                color = ConsoleColor.DarkYellow;
+            }
+            else if (kb > 500 && kb <= 800)
+            {
+                color = ConsoleColor.Magenta;
+            }
+            else if (kb > 800)
+            {
+                color = ConsoleColor.Red;
+            }
+
+            return color;
         }
 
         public static void DrawTable(this List<Record> records)
@@ -115,7 +152,7 @@
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
             var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
             var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
-            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " ai ", " perfx " };
+            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " size ", " ai ", " perfx " };
             var doc = new Document(
                         new Grid
                         {
@@ -134,8 +171,9 @@
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.op_Id } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result }, Color = record.result.GetColor() },
-                                    new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_ms_str + "ms / " + record.ai_s_str + "s" } },
-                                    new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_ms_str + "ms / " + record.local_s_str + "s" } }
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.size_str }, Color = record.size.GetColor() },
+                                    new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_s_str + "s" } },
+                                    new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_s_str + "s" } }
                                 })
                             }
                         }
@@ -159,7 +197,7 @@
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ".Green(), record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ", record.size_str.Color(record.size.GetColor()), " / ", record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
                 ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.duration_s_str, "s".Green());
             }
 
@@ -174,7 +212,7 @@
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             var maxIdLength = 7;
             var maxDurationLength = records.Max(x => x.duration_s_round);
-            foreach (var group in records.GroupBy(r => r.url))
+            foreach (var group in records.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
                 ColorConsole.WriteLine("\n ", group.Key.Green());
                 var okRecords = group.Where(x => x.result.Contains("200"));
@@ -210,21 +248,24 @@
         public static void DrawPercentilesTable(this List<Record> records)
         {
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
-            foreach (var group in records.GroupBy(r => r.url))
+            foreach (var group in records.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
                 ColorConsole.WriteLine("\n\n ", group.Key.Green());
                 var okRecords = group.Where(x => x.result.Contains("200"));
-                var stats = new Dictionary<string, double>
+                var stats = new Dictionary<string, object>
                 {
-                    { " min ", okRecords.Min(x => x.duration_ms) },
-                    { " max ", okRecords.Max(x => x.duration_ms) },
-                    { " mean ", okRecords.Select(x => x.duration_ms).Mean() },
-                    { " median ", okRecords.Select(x => x.duration_ms).Median() },
-                    { " std-dev ", okRecords.Select(x => x.duration_ms).StandardDeviation() },
-                    { " 90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
-                    { " 95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
-                    { " 99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
-                    { " ok / err ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) }
+                    { " dur-min ", okRecords.Min(x => x.duration_ms) },
+                    { " dur-max ", okRecords.Max(x => x.duration_ms) },
+                    { " dur-mean ", okRecords.Select(x => x.duration_ms).Mean() },
+                    { " dur-median ", okRecords.Select(x => x.duration_ms).Median() },
+                    { " dur-std-dev ", okRecords.Select(x => x.duration_ms).StandardDeviation() },
+                    { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
+                    { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
+                    { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
+                    { " size-min ", okRecords.Min(x => x.size.Value) },
+                    { " size-max ", okRecords.Max(x => x.size.Value) },
+                    { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
+                    { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
                 };
 
                 var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
@@ -241,8 +282,16 @@
                                 Children =
                                 {
                                     stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { stat.Key } }),
-                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkGreen : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? (((int)stat.Value).ToString() + "% ") : stat.Value.ToString("F2") + "ms ")}" } }),
-                                    stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkYellow : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? ((100 - (int)stat.Value).ToString() + "% ") : (stat.Value / 1000).ToString("F1") + "s ")}" } })
+                                    //stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkGreen : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? (((int)stat.Value).ToString() + "% ") : stat.Value.ToString("F2") + "ms ")}" } }),
+                                    stats.Select(stat => new Cell
+                                    {
+                                        Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap,
+                                        Color = stat.Key.Contains("size") ? ((long?)stat.Value).GetColor() : (stat.Key.Equals(" 200-ok ") ? ConsoleColor.DarkGreen : (stat.Key.Equals(" xxx-other ") ? ConsoleColor.DarkYellow : ((double)stat.Value).GetColor())),
+                                        Children =
+                                        {
+                                            $" { (stat.Key.Contains("size") ? ByteSize.FromBytes((long)stat.Value).LargestWholeNumberDecimalValue.ToString("F2") + ByteSize.FromBytes((long)stat.Value).LargestWholeNumberDecimalSymbol : (stat.Key.Equals(" 200-ok ") || stat.Key.Equals(" xxx-other ") ? (((int)stat.Value).ToString() + "% ") : (((double)stat.Value) / 1000).ToString("F1") + "s "))}"
+                                        }
+                                    })
                                 }
                             }
                          );

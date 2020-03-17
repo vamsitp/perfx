@@ -120,7 +120,9 @@
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                            records = await perf.Execute(stopToken);
+                            var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
+                            int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
+                            records = await perf.Execute(iterations, stopToken);
                             ColorConsole.Write("> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
                             if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
@@ -162,9 +164,9 @@
                 new[]
                 {
                     "--------------------------------------------------------------".Green(),
-                    "\nEnter ", "r".Green(), " to run the benchmarks",
+                    "\nEnter ", "r".Green(), ":10".DarkGray(), " to run the benchmarks", " 10 times".DarkGray(),
                     "\nEnter ", "s".Green(), " to print the stats/details for the previous run",
-                    "\nEnter ", "l".Green(), ":1h".DarkGray(), ":10".DarkGray(), " to fetch logs for the previous run in the last ", "1 hour".DarkGray(), " with", " 10 retries".DarkGray(), " (app-insights durations)",
+                    "\nEnter ", "l".Green(), ":1h".DarkGray(), ":10".DarkGray(), " to fetch app-insights duration logs for the previous run (in the last", " 1 hour".DarkGray(), " with", " 10 retries".DarkGray(), ")",
                     "\nEnter ", "c".Green(), " to clear the console",
                     "\nEnter ", "q".Green(), " to quit",
                     "\nEnter ", "?".Green(), " to print this help"
