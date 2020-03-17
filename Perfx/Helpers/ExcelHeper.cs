@@ -114,7 +114,7 @@
                 }
             }
 
-            var statsDataTable = stats.ToDataTable();
+            var statsDataTable = stats.AsEnumerable().ToDataTable();
             var statsTable = wsStats.Cell(1, 1).InsertTable(statsDataTable, "Stats");
             statsTable.Theme = XLTableTheme.TableStyleLight8;
 
