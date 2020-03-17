@@ -60,9 +60,9 @@
             }
         }
 
-        public static ConsoleColor GetColor(this double duration)
+        public static ConsoleColor GetColor(this double duration, int divider = 1000)
         {
-            var sec = (int)Math.Round(duration / 1000);
+            var sec = (int)Math.Round(duration / divider);
             var color = ConsoleColor.White;
             if (sec <= 2)
             {
@@ -248,26 +248,16 @@
         public static void DrawPercentilesTable(this List<Record> records)
         {
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
+            var runs = new List<Run>();
             foreach (var group in records.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
-                ColorConsole.WriteLine("\n ", group.Key.Green());
-                var okRecords = group.Where(x => x.result.Contains("200"));
-                var stats = new Dictionary<string, object>
-                {
-                    { " dur-min ", okRecords.Min(x => x.duration_ms) },
-                    { " dur-max ", okRecords.Max(x => x.duration_ms) },
-                    { " dur-mean ", okRecords.Select(x => x.duration_ms).Mean() },
-                    { " dur-median ", okRecords.Select(x => x.duration_ms).Median() },
-                    { " dur-std-dev ", okRecords.Select(x => x.duration_ms).StandardDeviation() },
-                    { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
-                    { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
-                    { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
-                    { " size-min ", okRecords.Min(x => x.size_b.HasValue ? x.size_b.Value : 0) },
-                    { " size-max ", okRecords.Max(x => x.size_b.HasValue ? x.size_b.Value : 0) },
-                    { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
-                    { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
-                };
+                var run = new Run(group, group.Key);
+                runs.Add(run);
+            }
 
+            foreach (var run in runs)
+            {
+                ColorConsole.WriteLine("\n ", run.url.Green());
                 var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
                 var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
                 var doc = new Document(
@@ -277,24 +267,25 @@
                                 StrokeColor = ConsoleColor.DarkGray,
                                 Columns =
                                 {
-                                    Enumerable.Range(0, stats.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
+                                    Enumerable.Range(0, run.Properties.Count).Select(i => new Alba.CsConsoleFormat.Column { Width = GridLength.Auto })
                                 },
                                 Children =
                                 {
-                                    stats.Select(stat => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { stat.Key } }),
-                                    //stats.Select(stat => new Cell { Stroke = rowThickness, Color = stat.Key.Equals(" ok / err ") ? ConsoleColor.DarkGreen : stat.Value.GetColor(), TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Children = { $" { (stat.Key.Equals(" ok / err ") ? (((int)stat.Value).ToString() + "% ") : stat.Value.ToString("F2") + "ms ")}" } }),
-                                    stats.Select(stat => new Cell
-                                    {
-                                        Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap,
-                                        Color = stat.Key.Contains("size") ? ((long?)stat.Value).GetColor() : (stat.Key.Equals(" 200-ok ") ? ConsoleColor.DarkGreen : (stat.Key.Equals(" xxx-other ") ? ConsoleColor.DarkYellow : ((double)stat.Value).GetColor())),
-                                        Children =
-                                        {
-                                            $" { (stat.Key.Contains("size") ? ByteSize.FromBytes((long)stat.Value).LargestWholeNumberDecimalValue.ToString("F2") + ByteSize.FromBytes((long)stat.Value).LargestWholeNumberDecimalSymbol : (stat.Key.Equals(" 200-ok ") || stat.Key.Equals(" xxx-other ") ? (((int)stat.Value).ToString() + "% ") : (((double)stat.Value) / 1000).ToString("F1") + "s "))}"
-                                        }
-                                    })
+                                    run.Properties.Select(prop => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { $" {prop.Name} " } }),
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_min_s.GetColor(1), Children = { run.dur_min_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_max_s.GetColor(1), Children = { run.dur_max_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_mean_s.GetColor(1), Children = { run.dur_mean_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_median_s.GetColor(1), Children = { run.dur_median_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_std_dev_s.GetColor(1), Children = { run.dur_std_dev_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_90_per_s.GetColor(1), Children = { run.dur_90_per_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_95_per_s.GetColor(1), Children = { run.dur_95_per_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_99_per_s.GetColor(1), Children = { run.dur_99_per_s + "s"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_min_kb.GetColor(100), Children = { run.size_min_kb + "KB"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_max_kb.GetColor(100), Children = { run.size_max_kb + "KB"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkGreen, Children = { run.ok_200 + "%"} },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkYellow, Children = { run.other_xxx + "%"} },
                                 }
-                            }
-                         );
+                            });
 
                 ConsoleRenderer.RenderDocument(doc);
             }
