@@ -32,7 +32,7 @@
         {
             var tenant = string.Empty;
             PrintHelp();
-            var records = Utils.ReadResults<Record>()?.ToList();
+            List<Record> records = null;
             while (!stopToken.IsCancellationRequested)
             {
                 try
@@ -59,21 +59,32 @@
                     }
                     else if (key.StartsWith("l", StringComparison.OrdinalIgnoreCase) || key.StartsWith("a", StringComparison.OrdinalIgnoreCase))
                     {
+                        if (records == null)
+                        {
+                            records = this.settings.OutputFormat.Read<Record>();
+                        }
+
                         if (records?.Count > 0)
                         {
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
                                 await ExecuteAppInsights(records, key, perf, stopToken);
-                                records.SaveToFile();
+                                records.Save(this.settings.OutputFormat);
                                 records.DrawStats();
                             }
                         }
                     }
                     else if (key.StartsWith("s", StringComparison.OrdinalIgnoreCase) || key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
                     {
+                        if (records == null)
+                        {
+                            records = this.settings.OutputFormat.Read<Record>();
+                        }
+
                         if (records?.Count > 0)
                         {
+                            // records.Save(this.settings.OutputFormat);
                             records.DrawStats();
                         }
                     }
@@ -131,7 +142,7 @@
                                 await ExecuteAppInsights(records, result, perf, stopToken);
                             }
 
-                            records.SaveToFile();
+                            records.Save(this.settings.OutputFormat);
                             records.DrawStats();
                         }
                     }

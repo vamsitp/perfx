@@ -18,7 +18,7 @@
     <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
     <PackageTags>Azure;API;Perf;Performance;Benchmark;Throughput;SLA</PackageTags>
     <Company>Microsoft</Company>
-    <Version>1.1.4</Version>
+    <Version>1.1.5</Version>
     <StartupObject>Perfx.Program</StartupObject>
     <ApplicationIcon />
     <Deterministic>false</Deterministic>
@@ -27,6 +27,7 @@
   <ItemGroup>
     <PackageReference Include="Alba.CsConsoleFormat.ColorfulConsole-NoXaml" Version="1.0.0" />
     <PackageReference Include="ByteSize" Version="2.0.0" />
+    <PackageReference Include="ClosedXML" Version="0.94.2" />
     <PackageReference Include="ColoredConsole" Version="1.0.0" />
     <PackageReference Include="CsvHelper" Version="15.0.1" />
     <PackageReference Include="Flurl.Http" Version="2.4.2" />

@@ -22,6 +22,7 @@
         public IEnumerable<string> ApiScopes { get; set; }
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
+        public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string AppInsightsAppId { get; set; } = string.Empty;
         public string AppInsightsApiKey { get; set; } = string.Empty;
@@ -63,5 +64,11 @@
     {
         public string code { get; set; }
         public string message { get; set; }
+    }
+
+    public enum OutputFormat
+    {
+        Excel,
+        Csv
     }
 }

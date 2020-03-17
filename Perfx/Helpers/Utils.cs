@@ -2,7 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Globalization;
+    using System.Data;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -14,14 +14,10 @@
 
     using ColoredConsole;
 
-    using CsvHelper;
-    using CsvHelper.Configuration;
-
     using MathNet.Numerics.Statistics;
 
     public static class Utils
     {
-        private const string ResultsFileName = "Perfx.csv";
         private const int MaxBarLength = 100;
         private const string VerticalChar = "│"; // "┃"
         private const char HorizontalChar = '─'; // '━'
@@ -250,7 +246,7 @@
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             foreach (var group in records.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
-                ColorConsole.WriteLine("\n\n ", group.Key.Green());
+                ColorConsole.WriteLine("\n ", group.Key.Green());
                 var okRecords = group.Where(x => x.result.Contains("200"));
                 var stats = new Dictionary<string, object>
                 {
@@ -262,8 +258,8 @@
                     { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
                     { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
                     { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
-                    { " size-min ", okRecords.Min(x => x.size.Value) },
-                    { " size-max ", okRecords.Max(x => x.size.Value) },
+                    { " size-min ", okRecords.Min(x => x.size.HasValue ? x.size.Value : 0) },
+                    { " size-max ", okRecords.Max(x => x.size.HasValue ? x.size.Value : 0) },
                     { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
                     { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
                 };
@@ -298,36 +294,6 @@
 
                 ConsoleRenderer.RenderDocument(doc);
             }
-        }
-
-        public static void SaveToFile(this IEnumerable<Record> items, string fileName = ResultsFileName)
-        {
-            var file = fileName.GetFullPath();
-            using (var reader = File.CreateText(file))
-            {
-                using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-                {
-                    csvWriter.WriteRecords(items);
-                }
-            }
-        }
-
-        public static IEnumerable<T> ReadResults<T>(string fileName = ResultsFileName)
-        {
-            var file = fileName.GetFullPath();
-            if (File.Exists(file))
-            {
-                var textReader = new StreamReader(file);
-                using (var csvReader = new CsvReader(textReader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-                {
-                    csvReader.Configuration.HeaderValidated = null;
-                    csvReader.Configuration.MissingFieldFound = null;
-                    var results = csvReader.GetRecords<T>().ToList();
-                    return results;
-                }
-            }
-
-            return null;
         }
 
         public static string GetFullPath(this string fileName)
