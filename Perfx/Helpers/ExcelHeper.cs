@@ -71,55 +71,74 @@
                 wb.Style.Font.FontName = "Segoe UI";
                 wb.Style.Font.FontSize = 10;
 
-                IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
-                var dataTable = records.ToDataTable();
-                var table = ws.Cell(1, 1).InsertTable(dataTable, "Runs");
-                table.Theme = XLTableTheme.TableStyleLight8;
+                CreateRunsSheet(wb, records);
+                CreateStatsSheet(wb, records);
 
-                var rowCount = (dataTable.Rows.Count + 1).ToString();
-                var result = ws.Range(ColumnNames[dataTable.Columns["result"].Ordinal] + rowCount);
-                result.AddConditionalFormat().WhenNotContains(":").Font.SetFontColor(XLColor.OrangeRed);
-                result.AddConditionalFormat().WhenNotContains("200").Font.SetFontColor(XLColor.MediumRedViolet);
-                result.AddConditionalFormat().WhenContains("200").Font.SetFontColor(XLColor.SeaGreen);
-
-                var size = ws.Range(ColumnNames[dataTable.Columns["size"].Ordinal] + rowCount);
-                size.AddConditionalFormat().WhenGreaterThan(8000).Font.SetFontColor(XLColor.OrangeRed);
-                size.AddConditionalFormat().WhenGreaterThan(5000).Font.SetFontColor(XLColor.MediumRedViolet);
-                size.AddConditionalFormat().WhenGreaterThan(2000).Font.SetFontColor(XLColor.RoyalBlue);
-                size.AddConditionalFormat().WhenEqualOrLessThan(2000).Font.SetFontColor(XLColor.SeaGreen);
-
-                var localms = ws.Range(ColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
-                localms.AddConditionalFormat().WhenGreaterThan(8000).Font.SetFontColor(XLColor.OrangeRed);
-                localms.AddConditionalFormat().WhenGreaterThan(5000).Font.SetFontColor(XLColor.MediumRedViolet);
-                localms.AddConditionalFormat().WhenGreaterThan(2000).Font.SetFontColor(XLColor.RoyalBlue);
-                localms.AddConditionalFormat().WhenEqualOrLessThan(2000).Font.SetFontColor(XLColor.SeaGreen);
-
-                ws.Columns().AdjustToContents();
-                ws.SheetView.Freeze(1, 3);
-
-                IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
-                var groups = records.Cast<Record>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (app-insights)"));
-                for (var i = 0; i < groups.Count(); i++)
-                {
-                    var group = groups.ElementAt(i);
-                    if (group.Key != null)
-                    {
-                        var run = new Run(group.ToList(), group.Key);
-                        var runDataTable = run.ToDataTable();
-                        var rowIndex = (i * 4) + 1;
-                        wsStats.Cell(rowIndex, 1).SetValue<string>(group.Key);
-                        var row = wsStats.Range($"A{rowIndex}:L{rowIndex}").Row(1);
-                        row.Merge();
-                        row.Style.Alignment.Horizontal = XLAlignmentHorizontalValues.Left;
-                        row.Style.Font.SetFontColor(XLColor.RoyalBlue);
-                        var runTable = wsStats.Cell(rowIndex + 1, 1).InsertTable(runDataTable, $"Stats{i}");
-                        runTable.Theme = XLTableTheme.TableStyleLight8;
-                    }
-                }
-
-                wsStats.Columns().AdjustToContents();
                 wb.SaveAs(fileName.GetFullPath());
             }
+        }
+
+        private static void CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> records)
+        {
+            IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
+            var dataTable = records.ToDataTable();
+            var table = ws.Cell(1, 1).InsertTable(dataTable, "Runs");
+            table.Theme = XLTableTheme.TableStyleLight8;
+
+            var rowCount = (dataTable.Rows.Count + 1).ToString();
+            var result = ws.Range(ColumnNames[dataTable.Columns["result"].Ordinal] + rowCount);
+            result.AddConditionalFormat().WhenNotContains(":").Font.SetFontColor(XLColor.OrangeRed);
+            result.AddConditionalFormat().WhenNotContains("200").Font.SetFontColor(XLColor.MediumRedViolet);
+            result.AddConditionalFormat().WhenContains("200").Font.SetFontColor(XLColor.SeaGreen);
+
+            var size = ws.Range(ColumnNames[dataTable.Columns["size_b"].Ordinal] + rowCount);
+            SetFormat(size, 1000);
+
+            var localms = ws.Range(ColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
+            SetFormat(localms, 1000);
+
+            ws.Columns().AdjustToContents();
+            ws.SheetView.Freeze(1, 3);
+        }
+
+        private static void CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> records)
+        {
+            IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
+            var stats = new List<Run>();
+            foreach (var group in records.Cast<Record>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
+            {
+                if (group.Key != null)
+                {
+                    var run = new Run(group.ToList(), group.Key);
+                    stats.Add(run);
+                }
+            }
+
+            var statsDataTable = stats.ToDataTable();
+            var statsTable = wsStats.Cell(1, 1).InsertTable(statsDataTable, "Stats");
+            statsTable.Theme = XLTableTheme.TableStyleLight8;
+
+            var statsRowCount = (statsDataTable.Rows.Count + 1).ToString();
+
+            var durations = wsStats.Range("B2:I" + statsRowCount);
+            SetFormat(durations);
+
+            var sizes = wsStats.Range("J2:K" + statsRowCount);
+            SetFormat(sizes);
+
+            wsStats.Range("L2:L" + statsRowCount).Style.Font.SetFontColor(XLColor.SeaGreen);
+            wsStats.Range("M2:M" + statsRowCount).Style.Font.SetFontColor(XLColor.OrangeRed);
+
+            wsStats.Columns().AdjustToContents();
+            wsStats.SheetView.Freeze(1, 1);
+        }
+
+        private static void SetFormat(IXLRange numbers, int multiplier = 1)
+        {
+            numbers.AddConditionalFormat().WhenGreaterThan(8 * multiplier).Font.SetFontColor(XLColor.OrangeRed);
+            numbers.AddConditionalFormat().WhenGreaterThan(5 * multiplier).Font.SetFontColor(XLColor.MediumRedViolet);
+            numbers.AddConditionalFormat().WhenGreaterThan(2 * multiplier).Font.SetFontColor(XLColor.RoyalBlue);
+            numbers.AddConditionalFormat().WhenEqualOrLessThan(2 * multiplier).Font.SetFontColor(XLColor.SeaGreen);
         }
 
         public static List<T> Read<T>(this OutputFormat outputFormat)
@@ -172,31 +191,31 @@
             return table;
         }
 
-        public static DataTable ToDataTable<T>(this T item)
-        {
-            var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
-            var table = new DataTable();
-            foreach (var prop in properties)
-            {
-                table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
-            }
+        //public static DataTable ToDataTable<T>(this T item)
+        //{
+        //    var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
+        //    var table = new DataTable();
+        //    foreach (var prop in properties)
+        //    {
+        //        table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
+        //    }
 
-            var row = table.NewRow();
-            foreach (var prop in properties)
-            {
-                if (prop.PropertyType == typeof(DateTime) && (DateTime)prop.GetValue(item) == DateTime.MinValue)
-                {
-                    row[prop.Name] = new DateTime(1900, 01, 01);
-                }
-                else
-                {
-                    row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
-                }
-            }
+        //    var row = table.NewRow();
+        //    foreach (var prop in properties)
+        //    {
+        //        if (prop.PropertyType == typeof(DateTime) && (DateTime)prop.GetValue(item) == DateTime.MinValue)
+        //        {
+        //            row[prop.Name] = new DateTime(1900, 01, 01);
+        //        }
+        //        else
+        //        {
+        //            row[prop.Name] = prop.GetValue(item) ?? DBNull.Value;
+        //        }
+        //    }
 
-            table.Rows.Add(row);
-            return table;
-        }
+        //    table.Rows.Add(row);
+        //    return table;
+        //}
 
         // Credit: https://stackoverflow.com/a/53546001
         public static DataTable ToDataTable(this string fileName, dynamic worksheet)

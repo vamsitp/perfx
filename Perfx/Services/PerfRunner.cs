@@ -80,7 +80,7 @@
                 "opid".PadLeft(leftPadding).Green(), ": ", record.op_Id, "\n",
                 "stat".PadLeft(leftPadding).Green(), ": ", record.result.GetColorToken(" "), " ", record.result, "\n",
                 "time".PadLeft(leftPadding).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n",
-                "size".PadLeft(leftPadding).Green(), ": ", record.size.GetColorToken(" "), " ", record.size_num_str, record.size_unit.Green(),  "\n");
+                "size".PadLeft(leftPadding).Green(), ": ", record.size_b.GetColorToken(" "), " ", record.size_num_str, record.size_unit.Green(),  "\n");
         }
 
         public async Task ExecuteAppInsights(List<Record> records, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
@@ -134,7 +134,7 @@
                 var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
                 record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
-                record.size = response.Content.Headers.ContentLength;
+                record.size_b = response.Content.Headers.ContentLength;
                 //using (var responseStream = await response.Content.ReadAsStreamAsync())
                 //{
                 //    using (var streamReader = new StreamReader(responseStream))

@@ -167,7 +167,7 @@
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.op_Id } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result }, Color = record.result.GetColor() },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.size_str }, Color = record.size.GetColor() },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.size_str }, Color = record.size_b.GetColor() },
                                     new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_s_str + "s" } },
                                     new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_s_str + "s" } }
                                 })
@@ -193,7 +193,7 @@
             foreach (var record in records)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ", record.size_str.Color(record.size.GetColor()), " / ", record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ", record.size_str.Color(record.size_b.GetColor()), " / ", record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
                 ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.duration_s_str, "s".Green());
             }
 
@@ -222,8 +222,8 @@
                     { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
                     { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
                     { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
-                    { " size-min ", okRecords.Min(x => x.size.HasValue ? x.size.Value : 0) },
-                    { " size-max ", okRecords.Max(x => x.size.HasValue ? x.size.Value : 0) },
+                    { " size-min ", okRecords.Min(x => x.size_b.HasValue ? x.size_b.Value : 0) },
+                    { " size-max ", okRecords.Max(x => x.size_b.HasValue ? x.size_b.Value : 0) },
                     { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
                     { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
                 };
@@ -262,8 +262,8 @@
                     { " dur-90% ", okRecords.Select(x => x.duration_ms).Percentile(90) },
                     { " dur-95% ", okRecords.Select(x => x.duration_ms).Percentile(95) },
                     { " dur-99% ", okRecords.Select(x => x.duration_ms).Percentile(99) },
-                    { " size-min ", okRecords.Min(x => x.size.HasValue ? x.size.Value : 0) },
-                    { " size-max ", okRecords.Max(x => x.size.HasValue ? x.size.Value : 0) },
+                    { " size-min ", okRecords.Min(x => x.size_b.HasValue ? x.size_b.Value : 0) },
+                    { " size-max ", okRecords.Max(x => x.size_b.HasValue ? x.size_b.Value : 0) },
                     { " 200-ok ", (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100) },
                     { " xxx-other ", (100 - (int)Math.Round(((double)(okRecords.Count() / group.Count())) * 100)) }
                 };

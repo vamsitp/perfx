@@ -17,14 +17,14 @@
         public string url { get; set; }
         public string op_Id { get; set; }
         public string result { get; set; }
-        public long? size { get; set; }
-        public string size_str => size.HasValue ? $"{size_num_str}{size_unit}" : string.Empty;
+        public long? size_b { get; set; }
+        public string size_str => size_b.HasValue ? $"{size_num_str}{size_unit}" : string.Empty;
 
         [Ignore]
-        public string size_num_str => size.HasValue ? ByteSize.FromBytes(size.Value).LargestWholeNumberDecimalValue.ToString("F2") : string.Empty;
+        public string size_num_str => size_b.HasValue ? ByteSize.FromBytes(size_b.Value).LargestWholeNumberDecimalValue.ToString("F2") : string.Empty;
 
         [Ignore]
-        public string size_unit => size.HasValue ? $"{ByteSize.FromBytes(size.Value).LargestWholeNumberDecimalSymbol}" : string.Empty;
+        public string size_unit => size_b.HasValue ? $"{ByteSize.FromBytes(size_b.Value).LargestWholeNumberDecimalSymbol}" : string.Empty;
 
         [Ignore]
         public double duration_ms => string.IsNullOrEmpty(ai_op_Id) ? local_ms : ai_ms;
@@ -76,21 +76,22 @@
         public List<Record> ok_records => this.records.Where(x => x.result.Contains("200"))?.ToList();
 
         [Ignore]
-        public List<double> ok_records_durations_ms => this.ok_records.Select(x => x.duration_ms)?.ToList();
+        public List<double> ok_records_durations_ms => this.ok_records.Select(x => Math.Round(x.duration_ms / 1000, 2))?.ToList();
 
         [Ignore]
-        public string url { get; set; }
+        public List<double> ok_records_size_kb => this.ok_records.Select(x => x.size_b.HasValue ? Math.Round(ByteSize.FromBytes(x.size_b.Value).KiloBytes, 2) : 0)?.ToList();
 
-        public double dur_min => this.ok_records_durations_ms.Min();
-        public double dur_max => this.ok_records_durations_ms.Max();
-        public double dur_mean => this.ok_records_durations_ms.Mean();
-        public double dur_median => this.ok_records_durations_ms.Median();
-        public double dur_std_dev => this.ok_records_durations_ms.StandardDeviation();
-        public double dur_90 => this.ok_records_durations_ms.Percentile(90);
-        public double dur_95 => this.ok_records_durations_ms.Percentile(95);
-        public double dur_99 => this.ok_records_durations_ms.Percentile(99);
-        public double size_min => this.ok_records.Min(x => x.size.HasValue ? x.size.Value : 0);
-        public double size_max => this.ok_records.Max(x => x.size.HasValue ? x.size.Value : 0);
+        public string url { get; set; }
+        public double dur_min_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Min() : 0;
+        public double dur_max_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Max() : 0;
+        public double dur_mean_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Mean() : 0;
+        public double dur_median_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Median() : 0;
+        public double dur_std_dev_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.StandardDeviation() : 0;
+        public double dur_90_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Percentile(90) : 0;
+        public double dur_95_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Percentile(95) : 0;
+        public double dur_99_s => this.ok_records_durations_ms.Count > 0 ? this.ok_records_durations_ms.Percentile(99) : 0;
+        public double size_min_kb => this.ok_records_size_kb.Count > 0 ? this.ok_records_size_kb.Min() : 0;
+        public double size_max_kb => this.ok_records_size_kb.Count > 0 ? this.ok_records_size_kb.Max() : 0;
         public double ok_200 => (int)Math.Round(((double)(this.ok_records.Count() / this.records.Count())) * 100);
         public double other_xxx => 100 - this.ok_200;
     }
