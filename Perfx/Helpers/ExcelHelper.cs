@@ -97,7 +97,7 @@
             return true;
         }
 
-        private static void CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> records)
+        private static IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> records)
         {
             IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
             var dataTable = records.ToDataTable();
@@ -128,9 +128,11 @@
             {
                 // Expected on Windows Server
             }
+
+            return ws;
         }
 
-        private static void CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> records)
+        private static IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> records)
         {
             IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
             var stats = new List<Run>();
@@ -167,6 +169,8 @@
             {
                 // Expected on Windows Server
             }
+
+            return wsStats;
         }
 
         private static void SetFormat(IXLRange numbers, int multiplier = 1)

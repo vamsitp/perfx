@@ -164,7 +164,7 @@
                 record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = ex.Message;
                 // ColorConsole.WriteLine(string.Empty.PadLeft(leftPadding), ex.Message.White().OnRed(), ": ", record.url.DarkGray(), $" (", record.op_Id.DarkGray(), ")");
-                this.logger.LogTrace($"ERR: {ex.Message.White()}: {record.id} - {record.url} ({record.op_Id})");
+                this.logger.LogTrace($"ERR: {ex.Message}: {record.id} - {record.url} ({record.op_Id})");
             }
 
             return record;
