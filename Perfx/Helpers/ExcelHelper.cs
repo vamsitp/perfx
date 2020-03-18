@@ -119,8 +119,15 @@
             var aims = ws.Range(ColumnNames[dataTable.Columns["ai_ms"].Ordinal] + rowCount);
             SetFormat(aims, 1000);
 
-            ws.Columns().AdjustToContents();
-            ws.SheetView.Freeze(1, 3);
+            try
+            {
+                ws.SheetView.Freeze(1, 3);
+                ws.Columns().AdjustToContents();
+            }
+            catch (Exception)
+            {
+                // Expected on Windows Server
+            }
         }
 
         private static void CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> records)
@@ -151,8 +158,15 @@
             wsStats.Range("L2:L" + statsRowCount).Style.Font.SetFontColor(XLColor.SeaGreen);
             wsStats.Range("M2:M" + statsRowCount).Style.Font.SetFontColor(XLColor.OrangeRed);
 
-            wsStats.Columns().AdjustToContents();
-            wsStats.SheetView.Freeze(1, 1);
+            try
+            {
+                wsStats.SheetView.Freeze(1, 1);
+                wsStats.Columns().AdjustToContents();
+            }
+            catch (Exception)
+            {
+                // Expected on Windows Server
+            }
         }
 
         private static void SetFormat(IXLRange numbers, int multiplier = 1)
