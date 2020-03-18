@@ -52,25 +52,30 @@
             ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
             ColorConsole.WriteLine("Iterations: ", iterations?.ToString()?.Green() ?? settings.Iterations.ToString().Green(), "\n");
 
-            var endpointTasks = settings.Endpoints.Select((ep, i) => Execute(ep, i + 1, iterations ?? settings.Iterations, stopToken));
-            var results = await Task.WhenAll(endpointTasks);
-            var records = results.SelectMany(e => e).ToList();
-            return records;
+            var endpointRecords = settings.Endpoints.SelectMany((endpoint, groupIndex) =>
+            {
+                return Enumerable.Range(0, iterations ?? settings.Iterations).Select(i =>
+                    new Record
+                    {
+                        id = float.Parse($"{groupIndex + 1}.{i + 1}"),
+                        op_Id = Guid.NewGuid().ToString(),
+                        url = endpoint
+                    });
+            });
+
+            // Group by endpoint?
+            var endpointTasks = endpointRecords.Select(record => Execute(record, stopToken));
+            var records = await Task.WhenAll(endpointTasks);
+            return records.ToList();
         }
 
-        private async Task<IEnumerable<Record>> Execute(string endpoint, float topIndex, int interations, CancellationToken stopToken = default)
+        private async Task<Record> Execute(Record record, CancellationToken stopToken = default)
         {
-            var result = await Task.WhenAll(Enumerable.Range(0, interations).Select(async i =>
-            {
-                var record = new Record {id = float.Parse($"{topIndex}.{i + 1}"), op_Id = Guid.NewGuid().ToString(), url = endpoint };
-                var response = await ProcessRequest(record, stopToken);
-                await Lock.WaitAsync();
-                Log(record);
-                Lock.Release();
-                return record;
-            }));
-
-            return result;
+            await ProcessRequest(record, stopToken);
+            // await Lock.WaitAsync();
+            Log(record);
+            // Lock.Release();
+            return record;
         }
 
         private void Log(Record record)
@@ -87,7 +92,7 @@
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
-                ColorConsole.Write(" App-Insights ".White().OnDarkGreen());
+                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", records.Count.ToString().Green(), "]");
                 var found = false;
                 var i = 0;
                 List<LogRecord> aiLogs = null;

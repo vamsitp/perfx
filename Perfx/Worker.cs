@@ -134,7 +134,7 @@
                             var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
                             int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
                             records = await perf.Execute(iterations, stopToken);
-                            ColorConsole.Write("> ".Green(), "Fetch ", "durations".Green(), " from App-Insights?", " (Y/N) ".Green());
+                            ColorConsole.Write("> ".Green(), "Fetch ", $" [{records.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
                             if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
                             {
