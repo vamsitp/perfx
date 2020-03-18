@@ -19,9 +19,16 @@
         [STAThread]
         static async Task Main(string[] args)
         {
+            //if (Console.WindowWidth < Console.LargestWindowWidth - 10 || Console.WindowHeight < Console.LargestWindowHeight - 5)
+            //{
+            //    Console.WriteLine($"Resizing: w - {Console.WindowWidth} -> {Console.LargestWindowWidth - 10} / h - {Console.WindowHeight} -> {Console.LargestWindowHeight - 5}");
+            //    Console.SetWindowPosition(0, 0);
+            //    Console.SetWindowSize(Console.LargestWindowWidth - 10, Console.LargestWindowHeight - 5);
+            //}
+            Console.OutputEncoding = Encoding.UTF8;
+
             // Credit: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
-            Console.OutputEncoding = Encoding.UTF8;
             IConfiguration configuration = null;
             var builder = Host
                             .CreateDefaultBuilder(args)

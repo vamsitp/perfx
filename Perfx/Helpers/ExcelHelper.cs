@@ -10,12 +10,12 @@
     using System.Reflection;
 
     using ClosedXML.Excel;
-
+    using ColoredConsole;
     using CsvHelper;
     using CsvHelper.Configuration;
     using CsvHelper.Configuration.Attributes;
 
-    public static class ExcelHeper
+    public static class ExcelHelper
     {
         private const string ResultsFileName = "Perfx.csv";
         private const string ResultsExcelFileName = "Perfx.xlsx";
@@ -24,12 +24,14 @@
 
         public static void SaveToFile<T>(this IEnumerable<T> records, string fileName = ResultsFileName)
         {
-            var file = fileName.GetFullPath();
-            using (var reader = File.CreateText(file))
+            if (fileName.Overwrite())
             {
-                using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                using (var reader = File.CreateText(fileName.GetFullPath()))
                 {
-                    csvWriter.WriteRecords(records);
+                    using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                    {
+                        csvWriter.WriteRecords(records);
+                    }
                 }
             }
         }
@@ -66,16 +68,33 @@
 
         public static void SaveToExcel<T>(this IEnumerable<T> records, string fileName = ResultsExcelFileName)
         {
-            using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
+            if (fileName.Overwrite())
             {
-                wb.Style.Font.FontName = "Segoe UI";
-                wb.Style.Font.FontSize = 10;
+                using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
+                {
+                    wb.Style.Font.FontName = "Segoe UI";
+                    wb.Style.Font.FontSize = 10;
 
-                CreateRunsSheet(wb, records);
-                CreateStatsSheet(wb, records);
+                    CreateRunsSheet(wb, records);
+                    CreateStatsSheet(wb, records);
 
-                wb.SaveAs(fileName.GetFullPath());
+                    wb.SaveAs(fileName.GetFullPath());
+                }
             }
+        }
+
+        private static bool Overwrite(this string fileName)
+        {
+            var filePath = fileName.GetFullPath();
+            if (File.Exists(filePath))
+            {
+                ColorConsole.Write("\n> ".Red(), "Overwrite ", filePath.DarkYellow(), "?", " (Y/N) ".Red());
+                var quit = Console.ReadKey();
+                ColorConsole.WriteLine();
+                return quit.Key == ConsoleKey.Y;
+            }
+
+            return true;
         }
 
         private static void CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> records)
@@ -96,6 +115,9 @@
 
             var localms = ws.Range(ColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
             SetFormat(localms, 1000);
+
+            var aims = ws.Range(ColumnNames[dataTable.Columns["ai_ms"].Ordinal] + rowCount);
+            SetFormat(aims, 1000);
 
             ws.Columns().AdjustToContents();
             ws.SheetView.Freeze(1, 3);
@@ -124,7 +146,7 @@
             SetFormat(durations);
 
             var sizes = wsStats.Range("J2:K" + statsRowCount);
-            SetFormat(sizes);
+            SetFormat(sizes, 100);
 
             wsStats.Range("L2:L" + statsRowCount).Style.Font.SetFontColor(XLColor.SeaGreen);
             wsStats.Range("M2:M" + statsRowCount).Style.Font.SetFontColor(XLColor.OrangeRed);

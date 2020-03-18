@@ -6,7 +6,7 @@ Azure API Performance benchmarking tool based on **App-Insights**
 #### USAGE
 **`perfx`** [`2`] (to override the number of iterations in the _settings_ file)
 
-> Results are saved to your `Documents` folder with the name: **`Perfx.csv`**
+> Results are saved to your `Documents` folder with the name: **`Perfx.xlsx`**/`Perfx.csv`
 
   ![Screenshot](Screenshot.png)
   ![Screenshot2](Screenshot2.png)
