@@ -33,7 +33,7 @@ Azure API Performance benchmarking tool based on **App-Insights**
 >         "https://YOUR-API.COM/route2"
 >     ],
 >     "Iterations": 5,
->     "OutputFormat": "Excel", // Csv
+>     "OutputFormat": "Excel", // "Csv"
 >     "ReadResponseHeadersOnly": false,
 >     "AppInsightsAppId": "",
 >     "AppInsightsApiKey": ""
