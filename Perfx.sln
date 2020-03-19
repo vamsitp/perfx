@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.29418.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx", "Perfx\Perfx.csproj", "{FDCF59D6-BF73-4D40-9293-4299BDAE7108}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{C226D509-7EA6-4E1E-806D-1110B2280B66}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Sln Items", "_Sln Items", "{C226D509-7EA6-4E1E-806D-1110B2280B66}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
 		LICENSE = LICENSE
@@ -15,6 +15,10 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.Core", "Perfx.Core\Perfx.Core.csproj", "{6F17D52C-F0CB-4CF4-B1C1-1C2226CFD94A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perfx.SamplePlugin", "Samples\Perfx.SamplePlugin\Perfx.SamplePlugin.csproj", "{83D297DE-ACFD-4495-86BF-79233655B1AA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{E5B5CD14-2ED9-4484-8092-25000C9B155D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -38,9 +42,20 @@ Global
 		{6F17D52C-F0CB-4CF4-B1C1-1C2226CFD94A}.Release|Any CPU.Build.0 = Release|Any CPU
 		{6F17D52C-F0CB-4CF4-B1C1-1C2226CFD94A}.Release|x64.ActiveCfg = Release|Any CPU
 		{6F17D52C-F0CB-4CF4-B1C1-1C2226CFD94A}.Release|x64.Build.0 = Release|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Debug|x64.Build.0 = Debug|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Release|x64.ActiveCfg = Release|Any CPU
+		{83D297DE-ACFD-4495-86BF-79233655B1AA}.Release|x64.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{83D297DE-ACFD-4495-86BF-79233655B1AA} = {E5B5CD14-2ED9-4484-8092-25000C9B155D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {2E4EDD6F-1187-4877-8A34-8253CEAC6B5E}

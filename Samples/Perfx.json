@@ -16,5 +16,5 @@
   "OutputFormat": "Excel",
   "ReadResponseHeadersOnly": false,
   "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
-  "PluginAssemblyPath": null
+  "PluginClassName": null // MyPluginAssembly.MyPlugin1
 }

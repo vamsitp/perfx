@@ -1,5 +1,5 @@
 # [perfx](https://github.com/vamsitp/perfx)
-Azure API Performance benchmarking tool based on **App-Insights**
+Azure API Performance benchmarking tool (for *Developers*) based on **App-Insights**
 
 ---
 
@@ -38,7 +38,7 @@ Azure API Performance benchmarking tool based on **App-Insights**
 >     "OutputFormat": "Excel", // "Csv"
 >     "ReadResponseHeadersOnly": false,
 >     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
->     "PluginAssemblyPath": null
+>     "PluginClassName": null
 > }
 > ```
 
@@ -65,6 +65,23 @@ Azure API Performance benchmarking tool based on **App-Insights**
 > ```
 
 > Also, see [`"allowPublicClient": true`](https://stackoverflow.com/a/57274706)
+
+---
+##### [PLUGINS](https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support#simple-plugin-with-no-dependencies)
+
+- Create a *.NET Standard* project and add reference to `Prefx.Core` project
+- Add a class that implements `IPlugin` interface
+- Update the **`csproj`** file as follows:
+  - ```xml
+    <ProjectReference Include="Perfx.Core.csproj">
+        <Private>false</Private>
+        <ExcludeAssets>runtime</ExcludeAssets>
+    </ProjectReference>
+    ```
+  - `<TargetFramework>netcoreapp3.1</TargetFramework>`
+  - `<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>` 
+  - Build the project and copy the build-output to `Documents/Perfx/Plugins` folder
+  - Optionally, if you have multiple `IPlugin` implementations, you can also update the *value* of `PluginClassName` with the specific implementation-class-full-name (e.g. `MyPluginAssembly.MyPlugin1`)
 
 ---
 

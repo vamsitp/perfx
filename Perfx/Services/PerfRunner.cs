@@ -9,7 +9,7 @@
     using System.Threading.Tasks;
 
     using ColoredConsole;
-
+    using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
 
@@ -25,9 +25,11 @@
         private readonly JsonSerializer jsonSerializer;
         private readonly ILogger<PerfRunner> logger;
         private readonly LogDataService logDataService;
-        private bool disposedValue = false;
-
+        private readonly IServiceProvider services;
+        private readonly IPlugin plugin;
         private readonly HttpClient client;
+
+        private bool disposedValue = false;
 
         private Settings settings;
 
@@ -35,7 +37,7 @@
 
         private static int leftPadding;
 
-        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer, ILogger<PerfRunner> logger)
+        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer, ILogger<PerfRunner> logger, IPlugin plugin, IServiceProvider services)
         {
             client = httpClientFactory.CreateClient(nameof(Perfx));
             client.Timeout = Timeout.InfiniteTimeSpan;
@@ -44,6 +46,8 @@
             this.logDataService = logDataService;
             this.jsonSerializer = jsonSerializer;
             this.logger = logger;
+            this.services = services;
+            this.plugin = plugin;
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
         }
 
@@ -63,7 +67,18 @@
                     });
             });
 
-            var groupedInputs = ExcelHelper.ReadFromExcel<RunInput>(this.settings.InputsFile, "Inputs")?.GroupBy(input => input.Url);
+            List<Endpoint> endpointDetails = null;
+            try
+            {
+                endpointDetails = await this.plugin.GetEndpointDetails(this.settings);
+            }
+            catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
+            {
+                var defaultPlugin = this.services.GetServices<IPlugin>().SingleOrDefault(p => p is PluginService);
+                endpointDetails = await defaultPlugin.GetEndpointDetails(this.settings);
+            }
+
+            var groupedInputs = endpointDetails?.GroupBy(input => input.Url);
 
             // Group by endpoint?
             var endpointTasks = endpointRecords.Select((record, i) =>
@@ -76,9 +91,9 @@
             return records.ToList();
         }
 
-        private static void SetInput(Record record, List<RunInput> inputs)
+        private static void SetInput(Record record, List<Endpoint> inputs)
         {
-            RunInput input;
+            Endpoint input;
 
             // TODO: Find a better way to extract the decimal-part whole-number
             var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault());
@@ -95,7 +110,7 @@
             }
             else
             {
-                input = new RunInput { Method = nameof(HttpMethod.Get) };
+                input = new Endpoint { Method = nameof(HttpMethod.Get) };
             }
 
             record.input = input;

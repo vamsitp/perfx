@@ -46,11 +46,19 @@
                                     .PostConfigure<Settings>(config => { if (args?.Length > 0 && int.TryParse(args.FirstOrDefault(), out var iterations)) config.Iterations = iterations; })
                                     .AddScoped<PerfRunner>()
                                     .AddHostedService<Worker>()
+                                    .AddSingleton<IPlugin, PluginService>()
                                     .AddSingleton<LogDataService>()
                                     .AddTransient<TimingHandler>()
                                     .AddSingleton<JsonSerializer>()
                                     .AddHttpClient(nameof(Perfx))
                                     .AddHttpMessageHandler<TimingHandler>();
+
+                                var plugin = PluginLoader.LoadPlugin(configuration.Get<Settings>());
+                                if (plugin != null)
+                                {
+                                    services.AddSingleton<IPlugin>(plugin);
+                                }
+
                                 //services.AddOptions<HostOptions>().Configure(o => o.ShutdownTimeout = TimeSpan.FromSeconds(10));
                             })
                             .ConfigureLogging((hostContext, logging) =>

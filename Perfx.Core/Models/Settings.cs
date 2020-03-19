@@ -10,10 +10,10 @@
     public class Settings
     {
         [JsonIgnore]
-        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.json");
+        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx),  $"{nameof(Perfx)}.json");
 
         [JsonIgnore]
-        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.Defaults.json");
+        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx), $"{nameof(Perfx)}.Defaults.json");
 
         private PropertyInfo[] properties;
 
@@ -29,7 +29,7 @@
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
         public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
-        public string PluginAssemblyPath { get; set; }
+        public string PluginClassName { get; set; }
 
         [JsonIgnore]
         public string Token { get; set; }

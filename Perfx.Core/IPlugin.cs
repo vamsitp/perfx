@@ -8,8 +8,6 @@
         // TODO: Use SecurePassword?
         Task<string> GetAuthToken(Settings settings);
 
-        Task<List<RunInput>> GetInputs();
-
-        Task<RunInput> GetInput(string endpoint, int index);
+        Task<List<Endpoint>> GetEndpointDetails(Settings settings);
     }
 }

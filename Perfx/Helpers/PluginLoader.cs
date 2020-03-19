@@ -1,4 +1,4 @@
-﻿namespace Perfx.Helpers
+﻿namespace Perfx
 {
     using System;
     using System.Collections.Generic;
@@ -9,51 +9,81 @@
 
     using ColoredConsole;
 
-    // https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
-    public class PluginLoader
-    {
-        public static List<IPlugin> LoadPlugins(string[] pluginPaths)
-        {
-            var commands = pluginPaths.SelectMany(pluginPath =>
-            {
-                var pluginAssembly = LoadPlugin(pluginPath);
-                return CreateCommands(pluginAssembly);
-            }).ToList();
+    using Perfx;
 
-            return commands;
+    // https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support
+    public static class PluginLoader
+    {
+        public static IPlugin LoadPlugin(Settings settings)
+        {
+            try
+            {
+                var plugins = new List<IPlugin>();
+                var pluginsDir = "Plugins".GetFullPath();
+                if (Directory.Exists(pluginsDir))
+                {
+                    foreach (var dll in Directory.GetFiles(pluginsDir, "*.dll"))
+                    {
+                        var pluginAssembly = GetPluginAssembly(dll);
+                        var implementations = GetPlugins(pluginAssembly)?.ToList();
+                        plugins.AddRange(implementations);
+                    }
+
+                    var plugin = plugins.FirstOrDefault(x => x.GetType().FullName.Equals(settings.PluginClassName)) ?? plugins.FirstOrDefault();
+                    ColorConsole.WriteLine($"Plugin loaded".DarkGray(), ": ".Green(), (plugin?.GetType()?.FullName ?? "None").DarkGray());
+                    return plugin;
+                }
+            }
+            catch (Exception ex)
+            {
+                ColorConsole.WriteLine(ex.Message.White().OnDarkRed());
+            }
+
+            return null;
         }
 
-        internal static Assembly LoadPlugin(string relativePath)
+        private static Assembly GetPluginAssembly(string dllPath)
         {
-            string pluginLocation = relativePath.GetFullPath();
-            ColorConsole.WriteLine($"Loading plugins from: ", pluginLocation.Green());
+            var pluginLocation = dllPath.GetFullPath();
+            if (pluginLocation == null)
+            {
+                return null;
+            }
+            else if (!File.Exists(pluginLocation))
+            {
+                ColorConsole.WriteLine($"Plugin '{pluginLocation}' does not exist!".OnDarkRed());
+                return null;
+            }
+
             var loadContext = new PluginLoadContext(pluginLocation);
             return loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(pluginLocation)));
         }
 
-        internal static IEnumerable<IPlugin> CreateCommands(Assembly assembly)
+        private static IEnumerable<IPlugin> GetPlugins(Assembly assembly)
         {
             int count = 0;
-
-            foreach (var type in assembly.GetTypes())
+            if (assembly != null)
             {
-                if (typeof(IPlugin).IsAssignableFrom(type))
+                foreach (var type in assembly.GetTypes())
                 {
-                    var result = Activator.CreateInstance(type) as IPlugin;
-                    if (result != null)
+                    if (typeof(IPlugin).IsAssignableFrom(type))
                     {
-                        count++;
-                        yield return result;
+                        var result = Activator.CreateInstance(type) as IPlugin;
+                        if (result != null)
+                        {
+                            count++;
+                            yield return result;
+                        }
                     }
                 }
-            }
 
-            if (count == 0)
-            {
-                string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
-                throw new ApplicationException(
-                    $"Can't find any type which implements IPlugin in {assembly} from {assembly.Location}.\n" +
-                    $"Available types: {availableTypes}");
+                if (count == 0)
+                {
+                    string availableTypes = string.Join(",", assembly.GetTypes().Select(t => t.FullName));
+                    throw new ApplicationException(
+                        $"Can't find any type which implements IPlugin in {assembly} from {assembly.Location}.\n" +
+                        $"Available types: {availableTypes}");
+                }
             }
         }
     }

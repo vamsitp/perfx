@@ -19,13 +19,17 @@
         private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
+        private readonly IServiceProvider services;
+        private readonly IPlugin plugin;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger, IPlugin plugin, IServiceProvider services)
         {
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
+            this.services = services;
+            this.plugin = plugin;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stopToken)
@@ -33,6 +37,11 @@
             var tenant = string.Empty;
             PrintHelp();
             List<Record> records = null;
+            if (!Directory.Exists(string.Empty.GetFullPath()))
+            {
+                Directory.CreateDirectory(string.Empty.GetFullPath());
+            }
+
             while (!stopToken.IsCancellationRequested)
             {
                 try
@@ -128,8 +137,15 @@
 
                         if (!string.IsNullOrEmpty(settings.UserId) && !string.IsNullOrEmpty(settings.Password))
                         {
-                            // input.Token = await AuthHelper.GetAuthToken(tenant);
-                            settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
+                            try
+                            {
+                                settings.Token = await this.plugin.GetAuthToken(settings);
+                            }
+                            catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
+                            {
+                                var defaultPlugin = this.services.GetServices<IPlugin>().SingleOrDefault(p => p is PluginService);
+                                settings.Token = await defaultPlugin.GetAuthToken(settings);
+                            }
                         }
 
                         using (var scope = serviceScopeFactory.CreateScope())

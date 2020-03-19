@@ -1,6 +1,6 @@
 ﻿namespace Perfx
 {
-    public class RunInput
+    public class Endpoint
     {
         public float Id { get; set; }
         public string Url { get; set; }
