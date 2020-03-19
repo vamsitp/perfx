@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Data;
+    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -10,11 +11,9 @@
 
     using Alba.CsConsoleFormat;
 
-    using ByteSizeLib;
-
     using ColoredConsole;
 
-    using MathNet.Numerics.Statistics;
+    using Microsoft.Extensions.Logging;
 
     public static class Utils
     {
@@ -252,6 +251,26 @@
         public static string GetFullPath(this string fileName)
         {
             return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+        }
+
+        public static void ShowThreads(this ILogger logger, bool consoleOutput = false)
+        {
+            try
+            {
+                var threads = Process.GetCurrentProcess().Threads.Cast<ProcessThread>().ToList();
+                if (consoleOutput)
+                {
+                    ColorConsole.WriteLine($"Threads: ", threads.Count.ToString().Cyan());
+                    threads.ForEach(t => ColorConsole.WriteLine($" {t.Id}".PadLeft(8).DarkGray(), ": ".Cyan(), $"{t.ThreadState} - {(t.ThreadState == System.Diagnostics.ThreadState.Wait ? t.WaitReason.ToString() : string.Empty)}".DarkGray()));
+                }
+
+                logger.LogDebug($"Threads: {threads.Count}");
+                threads.ForEach(t => logger.LogDebug($"\t{t.Id}: {t.ThreadState} - {(t.ThreadState == System.Diagnostics.ThreadState.Wait ? t.WaitReason.ToString() : string.Empty)}"));
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex.ToString());
+            }
         }
 
         // Credit: https://softwareengineering.stackexchange.com/a/370702

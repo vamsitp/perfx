@@ -2,7 +2,6 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.IO;
     using System.Linq;
     using System.Threading;
@@ -60,7 +59,7 @@
                     }
                     else if (key.StartsWith("t", StringComparison.OrdinalIgnoreCase))
                     {
-                        ShowThreads(true);
+                        this.logger.ShowThreads(true);
                     }
                     else if (key.StartsWith("l", StringComparison.OrdinalIgnoreCase) || key.StartsWith("a", StringComparison.OrdinalIgnoreCase))
                     {
@@ -164,19 +163,6 @@
             }
 
             // Clean-up on cancellation
-        }
-
-        private void ShowThreads(bool consoleOutput = false)
-        {
-            var threads = Process.GetCurrentProcess().Threads.Cast<ProcessThread>().ToList();
-            if (consoleOutput)
-            {
-                ColorConsole.WriteLine($"Threads: ", threads.Count.ToString().Cyan());
-                threads.ForEach(t => ColorConsole.WriteLine($" {t.Id}".PadLeft(8).DarkGray(), ": ".Cyan(), $"{t.ThreadState} - {(t.ThreadState == System.Diagnostics.ThreadState.Wait ? t.WaitReason.ToString() : string.Empty)}".DarkGray()));
-            }
-
-            this.logger.LogDebug($"Threads: {threads.Count}");
-            threads.ForEach(t => this.logger.LogDebug($"\t{t.Id}: {t.ThreadState} - {(t.ThreadState == System.Diagnostics.ThreadState.Wait ? t.WaitReason.ToString() : string.Empty)}"));
         }
 
         private static async Task ExecuteAppInsights(List<Record> records, string key, PerfRunner perf, CancellationToken stopToken)
