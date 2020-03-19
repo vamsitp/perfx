@@ -1,5 +1,6 @@
 ﻿namespace Perfx
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Reflection;
@@ -9,9 +10,10 @@
     public class Settings
     {
         [JsonIgnore]
-        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.json".GetFullPath();
+        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.json");
+
         [JsonIgnore]
-        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Defaults.json".GetFullPath();
+        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), $"{nameof(Perfx)}.Defaults.json");
 
         private PropertyInfo[] properties;
 
@@ -20,13 +22,14 @@
         public string Authority { get; set; } = string.Empty;
         public string ClientId { get; set; } = string.Empty;
         public IEnumerable<string> ApiScopes { get; set; }
+        public string AppInsightsAppId { get; set; } = string.Empty;
+        public string AppInsightsApiKey { get; set; } = string.Empty;
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
         public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
-        public string AppInsightsAppId { get; set; } = string.Empty;
-        public string AppInsightsApiKey { get; set; } = string.Empty;
+        public string PluginAssemblyPath { get; set; }
 
         [JsonIgnore]
         public string Token { get; set; }
@@ -54,17 +57,6 @@
             File.WriteAllText(AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
             // (this as IConfigurationRoot).Reload();
         }
-    }
-
-    public class InvalidAuthTokenError
-    {
-        public Error error { get; set; }
-    }
-
-    public class Error
-    {
-        public string code { get; set; }
-        public string message { get; set; }
     }
 
     public enum OutputFormat

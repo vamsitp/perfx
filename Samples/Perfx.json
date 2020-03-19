@@ -6,14 +6,15 @@
   "ApiScopes": [
     "api://"
   ],
+  "AppInsightsAppId": "",
+  "AppInsightsApiKey": "",
   "Endpoints": [
     "https://your-api.com/route1",
     "https://your-api.com/route2"
   ],
   "Iterations": 5,
-  "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
   "OutputFormat": "Excel",
   "ReadResponseHeadersOnly": false,
-  "AppInsightsAppId": "",
-  "AppInsightsApiKey": ""
+  "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
+  "PluginAssemblyPath": null
 }

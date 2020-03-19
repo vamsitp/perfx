@@ -6,7 +6,7 @@ Azure API Performance benchmarking tool based on **App-Insights**
 #### USAGE
 **`perfx`** [`2`] (to override the number of iterations in the _settings_ file)
 
-> Results are saved to your `Documents` folder with the name: **`Perfx.xlsx`**/`Perfx.csv`
+> Results are saved to your `Documents` folder with the name: **`Perfx_Results.xlsx`**/`Perfx_Results.csv`
 
   ![Screenshot](Screenshots\Screenshot1.png)
   ![Screenshot2](Screenshots\Screenshot2.png)
@@ -28,16 +28,17 @@ Azure API Performance benchmarking tool based on **App-Insights**
 >     "ApiScopes": [
 >         "api://YOUR-API-SCOPES"
 >     ],
+>     "AppInsightsAppId": "",
+>     "AppInsightsApiKey": ""
 >     "Endpoints": [
 >         "https://YOUR-API.COM/route1",
 >         "https://YOUR-API.COM/route2"
 >     ],
 >     "Iterations": 5,
->     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
 >     "OutputFormat": "Excel", // "Csv"
 >     "ReadResponseHeadersOnly": false,
->     "AppInsightsAppId": "",
->     "AppInsightsApiKey": ""
+>     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
+>     "PluginAssemblyPath": null
 > }
 > ```
 

@@ -63,7 +63,7 @@
                     });
             });
 
-            var groupedInputs = ExcelHelper.ReadFromExcel<RunInput>(this.settings.InputsFile, "Inputs").GroupBy(input => input.Url);
+            var groupedInputs = ExcelHelper.ReadFromExcel<RunInput>(this.settings.InputsFile, "Inputs")?.GroupBy(input => input.Url);
 
             // Group by endpoint?
             var endpointTasks = endpointRecords.Select((record, i) =>

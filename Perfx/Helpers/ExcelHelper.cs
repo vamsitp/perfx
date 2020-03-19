@@ -17,8 +17,8 @@
 
     public static class ExcelHelper
     {
-        private const string ResultsFileName = "Perfx.csv";
-        private const string ResultsExcelFileName = "Perfx.xlsx";
+        private const string ResultsFileName = "Perfx_Results.csv";
+        private const string ResultsExcelFileName = "Perfx_Results.xlsx";
 
         private static readonly string[] ColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
 
