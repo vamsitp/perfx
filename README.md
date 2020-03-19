@@ -8,8 +8,8 @@ Azure API Performance benchmarking tool based on **App-Insights**
 
 > Results are saved to your `Documents` folder with the name: **`Perfx.xlsx`**/`Perfx.csv`
 
-  ![Screenshot](Screenshot.png)
-  ![Screenshot2](Screenshot2.png)
+  ![Screenshot](Screenshots\Screenshot1.png)
+  ![Screenshot2](Screenshots\Screenshot2.png)
 
 - Enter **`r`**`:10` to **run** the benchmarks (`10` times)
 - Enter **`s`** to print the **stats**/details for the previous run
@@ -33,6 +33,7 @@ Azure API Performance benchmarking tool based on **App-Insights**
 >         "https://YOUR-API.COM/route2"
 >     ],
 >     "Iterations": 5,
+>     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
 >     "OutputFormat": "Excel", // "Csv"
 >     "ReadResponseHeadersOnly": false,
 >     "AppInsightsAppId": "",

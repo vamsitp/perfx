@@ -63,10 +63,42 @@
                     });
             });
 
+            var groupedInputs = ExcelHelper.ReadFromExcel<RunInput>(this.settings.InputsFile, "Inputs").GroupBy(input => input.Url);
+
             // Group by endpoint?
-            var endpointTasks = endpointRecords.Select(record => Execute(record, stopToken));
+            var endpointTasks = endpointRecords.Select((record, i) =>
+            {
+                var inputs = groupedInputs?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
+                SetInput(record, inputs);
+                return Execute(record, stopToken);
+            });
             var records = await Task.WhenAll(endpointTasks);
             return records.ToList();
+        }
+
+        private static void SetInput(Record record, List<RunInput> inputs)
+        {
+            RunInput input;
+
+            // TODO: Find a better way to extract the decimal-part whole-number
+            var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault());
+            if (inputs?.Count > 0)
+            {
+                if (inputs.Count >= id)
+                {
+                    input = inputs[id - 1];
+                }
+                else
+                {
+                    input = inputs.FirstOrDefault();
+                }
+            }
+            else
+            {
+                input = new RunInput { Method = nameof(HttpMethod.Get) };
+            }
+
+            record.input = input;
         }
 
         private async Task<Record> Execute(Record record, CancellationToken stopToken = default)
@@ -131,12 +163,13 @@
             this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
             this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
             record.timestamp = DateTime.Now;
+            var input = record.input;
             var taskWatch = Stopwatch.StartNew();
             try
             {
                 // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
                 // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-                var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
+                var response = await this.client.SendAsync(new HttpRequestMessage(new HttpMethod(input.Method), record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
                 record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
                 record.size_b = response.Content.Headers.ContentLength;

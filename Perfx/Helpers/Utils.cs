@@ -250,7 +250,7 @@
 
         public static string GetFullPath(this string fileName)
         {
-            return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
+            return Path.IsPathRooted(fileName) ? fileName : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), fileName);
         }
 
         public static void ShowThreads(this ILogger logger, bool consoleOutput = false)

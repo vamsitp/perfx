@@ -193,9 +193,9 @@
             }
         }
 
-        public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName)
+        public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName, string sheet = "Perfx_Runs")
         {
-            var records = filename.ToDataTable("Perfx_Runs")?.ToList<T>();
+            var records = filename.ToDataTable(sheet)?.ToList<T>();
             return records;
         }
 

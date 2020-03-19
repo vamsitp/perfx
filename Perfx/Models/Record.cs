@@ -27,6 +27,9 @@
         public string ai_op_Id { get; set; }
 
         [Ignore]
+        public RunInput input { get; set; }
+
+        [Ignore]
         public string size_num_str => size_b.HasValue ? ByteSize.FromBytes(size_b.Value).LargestWholeNumberDecimalValue.ToString("F2") : string.Empty;
 
         [Ignore]
@@ -99,5 +102,15 @@
 
         [Ignore]
         public List<PropertyInfo> Properties { get; } = typeof(Run).GetProperties().Where(p => !p.Name.Equals(nameof(url)) && p.GetCustomAttribute<IgnoreAttribute>() == null).ToList();
+    }
+
+    public class RunInput
+    {
+        public float Id { get; set; }
+        public string Url { get; set; }
+        public string Method { get; set; }
+        public string Query { get; set; }
+        public string Body { get; set; }
+        public string Headers { get; set; }
     }
 }

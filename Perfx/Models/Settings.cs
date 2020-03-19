@@ -22,6 +22,7 @@
         public IEnumerable<string> ApiScopes { get; set; }
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
+        public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
         public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string AppInsightsAppId { get; set; } = string.Empty;

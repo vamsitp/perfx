@@ -11,6 +11,9 @@
     "https://your-api.com/route2"
   ],
   "Iterations": 5,
+  "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
+  "OutputFormat": "Excel",
+  "ReadResponseHeadersOnly": false,
   "AppInsightsAppId": "",
   "AppInsightsApiKey": ""
 }
