@@ -44,7 +44,7 @@
                                 services
                                     .Configure<Settings>(configuration)
                                     .PostConfigure<Settings>(config => { if (args?.Length > 0 && int.TryParse(args.FirstOrDefault(), out var iterations)) config.Iterations = iterations; })
-                                    .AddScoped<PerfRunner>()
+                                    .AddScoped<BenchmarkService>()
                                     .AddScoped<HttpService>()
                                     .AddHostedService<Worker>()
                                     .AddSingleton<LogDataService>()

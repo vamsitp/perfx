@@ -14,24 +14,21 @@
 
     using SmartFormat;
 
-    public class PerfRunner : IDisposable
+    public class BenchmarkService : IDisposable
     {
-        private readonly LogDataService logDataService;
+        private static int leftPadding;
+
         private readonly IPlugin plugin;
         private readonly HttpService httpService;
 
         private bool disposedValue = false;
-
         private Settings settings;
 
-        private static int leftPadding;
-
-        public PerfRunner(IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, IServiceProvider services, HttpService httpService)
+        public BenchmarkService(IOptionsMonitor<Settings> settingsMonitor, IServiceProvider services, HttpService httpService)
         {
             this.httpService = httpService;
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
-            this.logDataService = logDataService;
             this.plugin = services.GetService<IPlugin>();
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
         }
@@ -125,42 +122,6 @@
                 "stat".PadLeft(leftPadding).Green(), ": ", result.result.GetColorToken(" "), " ", result.result, "\n",
                 "time".PadLeft(leftPadding).Green(), ": ", result.local_ms.GetColorToken(" "), " ", result.local_ms_str, "ms".Green(), " (~", result.local_s_str, "s".Green(), ") ", "\n",
                 "size".PadLeft(leftPadding).Green(), ": ", result.size_b.GetColorToken(" "), " ", result.size_num_str, result.size_unit.Green(),  "\n");
-        }
-
-        public async Task ExecuteAppInsights(List<Result> results, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
-        {
-            if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
-            {
-                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", results.Count.ToString().Green(), "]");
-                var found = false;
-                var i = 0;
-                List<Log> aiLogs = null;
-                do
-                {
-                    i++;
-                    aiLogs = (await logDataService.GetLogs(results.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
-                    found = aiLogs?.Count >= results.Count;
-                    ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
-                    await Task.Delay(1000);
-                }
-                while (!stopToken.IsCancellationRequested && found == false && i < retries);
-
-                if (aiLogs?.Count > 0)
-                {
-                    aiLogs.ForEach(ai =>
-                    {
-                        var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
-                        result.ai_ms = ai.duration;
-                        result.ai_op_Id = ai.operation_Id;
-                        // TODO: Rest of the props
-                    });
-                    ColorConsole.WriteLine();
-                }
-                else
-                {
-                    ColorConsole.WriteLine("\nNo logs found!".Yellow());
-                }
-            }
         }
 
         protected virtual void Dispose(bool disposing)

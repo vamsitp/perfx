@@ -34,10 +34,10 @@
         public List<PropertyInfo> Properties { get; } = typeof(Settings).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null).ToList();
 
         [JsonIgnore]
-        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.json".GetFullPath();
+        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.Settings.json".GetFullPath();
 
         [JsonIgnore]
-        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Defaults.json".GetFullPath();
+        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Logging.json".GetFullPath();
 
         public void Save()
         {

@@ -19,7 +19,7 @@
         private const string Bearer = "Bearer ";
 
         private readonly JsonSerializer jsonSerializer;
-        private readonly ILogger<PerfRunner> logger;
+        private readonly ILogger<HttpService> logger;
         private readonly HttpClient client;
 
         private bool disposedValue = false;
@@ -28,7 +28,7 @@
 
         private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
 
-        public HttpService(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, JsonSerializer jsonSerializer, ILogger<PerfRunner> logger)
+        public HttpService(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, JsonSerializer jsonSerializer, ILogger<HttpService> logger)
         {
             this.client = httpClientFactory.CreateClient(nameof(Perfx));
             this.client.Timeout = Timeout.InfiniteTimeSpan;

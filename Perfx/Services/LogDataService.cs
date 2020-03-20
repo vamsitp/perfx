@@ -1,10 +1,13 @@
 ﻿namespace Perfx
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
     using System.Threading;
     using System.Threading.Tasks;
+
+    using ColoredConsole;
 
     using Flurl.Http;
 
@@ -30,6 +33,42 @@
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.logger = logger;
+        }
+
+        public async Task ExecuteAppInsights(List<Result> results, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
+        {
+            if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
+            {
+                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", results.Count.ToString().Green(), "]");
+                var found = false;
+                var i = 0;
+                List<Log> aiLogs = null;
+                do
+                {
+                    i++;
+                    aiLogs = (await this.GetLogs(results.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
+                    found = aiLogs?.Count >= results.Count;
+                    ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
+                    await Task.Delay(1000);
+                }
+                while (!stopToken.IsCancellationRequested && found == false && i < retries);
+
+                if (aiLogs?.Count > 0)
+                {
+                    aiLogs.ForEach(ai =>
+                    {
+                        var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
+                        result.ai_ms = ai.duration;
+                        result.ai_op_Id = ai.operation_Id;
+                        // TODO: Rest of the props
+                    });
+                    ColorConsole.WriteLine();
+                }
+                else
+                {
+                    ColorConsole.WriteLine("\nNo logs found!".Yellow());
+                }
+            }
         }
 
         public async Task<IEnumerable<Log>> GetLogs(IEnumerable<string> traceIds, CancellationToken stopToken = default, string timeframe = "60m")

@@ -20,14 +20,16 @@
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
         private readonly IPlugin plugin;
+        private readonly LogDataService logDataService;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger, IServiceProvider services)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services)
         {
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
             this.plugin = services.GetService<IPlugin>();
+            this.logDataService = logDataService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stopToken)
@@ -79,7 +81,7 @@
                         {
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
-                                var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
+                                var perf = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                                 await ExecuteAppInsights(results, key, perf, stopToken);
                                 results.Save(this.settings.OutputFormat);
                                 results.DrawStats();
@@ -154,7 +156,7 @@
 
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
-                            var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
+                            var perf = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                             var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
                             int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
                             results = await perf.Execute(iterations, stopToken);
@@ -185,12 +187,12 @@
             // Clean-up on cancellation
         }
 
-        private static async Task ExecuteAppInsights(List<Result> results, string key, PerfRunner perf, CancellationToken stopToken)
+        private async Task ExecuteAppInsights(List<Result> results, string key, BenchmarkService perf, CancellationToken stopToken)
         {
             var split = key.Split(new[] { ':', '=', '-', '/' }, 3);
             var timeframe = split.Length > 1 ? split[1] : "60m";
             var retries = split.Length > 2 && int.TryParse(split[2], out var r) ? r : 60;
-            await perf.ExecuteAppInsights(results, timeframe, retries, stopToken);
+            await this.logDataService.ExecuteAppInsights(results, timeframe, retries, stopToken);
         }
 
         private static void PrintHelp()
