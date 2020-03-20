@@ -6,7 +6,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 #### USAGE
 **`perfx`** [`2`] (to override the number of iterations in the _settings_ file)
 
-> Additional details (e.g. *headers* / *body* / *query-params*) for the `Endpoints` defined the **`Perfx.Settings.json`** (sample [**here**](Samples/Perfx.Settings.json)) under `Documents/Perfx` can be provided in **`Perfx_Inputs.xlsx`** (sample [**here**](Samples/Perfx_Inputs.xlsx)) under the same folder (or using the *Plugin* model outlined below)
+> **Optional**: Additional details (e.g. *http-method* (defaults to `GET`) / *headers* / *body* / *query-params*) for the `Endpoints` defined the **`Perfx.Settings.json`** (sample [**here**](Samples/Perfx.Settings.json)) under `Documents/Perfx` can be provided in **`Perfx_Inputs.xlsx`** (sample [**here**](Samples/Perfx_Inputs.xlsx)) under the same folder (or using the *Plugin* model outlined below)
   
 > **Note**: By default, if an entry/row for an `Endpoint` exists in `Perfx_Inputs.xlsx`, the corresponding *row-index* of that entry is considered for the specific *iteration*. If the number of entries/rows for an `Endpoint` do not match up with the number of *iterations*, the first entry is taken into consideration for the subsequent iterations
 
