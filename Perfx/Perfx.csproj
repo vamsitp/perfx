@@ -18,7 +18,7 @@
     <RepositoryUrl>https://github.com/vamsitp/perfx</RepositoryUrl>
     <PackageTags>Azure;API;Perf;Performance;Benchmark;Throughput;SLA</PackageTags>
     <Company>Microsoft</Company>
-    <Version>1.2.0</Version>
+    <Version>1.2.1</Version>
     <StartupObject>Perfx.Program</StartupObject>
     <ApplicationIcon />
     <Deterministic>false</Deterministic>

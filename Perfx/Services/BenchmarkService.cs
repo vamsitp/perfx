@@ -49,7 +49,7 @@
                     });
             });
 
-            var endpointDetails = (await GetEndpointDetails()).Where(e => !string.IsNullOrWhiteSpace(e.Url));
+            var endpointDetails = (await GetEndpointDetails())?.Where(e => !string.IsNullOrWhiteSpace(e.Url));
             var groupedDetails = endpointDetails?.GroupBy(input => this.GetFormattedUrl(input.Url));
 
             // Group by endpoint?
