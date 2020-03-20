@@ -21,7 +21,7 @@
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var uri = request.RequestUri.OriginalString;
-            var traceId = request.Headers.GetValues(PerfRunner.RequestId).FirstOrDefault();
+            var traceId = request.Headers.GetValues(HttpService.RequestId).FirstOrDefault();
             logger.LogInformation($"Begin: {uri} ({traceId})");
             var sw = Stopwatch.StartNew();
             try

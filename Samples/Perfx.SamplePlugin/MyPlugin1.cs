@@ -1,9 +1,13 @@
 ﻿namespace Perfx.SamplePlugin
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
+    using System.Threading;
     using System.Threading.Tasks;
+
+    using Perfx;
 
     public class MyPlugin1 : IPlugin
     {
@@ -38,5 +42,16 @@
 
             return Task.FromResult(endpointDetails);
         }
+
+        ////public Task<dynamic> ProcessRequest(dynamic record, CancellationToken stopToken = default)
+        ////{
+        ////    // Get the response whichever way you like from the record details ('record' is of type 'Perfx.Result') and...
+        ////    // SET:
+        ////    //  record.local_ms // e.g. taskWatch.ElapsedMilliseconds;
+        ////    //  record.result // e.g. $"{(int)response.StatusCode}: {response.ReasonPhrase}";
+        ////    //  record.size_b // e.g. response.Content.Headers.ContentLength;
+
+        ////    throw new NotImplementedException();
+        ////}
     }
 }

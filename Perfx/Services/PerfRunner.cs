@@ -2,52 +2,35 @@
 {
     using System;
     using System.Collections.Generic;
-    using System.Diagnostics;
     using System.Linq;
     using System.Net.Http;
     using System.Threading;
     using System.Threading.Tasks;
 
     using ColoredConsole;
-    using Microsoft.Extensions.DependencyInjection;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.Extensions.Options;
 
-    using Newtonsoft.Json;
+    using Microsoft.Extensions.DependencyInjection;
+    using Microsoft.Extensions.Options;
 
     public class PerfRunner : IDisposable
     {
-        public const string RequestId = "Request-Id";
-        private const string OperationId = "operation_Id";
-        private const string AuthHeader = "Authorization";
-        private const string Bearer = "Bearer ";
-
-        private readonly JsonSerializer jsonSerializer;
-        private readonly ILogger<PerfRunner> logger;
         private readonly LogDataService logDataService;
-        private readonly IServiceProvider services;
         private readonly IPlugin plugin;
-        private readonly HttpClient client;
+        private readonly HttpService httpService;
 
         private bool disposedValue = false;
 
         private Settings settings;
 
-        private static readonly SemaphoreSlim Lock = new SemaphoreSlim(1, 1);
-
         private static int leftPadding;
 
-        public PerfRunner(IHttpClientFactory httpClientFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, JsonSerializer jsonSerializer, ILogger<PerfRunner> logger, IPlugin plugin, IServiceProvider services)
+        public PerfRunner(IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, IServiceProvider services, HttpService httpService)
         {
-            client = httpClientFactory.CreateClient(nameof(Perfx));
-            client.Timeout = Timeout.InfiniteTimeSpan;
+            this.httpService = httpService;
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.logDataService = logDataService;
-            this.jsonSerializer = jsonSerializer;
-            this.logger = logger;
-            this.services = services;
-            this.plugin = plugin;
+            this.plugin = services.GetService<IPlugin>();
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
         }
 
@@ -70,12 +53,18 @@
             List<Endpoint> endpointDetails = null;
             try
             {
-                endpointDetails = await this.plugin.GetEndpointDetails(this.settings);
+                if (this.plugin != null)
+                {
+                    endpointDetails = await this.plugin.GetEndpointDetails(this.settings);
+                }
+                else
+                {
+                    endpointDetails = ResultsHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
+                }
             }
             catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
             {
-                var defaultPlugin = this.services.GetServices<IPlugin>().SingleOrDefault(p => p is PluginService);
-                endpointDetails = await defaultPlugin.GetEndpointDetails(this.settings);
+                endpointDetails = ResultsHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
             }
 
             var groupedDetails = endpointDetails?.GroupBy(input => input.Url);
@@ -119,7 +108,7 @@
 
         private async Task<Result> Execute(Result record, CancellationToken stopToken = default)
         {
-            await ProcessRequest(record, stopToken);
+            await this.httpService.ProcessRequest(record, stopToken);
             // await Lock.WaitAsync();
             Log(record);
             // Lock.Release();
@@ -172,65 +161,13 @@
             }
         }
 
-        private async Task<Result> ProcessRequest(Result record, CancellationToken stopToken = default)
-        {
-            var token = this.settings.Token;
-            this.client.DefaultRequestHeaders.Clear();
-            this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
-            record.timestamp = DateTime.Now;
-            var input = record.input;
-            var taskWatch = Stopwatch.StartNew();
-            try
-            {
-                // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
-                // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-                var response = await this.client.SendAsync(new HttpRequestMessage(new HttpMethod(input.Method), record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
-                record.local_ms = taskWatch.ElapsedMilliseconds;
-                record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
-                record.size_b = response.Content.Headers.ContentLength;
-                //using (var responseStream = await response.Content.ReadAsStreamAsync())
-                //{
-                //    using (var streamReader = new StreamReader(responseStream))
-                //    using (var jsonTextReader = new JsonTextReader(streamReader))
-                //    {
-                //        if (!response.IsSuccessStatusCode)
-                //        {
-                //            var err = jsonSerializer.Deserialize<InvalidAuthTokenError>(jsonTextReader);
-                //            if (err == null)
-                //            {
-                //                ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{await jsonTextReader.ReadAsStringAsync()}");
-                //            }
-                //            else
-                //            {
-                //                ColorConsole.WriteLine($"GetJson - {response.StatusCode}: {response.ReasonPhrase}\n{err.error.code}: {err.error.message}".White().OnRed());
-                //            }
-                //        }
-                //        else
-                //        {
-                //            return (jsonSerializer.Deserialize<T>(jsonTextReader), elapsedTime);
-                //        }
-                //    }
-                //}
-            }
-            catch (Exception ex)
-            {
-                record.local_ms = taskWatch.ElapsedMilliseconds;
-                record.result = ex.Message;
-                // ColorConsole.WriteLine(string.Empty.PadLeft(leftPadding), ex.Message.White().OnRed(), ": ", record.url.DarkGray(), $" (", record.op_Id.DarkGray(), ")");
-                this.logger.LogTrace($"ERR: {ex.Message}: {record.id} - {record.url} ({record.op_Id})");
-            }
-
-            return record;
-        }
-
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue)
             {
                 if (disposing)
                 {
-                    this.client.Dispose();
+                    this.httpService.Dispose();
                 }
 
                 disposedValue = true;

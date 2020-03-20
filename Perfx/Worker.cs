@@ -19,17 +19,15 @@
         private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
-        private readonly IServiceProvider services;
         private readonly IPlugin plugin;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger, IPlugin plugin, IServiceProvider services)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, ILogger<Worker> logger, IServiceProvider services)
         {
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
-            this.services = services;
-            this.plugin = plugin;
+            this.plugin = services.GetService<IPlugin>();
         }
 
         protected override async Task ExecuteAsync(CancellationToken stopToken)
@@ -139,12 +137,18 @@
                         {
                             try
                             {
-                                settings.Token = await this.plugin.GetAuthToken(settings);
+                                if (this.plugin != null)
+                                {
+                                    settings.Token = await this.plugin.GetAuthToken(settings);
+                                }
+                                else
+                                {
+                                    settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
+                                }
                             }
                             catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
                             {
-                                var defaultPlugin = this.services.GetServices<IPlugin>().SingleOrDefault(p => p is PluginService);
-                                settings.Token = await defaultPlugin.GetAuthToken(settings);
+                                settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
                             }
                         }
 
@@ -154,7 +158,7 @@
                             var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
                             int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
                             results = await perf.Execute(iterations, stopToken);
-                            ColorConsole.Write("> ".Green(), "Fetch ", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
+                            ColorConsole.Write("> ".Green(), "Fetch", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
                             if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
                             {
