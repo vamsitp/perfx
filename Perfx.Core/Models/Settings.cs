@@ -62,6 +62,7 @@
     public enum OutputFormat
     {
         Excel,
-        Csv
+        Csv,
+        Json
     }
 }

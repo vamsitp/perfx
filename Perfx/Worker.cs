@@ -36,7 +36,7 @@
         {
             var tenant = string.Empty;
             PrintHelp();
-            List<Record> records = null;
+            List<Result> results = null;
             if (!Directory.Exists(string.Empty.GetFullPath()))
             {
                 Directory.CreateDirectory(string.Empty.GetFullPath());
@@ -72,33 +72,33 @@
                     }
                     else if (key.StartsWith("l", StringComparison.OrdinalIgnoreCase) || key.StartsWith("a", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (records == null)
+                        if (results == null)
                         {
-                            records = this.settings.OutputFormat.Read<Record>();
+                            results = this.settings.OutputFormat.Read<Result>();
                         }
 
-                        if (records?.Count > 0)
+                        if (results?.Count > 0)
                         {
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
                                 var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
-                                await ExecuteAppInsights(records, key, perf, stopToken);
-                                records.Save(this.settings.OutputFormat);
-                                records.DrawStats();
+                                await ExecuteAppInsights(results, key, perf, stopToken);
+                                results.Save(this.settings.OutputFormat);
+                                results.DrawStats();
                             }
                         }
                     }
                     else if (key.StartsWith("s", StringComparison.OrdinalIgnoreCase) || key.StartsWith("d", StringComparison.OrdinalIgnoreCase) || key.StartsWith("b", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (records == null)
+                        if (results == null)
                         {
-                            records = this.settings.OutputFormat.Read<Record>();
+                            results = this.settings.OutputFormat.Read<Result>();
                         }
 
-                        if (records?.Count > 0)
+                        if (results?.Count > 0)
                         {
-                            // records.Save(this.settings.OutputFormat);
-                            records.DrawStats();
+                            // results.Save(this.settings.OutputFormat);
+                            results.DrawStats();
                         }
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
@@ -153,17 +153,17 @@
                             var perf = scope.ServiceProvider.GetRequiredService<PerfRunner>();
                             var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
                             int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
-                            records = await perf.Execute(iterations, stopToken);
-                            ColorConsole.Write("> ".Green(), "Fetch ", $" [{records.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
+                            results = await perf.Execute(iterations, stopToken);
+                            ColorConsole.Write("> ".Green(), "Fetch ", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
                             if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
                             {
                                 ColorConsole.WriteLine();
-                                await ExecuteAppInsights(records, result, perf, stopToken);
+                                await ExecuteAppInsights(results, result, perf, stopToken);
                             }
 
-                            records.Save(this.settings.OutputFormat);
-                            records.DrawStats();
+                            results.Save(this.settings.OutputFormat);
+                            results.DrawStats();
                         }
                     }
                     else // (string.IsNullOrWhiteSpace(key))
@@ -181,12 +181,12 @@
             // Clean-up on cancellation
         }
 
-        private static async Task ExecuteAppInsights(List<Record> records, string key, PerfRunner perf, CancellationToken stopToken)
+        private static async Task ExecuteAppInsights(List<Result> results, string key, PerfRunner perf, CancellationToken stopToken)
         {
             var split = key.Split(new[] { ':', '=', '-', '/' }, 3);
             var timeframe = split.Length > 1 ? split[1] : "60m";
             var retries = split.Length > 2 && int.TryParse(split[2], out var r) ? r : 60;
-            await perf.ExecuteAppInsights(records, timeframe, retries, stopToken);
+            await perf.ExecuteAppInsights(results, timeframe, retries, stopToken);
         }
 
         private static void PrintHelp()

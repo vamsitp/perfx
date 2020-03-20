@@ -20,7 +20,7 @@
         public string type { get; set; }
     }
 
-    public class LogRecord
+    public class Log
     {
         public long id { get; set; }
         public DateTime timestamp { get; set; }

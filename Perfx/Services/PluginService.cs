@@ -13,7 +13,7 @@
 
         public Task<List<Endpoint>> GetEndpointDetails(Settings settings)
         {
-            return Task.FromResult(ExcelHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs"));
+            return Task.FromResult(ResultsHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs"));
         }
     }
 }

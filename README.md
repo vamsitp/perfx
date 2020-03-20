@@ -1,5 +1,5 @@
 # [perfx](https://github.com/vamsitp/perfx)
-Azure API Performance benchmarking tool (for *Developers*) based on **App-Insights**
+An **extensible** Azure API Performance benchmarking tool (for *Developers*) based on **App-Insights**
 
 ---
 
@@ -35,7 +35,7 @@ Azure API Performance benchmarking tool (for *Developers*) based on **App-Insigh
 >         "https://YOUR-API.COM/route2"
 >     ],
 >     "Iterations": 5,
->     "OutputFormat": "Excel", // "Csv"
+>     "OutputFormat": "Excel", // "Csv", "Json"
 >     "ReadResponseHeadersOnly": false,
 >     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
 >     "PluginClassName": null
@@ -67,7 +67,7 @@ Azure API Performance benchmarking tool (for *Developers*) based on **App-Insigh
 > Also, see [`"allowPublicClient": true`](https://stackoverflow.com/a/57274706)
 
 ---
-##### [PLUGINS](https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support#simple-plugin-with-no-dependencies)
+##### EXTEND [(PLUGINS)](https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support#simple-plugin-with-no-dependencies)
 
 - Create a *.NET Standard* project and add reference to `Prefx.Core` project
 - Add a class that implements `IPlugin` interface

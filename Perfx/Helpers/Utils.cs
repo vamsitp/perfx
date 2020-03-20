@@ -141,7 +141,7 @@
             return color;
         }
 
-        public static void DrawTable(this List<Record> records)
+        public static void DrawTable(this List<Result> results)
         {
             // Credit: https://stackoverflow.com/a/49032729
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
@@ -160,15 +160,15 @@
                             Children =
                             {
                                 headers.Select(header => new Cell { Stroke = headerThickness, Color = header.Equals(" perfx ") ? ConsoleColor.DarkGreen : ConsoleColor.White, Background = header.Equals(" perfx ") ? ConsoleColor.White : ConsoleColor.DarkGreen, Children = { header } }),
-                                records.Select(record => new[]
+                                results.Select(result => new[]
                                 {
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { record.id } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { record.url } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.op_Id } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.result }, Color = record.result.GetColor() },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.size_str }, Color = record.size_b.GetColor() },
-                                    new Cell { Stroke = rowThickness, Color = record.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.ai_s_str + "s" } },
-                                    new Cell { Stroke = rowThickness, Color = record.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { record.local_s_str + "s" } }
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { result.id } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { result.url } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.op_Id } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.result }, Color = result.result.GetColor() },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.size_str }, Color = result.size_b.GetColor() },
+                                    new Cell { Stroke = rowThickness, Color = result.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.ai_s_str + "s" } },
+                                    new Cell { Stroke = rowThickness, Color = result.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.local_s_str + "s" } }
                                 })
                             }
                         }
@@ -177,23 +177,23 @@
             ConsoleRenderer.RenderDocument(doc);
         }
 
-        public static void DrawStats(this List<Record> records)
+        public static void DrawStats(this List<Result> results)
         {
-            records.DrawTable();
-            records.DrawChart();
-            records.DrawPercentilesTable();
+            results.DrawTable();
+            results.DrawChart();
+            results.DrawPercentilesTable();
         }
 
-        public static void DrawChart(this List<Record> records)
+        public static void DrawChart(this List<Result> results)
         {
             ColorConsole.WriteLine("\n\n", " Responses ".White().OnGreen());
-            var maxIdLength = records.Max(x => x.id.ToString().Length);
-            var maxDurationLength = records.Max(x => x.duration_s_round);
-            foreach (var record in records)
+            var maxIdLength = results.Max(x => x.id.ToString().Length);
+            var maxDurationLength = results.Max(x => x.duration_s_round);
+            foreach (var result in results)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), record.op_Id.DarkGray(), " / ", record.size_str.Color(record.size_b.GetColor()), " / ", record.result.GetColorToken(), " / ".Green(), record.url.DarkGray());
-                ColorConsole.WriteLine(record.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), record.duration_ms.GetColorToken(' '), " ", record.duration_s_str, "s".Green());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), result.op_Id.DarkGray(), " / ", result.size_str.Color(result.size_b.GetColor()), " / ", result.result.GetColorToken(), " / ".Green(), result.url.DarkGray());
+                ColorConsole.WriteLine(result.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), result.duration_ms.GetColorToken(' '), " ", result.duration_s_str, "s".Green());
             }
 
             ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
@@ -202,11 +202,11 @@
                 "[", "100".DarkCyan(), "]");
         }
 
-        public static void DrawPercentilesTable(this List<Record> records)
+        public static void DrawPercentilesTable(this List<Result> results)
         {
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             var runs = new List<Run>();
-            foreach (var group in records.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
+            foreach (var group in results.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
                 var run = new Run(group, group.Key);
                 runs.Add(run);

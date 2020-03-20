@@ -51,7 +51,7 @@
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
         }
 
-        public async Task<List<Record>> Execute(int? iterations = null, CancellationToken stopToken = default)
+        public async Task<List<Result>> Execute(int? iterations = null, CancellationToken stopToken = default)
         {
             ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
             ColorConsole.WriteLine("Iterations: ", iterations?.ToString()?.Green() ?? settings.Iterations.ToString().Green(), "\n");
@@ -59,7 +59,7 @@
             var endpointRecords = settings.Endpoints.SelectMany((endpoint, groupIndex) =>
             {
                 return Enumerable.Range(0, iterations ?? settings.Iterations).Select(i =>
-                    new Record
+                    new Result
                     {
                         id = float.Parse($"{groupIndex + 1}.{i + 1}"),
                         op_Id = Guid.NewGuid().ToString(),
@@ -78,34 +78,35 @@
                 endpointDetails = await defaultPlugin.GetEndpointDetails(this.settings);
             }
 
-            var groupedInputs = endpointDetails?.GroupBy(input => input.Url);
+            var groupedDetails = endpointDetails?.GroupBy(input => input.Url);
 
             // Group by endpoint?
             var endpointTasks = endpointRecords.Select((record, i) =>
             {
-                var inputs = groupedInputs?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
-                SetInput(record, inputs);
+                var details = groupedDetails?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
+                SetInput(record, details);
                 return Execute(record, stopToken);
             });
-            var records = await Task.WhenAll(endpointTasks);
-            return records.ToList();
+
+            var results = await Task.WhenAll(endpointTasks);
+            return results.ToList();
         }
 
-        private static void SetInput(Record record, List<Endpoint> inputs)
+        private static void SetInput(Result record, List<Endpoint> details)
         {
             Endpoint input;
 
             // TODO: Find a better way to extract the decimal-part whole-number
             var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault());
-            if (inputs?.Count > 0)
+            if (details?.Count > 0)
             {
-                if (inputs.Count >= id)
+                if (details.Count >= id)
                 {
-                    input = inputs[id - 1];
+                    input = details[id - 1];
                 }
                 else
                 {
-                    input = inputs.FirstOrDefault();
+                    input = details.FirstOrDefault();
                 }
             }
             else
@@ -116,7 +117,7 @@
             record.input = input;
         }
 
-        private async Task<Record> Execute(Record record, CancellationToken stopToken = default)
+        private async Task<Result> Execute(Result record, CancellationToken stopToken = default)
         {
             await ProcessRequest(record, stopToken);
             // await Lock.WaitAsync();
@@ -125,29 +126,29 @@
             return record;
         }
 
-        private void Log(Record record)
+        private void Log(Result result)
         {
-            var id = record.id.ToString();
-            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), record.url.Green(), "\n",
-                "opid".PadLeft(leftPadding).Green(), ": ", record.op_Id, "\n",
-                "stat".PadLeft(leftPadding).Green(), ": ", record.result.GetColorToken(" "), " ", record.result, "\n",
-                "time".PadLeft(leftPadding).Green(), ": ", record.local_ms.GetColorToken(" "), " ", record.local_ms_str, "ms".Green(), " (~", record.local_s_str, "s".Green(), ") ", "\n",
-                "size".PadLeft(leftPadding).Green(), ": ", record.size_b.GetColorToken(" "), " ", record.size_num_str, record.size_unit.Green(),  "\n");
+            var id = result.id.ToString();
+            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), result.url.Green(), "\n",
+                "opid".PadLeft(leftPadding).Green(), ": ", result.op_Id, "\n",
+                "stat".PadLeft(leftPadding).Green(), ": ", result.result.GetColorToken(" "), " ", result.result, "\n",
+                "time".PadLeft(leftPadding).Green(), ": ", result.local_ms.GetColorToken(" "), " ", result.local_ms_str, "ms".Green(), " (~", result.local_s_str, "s".Green(), ") ", "\n",
+                "size".PadLeft(leftPadding).Green(), ": ", result.size_b.GetColorToken(" "), " ", result.size_num_str, result.size_unit.Green(),  "\n");
         }
 
-        public async Task ExecuteAppInsights(List<Record> records, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
+        public async Task ExecuteAppInsights(List<Result> results, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
-                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", records.Count.ToString().Green(), "]");
+                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", results.Count.ToString().Green(), "]");
                 var found = false;
                 var i = 0;
-                List<LogRecord> aiLogs = null;
+                List<Log> aiLogs = null;
                 do
                 {
                     i++;
-                    aiLogs = (await logDataService.GetLogs(records.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
-                    found = aiLogs?.Count >= records.Count;
+                    aiLogs = (await logDataService.GetLogs(results.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
+                    found = aiLogs?.Count >= results.Count;
                     ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
                     await Task.Delay(1000);
                 }
@@ -157,9 +158,9 @@
                 {
                     aiLogs.ForEach(ai =>
                     {
-                        var record = records.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
-                        record.ai_ms = ai.duration;
-                        record.ai_op_Id = ai.operation_Id;
+                        var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
+                        result.ai_ms = ai.duration;
+                        result.ai_op_Id = ai.operation_Id;
                         // TODO: Rest of the props
                     });
                     ColorConsole.WriteLine();
@@ -171,7 +172,7 @@
             }
         }
 
-        private async Task<Record> ProcessRequest(Record record, CancellationToken stopToken = default)
+        private async Task<Result> ProcessRequest(Result record, CancellationToken stopToken = default)
         {
             var token = this.settings.Token;
             this.client.DefaultRequestHeaders.Clear();

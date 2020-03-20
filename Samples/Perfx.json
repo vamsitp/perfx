@@ -13,7 +13,7 @@
     "https://your-api.com/route2"
   ],
   "Iterations": 5,
-  "OutputFormat": "Excel",
+  "OutputFormat": "Excel", // "Csv", "Json"
   "ReadResponseHeadersOnly": false,
   "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
   "PluginClassName": null // MyPluginAssembly.MyPlugin1

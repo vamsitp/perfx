@@ -14,15 +14,41 @@
     using CsvHelper;
     using CsvHelper.Configuration;
     using CsvHelper.Configuration.Attributes;
+    using Newtonsoft.Json;
 
-    public static class ExcelHelper
+    public static class ResultsHelper
     {
-        private const string ResultsFileName = "Perfx_Results.csv";
+        private const string ResultsJsonFileName = "Perfx_Results.Json";
+        private const string ResultsCsvFileName = "Perfx_Results.csv";
         private const string ResultsExcelFileName = "Perfx_Results.xlsx";
 
-        private static readonly string[] ColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
+        private static readonly string[] ExcelColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
 
-        public static void SaveToFile<T>(this IEnumerable<T> records, string fileName = ResultsFileName)
+        public static void Save<T>(this IEnumerable<T> results, OutputFormat outputFormat)
+        {
+            if (outputFormat == OutputFormat.Excel)
+            {
+                SaveToExcel(results);
+            }
+            else if (outputFormat == OutputFormat.Csv)
+            {
+                SaveToCsv(results);
+            }
+            else
+            {
+                SaveToJson(results);
+            }
+        }
+
+        public static void SaveToJson<T>(this IEnumerable<T> results, string fileName = ResultsJsonFileName)
+        {
+            if (fileName.Overwrite())
+            {
+                File.WriteAllText(fileName.GetFullPath(), JsonConvert.SerializeObject(results, Formatting.Indented));
+            }
+        }
+
+        public static void SaveToCsv<T>(this IEnumerable<T> results, string fileName = ResultsCsvFileName)
         {
             if (fileName.Overwrite())
             {
@@ -30,13 +56,57 @@
                 {
                     using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
                     {
-                        csvWriter.WriteRecords(records);
+                        csvWriter.WriteRecords(results);
                     }
                 }
             }
         }
 
-        public static List<T> ReadResults<T>(string fileName = ResultsFileName)
+        public static void SaveToExcel<T>(this IEnumerable<T> results, string fileName = ResultsExcelFileName)
+        {
+            if (fileName.Overwrite())
+            {
+                using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
+                {
+                    wb.Style.Font.FontName = "Segoe UI";
+                    wb.Style.Font.FontSize = 10;
+
+                    CreateRunsSheet(wb, results);
+                    CreateStatsSheet(wb, results);
+
+                    wb.SaveAs(fileName.GetFullPath());
+                }
+            }
+        }
+
+        public static List<T> Read<T>(this OutputFormat outputFormat)
+        {
+            if (outputFormat == OutputFormat.Excel)
+            {
+                return ReadFromExcel<T>() ?? ReadFromCsv<T>();
+            }
+            else if (outputFormat == OutputFormat.Csv)
+            {
+                return ReadFromCsv<T>();
+            }
+            else
+            {
+                return ReadFromJson<T>();
+            }
+        }
+
+        public static List<T> ReadFromJson<T>(string fileName = ResultsJsonFileName)
+        {
+            var file = fileName.GetFullPath();
+            if (File.Exists(file))
+            {
+                return JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(file));
+            }
+
+            return null;
+        }
+
+        public static List<T> ReadFromCsv<T>(string fileName = ResultsCsvFileName)
         {
             var file = fileName.GetFullPath();
             if (File.Exists(file))
@@ -54,33 +124,10 @@
             return null;
         }
 
-        public static void Save<T>(this IEnumerable<T> records, OutputFormat outputFormat)
+        public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName, string sheet = "Perfx_Runs")
         {
-            if (outputFormat == OutputFormat.Excel)
-            {
-                SaveToExcel(records);
-            }
-            else
-            {
-                SaveToFile(records);
-            }
-        }
-
-        public static void SaveToExcel<T>(this IEnumerable<T> records, string fileName = ResultsExcelFileName)
-        {
-            if (fileName.Overwrite())
-            {
-                using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
-                {
-                    wb.Style.Font.FontName = "Segoe UI";
-                    wb.Style.Font.FontSize = 10;
-
-                    CreateRunsSheet(wb, records);
-                    CreateStatsSheet(wb, records);
-
-                    wb.SaveAs(fileName.GetFullPath());
-                }
-            }
+            var results = filename.ToDataTable(sheet)?.ToList<T>();
+            return results;
         }
 
         private static bool Overwrite(this string fileName)
@@ -97,26 +144,26 @@
             return true;
         }
 
-        private static IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> records)
+        private static IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> results)
         {
             IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
-            var dataTable = records.ToDataTable();
+            var dataTable = results.ToDataTable();
             var table = ws.Cell(1, 1).InsertTable(dataTable, "Runs");
             table.Theme = XLTableTheme.TableStyleLight8;
 
             var rowCount = (dataTable.Rows.Count + 1).ToString();
-            var result = ws.Range(ColumnNames[dataTable.Columns["result"].Ordinal] + rowCount);
+            var result = ws.Range(ExcelColumnNames[dataTable.Columns["result"].Ordinal] + rowCount);
             result.AddConditionalFormat().WhenNotContains(":").Font.SetFontColor(XLColor.OrangeRed);
             result.AddConditionalFormat().WhenNotContains("200").Font.SetFontColor(XLColor.MediumRedViolet);
             result.AddConditionalFormat().WhenContains("200").Font.SetFontColor(XLColor.SeaGreen);
 
-            var size = ws.Range(ColumnNames[dataTable.Columns["size_b"].Ordinal] + rowCount);
+            var size = ws.Range(ExcelColumnNames[dataTable.Columns["size_b"].Ordinal] + rowCount);
             SetFormat(size, 1000);
 
-            var localms = ws.Range(ColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
+            var localms = ws.Range(ExcelColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
             SetFormat(localms, 1000);
 
-            var aims = ws.Range(ColumnNames[dataTable.Columns["ai_ms"].Ordinal] + rowCount);
+            var aims = ws.Range(ExcelColumnNames[dataTable.Columns["ai_ms"].Ordinal] + rowCount);
             SetFormat(aims, 1000);
 
             try
@@ -132,11 +179,11 @@
             return ws;
         }
 
-        private static IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> records)
+        private static IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results)
         {
             IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
             var stats = new List<Run>();
-            foreach (var group in records.Cast<Record>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
+            foreach (var group in results.Cast<Result>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
             {
                 if (group.Key != null)
                 {
@@ -181,26 +228,8 @@
             numbers.AddConditionalFormat().WhenEqualOrLessThan(2 * multiplier).Font.SetFontColor(XLColor.SeaGreen);
         }
 
-        public static List<T> Read<T>(this OutputFormat outputFormat)
-        {
-            if (outputFormat == OutputFormat.Excel)
-            {
-                return ReadFromExcel<T>() ?? ReadResults<T>();
-            }
-            else
-            {
-                return ReadResults<T>();
-            }
-        }
-
-        public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName, string sheet = "Perfx_Runs")
-        {
-            var records = filename.ToDataTable(sheet)?.ToList<T>();
-            return records;
-        }
-
         // Credit: https://stackoverflow.com/questions/18100783/how-to-convert-a-list-into-data-table
-        public static DataTable ToDataTable<T>(this IEnumerable<T> data)
+        public static DataTable ToDataTable<T>(this IEnumerable<T> items)
         {
             // var properties = TypeDescriptor.GetProperties(typeof(T)).Cast<PropertyDescriptor>().Where(p => !p.Attributes.Cast<Attribute>().Any(a => a.GetType() == typeof(IgnoreAttribute)));
             var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
@@ -210,7 +239,7 @@
                 table.Columns.Add(prop.Name, Nullable.GetUnderlyingType(prop.PropertyType) ?? prop.PropertyType);
             }
 
-            foreach (var item in data)
+            foreach (var item in items)
             {
                 var row = table.NewRow();
                 foreach (var prop in properties)

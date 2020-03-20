@@ -21,7 +21,7 @@
             "| order by timestamp asc " +
             "| project id=row_number(), timestamp, url, duration, operation_Id, operation_ParentId, resultCode, performanceBucket, client_IP, client_City";
         private const string Url = "https://api.applicationinsights.io/v1/apps/{0}/query";
-        private static readonly List<PropertyInfo> props = typeof(LogRecord).GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
+        private static readonly List<PropertyInfo> props = typeof(Log).GetProperties(BindingFlags.Public | BindingFlags.Instance).ToList();
         private readonly ILogger<LogDataService> logger;
         private Settings settings;
 
@@ -32,7 +32,7 @@
             this.logger = logger;
         }
 
-        public async Task<IEnumerable<LogRecord>> GetLogs(IEnumerable<string> traceIds, CancellationToken stopToken = default, string timeframe = "60m")
+        public async Task<IEnumerable<Log>> GetLogs(IEnumerable<string> traceIds, CancellationToken stopToken = default, string timeframe = "60m")
         {
             var subquery = "and (" + string.Join(" ", traceIds.Select((t, i) => (i == 0 ? string.Empty : "or ") + $"* contains '{t}'")) + ") ";
             var query = string.Format(Query, timeframe, subquery);
@@ -44,19 +44,19 @@
                 .PostJsonAsync(new { query }, stopToken)
                 .ReceiveJson<LogData>();
 
-            var results = new List<LogRecord>();
+            var results = new List<Log>();
             var cols = response.tables?.FirstOrDefault()?.columns?.ToList();
             var rows = response.tables?.FirstOrDefault()?.rows?.ToList();
             if (cols?.Count > 0 && rows?.Count > 0)
             {
                 for (int r = 0; r < rows.Count; r++)
                 {
-                    var record = new LogRecord();
-                    results.Add(record);
+                    var log = new Log();
+                    results.Add(log);
                     for (int c = 0; c < cols.Count; c++)
                     {
                         var prop = props[c];
-                        prop.SetValue(record, rows[r][c]);
+                        prop.SetValue(log, rows[r][c]);
                     }
                 }
             }

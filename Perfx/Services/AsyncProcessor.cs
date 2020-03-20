@@ -31,13 +31,13 @@
             this.logger = logger;
         }
 
-        public ISourceBlock<Record> ProcessEndpoints(string[] endpoints, int topIndex, int maxDegreeOfParallelism, CancellationToken stopToken)
+        public ISourceBlock<Result> ProcessEndpoints(string[] endpoints, int topIndex, int maxDegreeOfParallelism, CancellationToken stopToken)
         {
-            var block = new TransformManyBlock<(string endpoint, int i), Record>(
+            var block = new TransformManyBlock<(string endpoint, int i), Result>(
                 async item =>
                 {
-                    var record = new Record { id = float.Parse($"{topIndex}.{item.i + 1}"), op_Id = Guid.NewGuid().ToString(), url = item.endpoint };
-                    return await ProcessEndpoint(record, stopToken);
+                    var result = new Result { id = float.Parse($"{topIndex}.{item.i + 1}"), op_Id = Guid.NewGuid().ToString(), url = item.endpoint };
+                    return await ProcessEndpoint(result, stopToken);
                 }, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = maxDegreeOfParallelism });
 
             for (var i = 0; i < endpoints.Length; i++)
@@ -50,39 +50,39 @@
             return block;
         }
 
-        private async Task<Record[]> ProcessEndpoint(Record record, CancellationToken stopToken)
+        private async Task<Result[]> ProcessEndpoint(Result result, CancellationToken stopToken)
         {
             var token = this.settings.Token;
             this.client.DefaultRequestHeaders.Clear();
             this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
-            record.timestamp = DateTime.Now;
+            this.client.DefaultRequestHeaders.Add(RequestId, result.op_Id);
+            result.timestamp = DateTime.Now;
             var taskWatch = Stopwatch.StartNew();
 
             try
             {
                 // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
                 // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-                var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
-                record.local_ms = taskWatch.ElapsedMilliseconds;
-                record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
-                record.size_b = response.Content.Headers.ContentLength;
+                var response = await this.client.SendAsync(new HttpRequestMessage(HttpMethod.Get, result.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
+                result.local_ms = taskWatch.ElapsedMilliseconds;
+                result.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
+                result.size_b = response.Content.Headers.ContentLength;
             }
             catch (Exception ex)
             {
-                record.local_ms = taskWatch.ElapsedMilliseconds;
-                record.result = ex.Message;
+                result.local_ms = taskWatch.ElapsedMilliseconds;
+                result.result = ex.Message;
                 // ColorConsole.WriteLine(string.Empty.PadLeft(leftPadding), ex.Message.White().OnRed(), ": ", record.url.DarkGray(), $" (", record.op_Id.DarkGray(), ")");
-                this.logger.LogTrace($"ERR: {ex.Message}: {record.id} - {record.url} ({record.op_Id})");
+                this.logger.LogTrace($"ERR: {ex.Message}: {result.id} - {result.url} ({result.op_Id})");
             }
 
-            return new[] { record };
+            return new[] { result };
         }
 
         // Credit: https://stackoverflow.com/a/46383356
-        public async Task<List<Record>> ProcessDownloads(string[] endpoints, int iterations, CancellationToken stopToken)
+        public async Task<List<Result>> ProcessDownloads(string[] endpoints, int iterations, CancellationToken stopToken)
         {
-            //var result = new List<Record>();
+            //var result = new List<Result>();
             //var downloadData = new TransformBlock<string, HttpResponseMessage>(async url =>
             //{
             //    var record = new Record { id = float.Parse($"{topIndex}.{i + 1}"), op_Id = Guid.NewGuid().ToString(), url = url };
@@ -96,7 +96,7 @@
             //    return response;
             //}, new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = concurrentDownloads });
 
-            //var processData = new TransformBlock<HttpResponseMessage, Record>(
+            //var processData = new TransformBlock<HttpResponseMessage, Result>(
             //    response =>
             //    {
             //        record.local_ms = taskWatch.ElapsedMilliseconds;
@@ -106,7 +106,7 @@
             //    },
             //    new ExecutionDataflowBlockOptions { MaxDegreeOfParallelism = DataflowBlockOptions.Unbounded });
 
-            //var collectData = new ActionBlock<Record>(data => result.Add(data)); // When you don't specify options dataflow processes items one at a time.
+            //var collectData = new ActionBlock<Result>(data => result.Add(data)); // When you don't specify options dataflow processes items one at a time.
 
             //// Set up the chain of blocks, have it call `.Complete()` on the next block when the current block finishes processing it's last item.
             //downloadData.LinkTo(processData, new DataflowLinkOptions { PropagateCompletion = true });
@@ -126,7 +126,7 @@
 
             //return result;
 
-            return await Task.FromResult(default(List<Record>));
+            return await Task.FromResult(default(List<Result>));
         }
     }
 }
