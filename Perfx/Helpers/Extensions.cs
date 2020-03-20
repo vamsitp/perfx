@@ -147,7 +147,7 @@
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
             var headerThickness = new LineThickness(LineWidth.Single, LineWidth.Double);
             var rowThickness = new LineThickness(LineWidth.Single, LineWidth.Single);
-            var headers = new List<string> { " # ", " url ", " op_Id ", " result ", " size ", " ai ", " perfx " };
+            var headers = new List<string> { " # ", " url ", " query ", " op_Id ", " result ", " size ", " ai ", " perfx " };
             var doc = new Document(
                         new Grid
                         {
@@ -164,6 +164,7 @@
                                 {
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Right, Children = { result.id } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { result.url } },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { result.query } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.op_Id } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.result }, Color = result.result.GetColor() },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.size_str }, Color = result.size_b.GetColor() },
@@ -192,7 +193,7 @@
             foreach (var result in results)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), result.op_Id.DarkGray(), " / ", result.size_str.Color(result.size_b.GetColor()), " / ", result.result.GetColorToken(), " / ".Green(), result.url.DarkGray());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), result.op_Id.DarkGray(), " / ", result.size_str.Color(result.size_b.GetColor()), " / ", result.result.GetColorToken(), " / ".Green(), result.full_url.DarkGray());
                 ColorConsole.WriteLine(result.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), result.duration_ms.GetColorToken(' '), " ", result.duration_s_str, "s".Green());
             }
 
@@ -208,8 +209,11 @@
             var runs = new List<Run>();
             foreach (var group in results.GroupBy(r => r.url + (string.IsNullOrEmpty(r.ai_op_Id) ? string.Empty : $" (ai)")))
             {
-                var run = new Run(group, group.Key);
-                runs.Add(run);
+                if (group.Key != null)
+                {
+                    var run = new Run(group, group.Key);
+                    runs.Add(run);
+                }
             }
 
             foreach (var run in runs)

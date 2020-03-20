@@ -68,13 +68,12 @@
             }
 
             record.timestamp = DateTime.Now;
-            var url = record.url.TrimEnd('/') + (string.IsNullOrWhiteSpace(details.Query) ? string.Empty : ("/" + details.Query.TrimStart('/')));
-            using (var request = new HttpRequestMessage(new HttpMethod(details.Method), record.url))
+            using (var request = new HttpRequestMessage(new HttpMethod(details.Method), record.full_url))
             {
                 var content = record.details.Body?.Split(':', 2);
                 if (content?.Length > 0)
                 {
-                    using (var httpContent = new StringContent(content[1], Encoding.UTF8, content[0]))
+                    using (var httpContent = new StringContent(content[1]?.Trim(), Encoding.UTF8, content[0]?.Trim()))
                     {
                         request.Content = httpContent;
                         var taskWatch = Stopwatch.StartNew();

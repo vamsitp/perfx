@@ -81,8 +81,8 @@
                         {
                             using (var scope = serviceScopeFactory.CreateScope())
                             {
-                                var perf = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
-                                await ExecuteAppInsights(results, key, perf, stopToken);
+                                var benchmark = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
+                                await ExecuteAppInsights(results, key, stopToken);
                                 results.Save(this.settings.OutputFormat);
                                 results.DrawStats();
                             }
@@ -156,16 +156,16 @@
 
                         using (var scope = serviceScopeFactory.CreateScope())
                         {
-                            var perf = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
+                            var benchmark = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                             var split = key.Split(new[] { ':', '=', '-', '/' }, 2);
-                            int? iterations = split.Length > 1 && int.TryParse(split[1], out var r) ? r : default(int?);
-                            results = await perf.Execute(iterations, stopToken);
+                            int? iterations = split.Length > 1 && int.TryParse(split[1]?.Trim(), out var r) ? r : default(int?);
+                            results = await benchmark.Execute(iterations, stopToken);
                             ColorConsole.Write("> ".Green(), "Fetch", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
                             if (result?.StartsWith("y", StringComparison.OrdinalIgnoreCase) == true)
                             {
                                 ColorConsole.WriteLine();
-                                await ExecuteAppInsights(results, result, perf, stopToken);
+                                await ExecuteAppInsights(results, result, stopToken);
                             }
 
                             results.Save(this.settings.OutputFormat);
@@ -187,11 +187,11 @@
             // Clean-up on cancellation
         }
 
-        private async Task ExecuteAppInsights(List<Result> results, string key, BenchmarkService perf, CancellationToken stopToken)
+        private async Task ExecuteAppInsights(List<Result> results, string key, CancellationToken stopToken)
         {
             var split = key.Split(new[] { ':', '=', '-', '/' }, 3);
-            var timeframe = split.Length > 1 ? split[1] : "60m";
-            var retries = split.Length > 2 && int.TryParse(split[2], out var r) ? r : 60;
+            var timeframe = split.Length > 1 ? split[1]?.Trim() : "60m";
+            var retries = split.Length > 2 && int.TryParse(split[2]?.Trim(), out var r) ? r : 60;
             await this.logDataService.ExecuteAppInsights(results, timeframe, retries, stopToken);
         }
 

@@ -40,28 +40,38 @@
 
             var endpointRecords = this.settings.Endpoints.SelectMany((endpoint, groupIndex) =>
             {
-                return Enumerable.Range(0, iterations ?? settings.Iterations).Select(i =>
+                return Enumerable.Range(0, iterations ?? this.settings.Iterations).Select(i =>
                     new Result
                     {
                         id = float.Parse($"{groupIndex + 1}.{i + 1}"),
                         op_Id = Guid.NewGuid().ToString(),
-                        url = this.settings.FormatArgs == null ? endpoint : Smart.Format(endpoint, this.settings.FormatArgs)
+                        url = this.GetFormattedUrl(endpoint)
                     });
             });
 
-            var endpointDetails = await GetEndpointDetails();
-            var groupedDetails = endpointDetails?.GroupBy(input => input.Url);
+            var endpointDetails = (await GetEndpointDetails()).Where(e => !string.IsNullOrWhiteSpace(e.Url));
+            var groupedDetails = endpointDetails?.GroupBy(input => this.GetFormattedUrl(input.Url));
 
             // Group by endpoint?
             var endpointTasks = endpointRecords.Select((record, i) =>
             {
-                var details = groupedDetails?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
+                var details = groupedDetails?.SingleOrDefault(x => x != null && x.Key?.Trim()?.Equals(record.url.Trim(), StringComparison.OrdinalIgnoreCase) == true)?.ToList();
                 SetInput(record, details);
                 return Execute(record, stopToken);
             });
 
             var results = await Task.WhenAll(endpointTasks);
             return results.ToList();
+        }
+
+        private string GetFormattedUrl(string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return url;
+            }
+
+            return this.settings.FormatArgs == null ? url : Smart.Format(url, this.settings.FormatArgs);
         }
 
         private async Task<List<Endpoint>> GetEndpointDetails()
@@ -92,7 +102,7 @@
             Endpoint details;
 
             // TODO: Find a better way to extract the decimal-part whole-number
-            var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault());
+            var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault().Trim());
             if (detailsList?.Count > 0)
             {
                 if (detailsList.Count >= id)
@@ -101,6 +111,7 @@
                 }
                 else
                 {
+                    // TODO: Random instead of FirstOrDefault?
                     details = detailsList.FirstOrDefault();
                 }
             }
@@ -124,7 +135,7 @@
         private void Log(Result result)
         {
             var id = result.id.ToString();
-            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), result.url.Green(), "\n",
+            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), result.full_url.Green(), "\n",
                 "opid".PadLeft(leftPadding).Green(), ": ", result.op_Id, "\n",
                 "stat".PadLeft(leftPadding).Green(), ": ", result.result.GetColorToken(" "), " ", result.result, "\n",
                 "time".PadLeft(leftPadding).Green(), ": ", result.local_ms.GetColorToken(" "), " ", result.local_ms_str, "ms".Green(), " (~", result.local_s_str, "s".Green(), ") ", "\n",

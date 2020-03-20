@@ -16,6 +16,7 @@
         public float id { get; set; }
         public DateTime timestamp { get; set; }
         public string url { get; set; }
+        public string query => this.details.Query;
         public string result { get; set; }
         public long? size_b { get; set; }
         public string size_str => size_b.HasValue ? $"{size_num_str}{size_unit}" : string.Empty;
@@ -25,6 +26,9 @@
         public double ai_s => Math.Round(this.ai_ms / 1000, 2);
         public string op_Id { get; set; }
         public string ai_op_Id { get; set; }
+
+        [Ignore]
+        public string full_url => this.url.TrimEnd('/') + (string.IsNullOrWhiteSpace(this.details.Query) ? string.Empty : ("/" + this.details.Query.TrimStart('/')));
 
         [Ignore]
         public Endpoint details { get; set; }

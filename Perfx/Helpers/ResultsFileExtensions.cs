@@ -300,7 +300,7 @@
             {
                 IXLWorksheet workSheet = workBook.Worksheets.Contains(worksheet) ? workBook.Worksheet(worksheet) : workBook.Worksheet(1);
                 var firstRow = true;
-                foreach (var row in workSheet.Rows())
+                foreach (var row in workSheet.RangeUsed().Rows())
                 {
                     if (firstRow)
                     {
