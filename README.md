@@ -6,12 +6,14 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 #### USAGE
 **`perfx`** [`2`] (to override the number of iterations in the _settings_ file)
 
-> Additional details (e.g. *headers* / *body* / *query-params*) for the `Endpoints` defined the `Perfx.Settings.json` (sample [here](Samples/Perfx.Settings.json)) under `Documents/Perfx` can be provided in **[`Perfx_Inputs.xlsx`](Samples/Perfx_Inputs.xlsx)** under the same folder (or using the *Plugin* model outlined below)
+> Additional details (e.g. *headers* / *body* / *query-params*) for the `Endpoints` defined the **`Perfx.Settings.json`** (sample [**here**](Samples/Perfx.Settings.json)) under `Documents/Perfx` can be provided in **`Perfx_Inputs.xlsx`** (sample [**here**](Samples/Perfx_Inputs.xlsx)) under the same folder (or using the *Plugin* model outlined below)
+  
+> **Note**: By default, if an entry/row for an `Endpoint` exists in `Perfx_Inputs.xlsx`, the corresponding *row-index* of that entry is considered for the specific *iteration*. If the number of entries/rows for an `Endpoint` do not match up with the number of *iterations*, the first entry is taken into consideration for the subsequent iterations
 
 > Results are saved to your `Documents/Perfx` with the name: **`Perfx_Results.xlsx`**/`Perfx_Results.csv`/`Perfx_Results.json` (depending on the specified `OutputFormat` in `Perfx.Settings.json`
 
-  ![Screenshot](Screenshots\Screenshot1.png)
-  ![Screenshot2](Screenshots\Screenshot2.png)
+  ![Screenshot1](Screenshots/Screenshot1.png)
+  ![Screenshot2](Screenshots/Screenshot2.png)
 
 - Enter **`r`**`:10` to **run** the benchmarks (`10` times)
 - Enter **`s`** to print the **stats**/details for the previous run
@@ -20,7 +22,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**
 
-> **PRE-REQ**: Populate the following JSON and save it to your `Documents/Perfx` folder with the name: **`Perfx.json`**
+> **PRE-REQ**: Populate the following JSON and save it to your `Documents/Perfx` folder with the name: **`Perfx.Settings.json`**
 > ```json
 > {
 >     "UserId": "",
@@ -88,6 +90,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
   - Build the project and copy the build-output to `Documents/Perfx/Plugins` folder
   - Optionally, if you have multiple `IPlugin` implementations, you can also update the *value* of `PluginClassName` with the specific implementation-class-full-name (e.g. `MyPluginAssembly.MyPlugin1`)
 
+> Sample: [Perfx.SamplePlugin](Samples/Perfx.SamplePlugin)
 ---
 
 ```batch
