@@ -35,8 +35,10 @@
                             //.ConfigureHostConfiguration(configHost => { })
                             .ConfigureAppConfiguration((hostContext, config) =>
                             {
-                                config.AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true);
-                                config.AddJsonFile(Settings.DefaultSettingsFile, optional: true, reloadOnChange: true);
+                                config
+                                    .SetBasePath(string.Empty.GetFullPath())
+                                    .AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true)
+                                    .AddJsonFile(Settings.DefaultSettingsFile, optional: true, reloadOnChange: true);
                                 configuration = config.Build();
                             })
                             .ConfigureServices((hostContext, services) =>

@@ -2,7 +2,9 @@
 {
     using System;
     using System.Diagnostics;
+    using System.Linq;
     using System.Net.Http;
+    using System.Text;
     using System.Threading;
     using System.Threading.Tasks;
 
@@ -38,20 +40,64 @@
             this.logger = logger;
         }
 
+        // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
+        // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
         public async Task<Result> ProcessRequest(Result record, CancellationToken stopToken = default)
         {
             var token = this.settings.Token;
+            var details = record.details;
             this.client.DefaultRequestHeaders.Clear();
-            this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
-            this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
+
+            var headers = details.Headers?.Split(new[] { '\n' }, StringSplitOptions.RemoveEmptyEntries)?.Select(x => x?.Split(':', 2))?.ToDictionary(split => split[0]?.Trim().ToLowerInvariant(), split => split[1]?.Trim(), StringComparer.OrdinalIgnoreCase);
+            if (!(headers?.ContainsKey(AuthHeader) == true))
+            {
+                this.client.DefaultRequestHeaders.Add(AuthHeader, Bearer + token);
+            }
+
+            if (!(headers?.ContainsKey(RequestId) == true))
+            {
+                this.client.DefaultRequestHeaders.Add(RequestId, record.op_Id);
+            }
+
+            if (headers?.Count > 0)
+            {
+                foreach (var header in headers)
+                {
+                    this.client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                }
+            }
+
             record.timestamp = DateTime.Now;
-            var input = record.input;
+            var url = record.url.TrimEnd('/') + (string.IsNullOrWhiteSpace(details.Query) ? string.Empty : ("/" + details.Query.TrimStart('/')));
+            using (var request = new HttpRequestMessage(new HttpMethod(details.Method), record.url))
+            {
+                var content = record.details.Body?.Split(':', 2);
+                if (content?.Length > 0)
+                {
+                    using (var httpContent = new StringContent(content[1], Encoding.UTF8, content[0]))
+                    {
+                        request.Content = httpContent;
+                        var taskWatch = Stopwatch.StartNew();
+                        await ProcessRequest(record, request, stopToken);
+                    }
+                }
+                else
+                {
+                    await ProcessRequest(record, request, stopToken);
+                }
+            }
+
+            return record;
+        }
+
+        private async Task ProcessRequest(Result record, HttpRequestMessage request, CancellationToken stopToken)
+        {
+            HttpResponseMessage response = null;
+            var completion = this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead;
             var taskWatch = Stopwatch.StartNew();
             try
             {
-                // See: https://docs.microsoft.com/en-us/windows/win32/sysinfo/acquiring-high-resolution-time-stamps
-                // Credit: https://josefottosson.se/you-are-probably-still-using-httpclient-wrong-and-it-is-destabilizing-your-software/
-                var response = await this.client.SendAsync(new HttpRequestMessage(new HttpMethod(input.Method), record.url), this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead, stopToken);
+                response = await this.client.SendAsync(request, completion, stopToken);
                 record.local_ms = taskWatch.ElapsedMilliseconds;
                 record.result = $"{(int)response.StatusCode}: {response.ReasonPhrase}";
                 record.size_b = response.Content.Headers.ContentLength;
@@ -85,8 +131,10 @@
                 record.result = ex.Message;
                 this.logger.LogTrace($"ERR: {ex.Message}: {record.id} - {record.url} ({record.op_Id})");
             }
-
-            return record;
+            finally
+            {
+                response?.Dispose();
+            }
         }
 
         protected virtual void Dispose(bool disposing)

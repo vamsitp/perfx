@@ -40,7 +40,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 >     "Iterations": 5,
 >     "OutputFormat": "Excel", // "Csv", "Json"
 >     "ReadResponseHeadersOnly": false,
->     "InputsFile": "Perfx_Inputs.xlsx", // Headers: semi-colon separated
+>     "InputsFile": "Perfx_Inputs.xlsx", // Headers: One on each line (Excel: ALT + ENTER)
 >     "PluginClassName": null
 > }
 > ```

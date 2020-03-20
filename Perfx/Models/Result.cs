@@ -27,7 +27,7 @@
         public string ai_op_Id { get; set; }
 
         [Ignore]
-        public Endpoint input { get; set; }
+        public Endpoint details { get; set; }
 
         [Ignore]
         public string size_num_str => size_b.HasValue ? ByteSize.FromBytes(size_b.Value).LargestWholeNumberDecimalValue.ToString("F2") : string.Empty;

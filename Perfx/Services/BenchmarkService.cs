@@ -11,7 +11,7 @@
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
-
+    using Perfx;
     using SmartFormat;
 
     public class BenchmarkService : IDisposable
@@ -30,7 +30,7 @@
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.plugin = services.GetService<IPlugin>();
-            leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 5;
+            leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 6;
         }
 
         public async Task<List<Result>> Execute(int? iterations = null, CancellationToken stopToken = default)
@@ -38,7 +38,7 @@
             ColorConsole.WriteLine("Endpoints: ", settings.Endpoints.Count().ToString().Green());
             ColorConsole.WriteLine("Iterations: ", iterations?.ToString()?.Green() ?? settings.Iterations.ToString().Green(), "\n");
 
-            var endpointRecords = settings.Endpoints.SelectMany((endpoint, groupIndex) =>
+            var endpointRecords = this.settings.Endpoints.SelectMany((endpoint, groupIndex) =>
             {
                 return Enumerable.Range(0, iterations ?? settings.Iterations).Select(i =>
                     new Result
@@ -49,7 +49,25 @@
                     });
             });
 
-            List<Endpoint> endpointDetails = null;
+            var endpointDetails = await GetEndpointDetails();
+            var groupedDetails = endpointDetails?.GroupBy(input => input.Url);
+
+            // Group by endpoint?
+            var endpointTasks = endpointRecords.Select((record, i) =>
+            {
+                var details = groupedDetails?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
+                SetInput(record, details);
+                return Execute(record, stopToken);
+            });
+
+            var results = await Task.WhenAll(endpointTasks);
+            return results.ToList();
+        }
+
+        private async Task<List<Endpoint>> GetEndpointDetails()
+        {
+            List<Endpoint> endpointDetails;
+
             try
             {
                 if (this.plugin != null)
@@ -66,43 +84,32 @@
                 endpointDetails = ResultsFileExtensions.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
             }
 
-            var groupedDetails = endpointDetails?.GroupBy(input => input.Url);
-
-            // Group by endpoint?
-            var endpointTasks = endpointRecords.Select((record, i) =>
-            {
-                var details = groupedDetails?.SingleOrDefault(x => x != null && x.Key?.Equals(record.url, StringComparison.OrdinalIgnoreCase) == true)?.ToList();
-                SetInput(record, details);
-                return Execute(record, stopToken);
-            });
-
-            var results = await Task.WhenAll(endpointTasks);
-            return results.ToList();
+            return endpointDetails;
         }
 
-        private static void SetInput(Result record, List<Endpoint> details)
+        private static void SetInput(Result record, List<Endpoint> detailsList)
         {
-            Endpoint input;
+            Endpoint details;
 
             // TODO: Find a better way to extract the decimal-part whole-number
             var id = Convert.ToInt32(record.id.ToString().Split('.').LastOrDefault());
-            if (details?.Count > 0)
+            if (detailsList?.Count > 0)
             {
-                if (details.Count >= id)
+                if (detailsList.Count >= id)
                 {
-                    input = details[id - 1];
+                    details = detailsList[id - 1];
                 }
                 else
                 {
-                    input = details.FirstOrDefault();
+                    details = detailsList.FirstOrDefault();
                 }
             }
             else
             {
-                input = new Endpoint { Method = nameof(HttpMethod.Get) };
+                details = new Endpoint { Method = nameof(HttpMethod.Get) };
             }
 
-            record.input = input;
+            record.details = details;
         }
 
         private async Task<Result> Execute(Result record, CancellationToken stopToken = default)
