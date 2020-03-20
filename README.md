@@ -6,7 +6,9 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 #### USAGE
 **`perfx`** [`2`] (to override the number of iterations in the _settings_ file)
 
-> Results are saved to your `Documents` folder with the name: **`Perfx_Results.xlsx`**/`Perfx_Results.csv`
+> Additional details (e.g. *headers* / *body* / *query-params*) for the `Endpoints` defined the `Perfx.Settings.json` (sample [here](Samples/Perfx.Settings.json)) under `Documents/Perfx` can be provided in **[`Perfx_Inputs.xlsx`](Samples/Perfx_Inputs.xlsx)** under the same folder (or using the *Plugin* model outlined below)
+
+> Results are saved to your `Documents/Perfx` with the name: **`Perfx_Results.xlsx`**/`Perfx_Results.csv`/`Perfx_Results.json` (depending on the specified `OutputFormat` in `Perfx.Settings.json`
 
   ![Screenshot](Screenshots\Screenshot1.png)
   ![Screenshot2](Screenshots\Screenshot2.png)
@@ -18,7 +20,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 - Enter **`q`** to **quit**
 - Enter **`?`** to print this **help**
 
-> **PRE-REQ**: Populate the following JSON and save it to your `Documents` folder with the name: **`Perfx.json`**
+> **PRE-REQ**: Populate the following JSON and save it to your `Documents/Perfx` folder with the name: **`Perfx.json`**
 > ```json
 > {
 >     "UserId": "",
@@ -45,7 +47,7 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 > }
 > ```
 
-> **OPTIONAL**: Populate the following JSON and save it to your `Documents` folder with the name: **`Perfx.Settings.json`**
+> **OPTIONAL**: Populate the following JSON and save it to your `Documents/Perfx` folder with the name: [**`Perfx.Settings.json`**](Samples/Perfx.Settings.json)
 > ```json
 > {
 >     "Logging": {

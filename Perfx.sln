@@ -10,13 +10,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Sln Items", "_Sln Items", 
 		.gitignore = .gitignore
 		LICENSE = LICENSE
 		Notices.md = Notices.md
-		Samples\Perfx.json = Samples\Perfx.json
+		Samples\Perfx.Settings.json = Samples\Perfx.Settings.json
 		README.md = README.md
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.Core", "Perfx.Core\Perfx.Core.csproj", "{6F17D52C-F0CB-4CF4-B1C1-1C2226CFD94A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perfx.SamplePlugin", "Samples\Perfx.SamplePlugin\Perfx.SamplePlugin.csproj", "{83D297DE-ACFD-4495-86BF-79233655B1AA}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.SamplePlugin", "Samples\Perfx.SamplePlugin\Perfx.SamplePlugin.csproj", "{83D297DE-ACFD-4495-86BF-79233655B1AA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{E5B5CD14-2ED9-4484-8092-25000C9B155D}"
 EndProject
