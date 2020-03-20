@@ -12,6 +12,8 @@
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
 
+    using SmartFormat;
+
     public class PerfRunner : IDisposable
     {
         private readonly LogDataService logDataService;
@@ -46,7 +48,7 @@
                     {
                         id = float.Parse($"{groupIndex + 1}.{i + 1}"),
                         op_Id = Guid.NewGuid().ToString(),
-                        url = endpoint
+                        url = this.settings.FormatArgs == null ? endpoint : Smart.Format(endpoint, this.settings.FormatArgs)
                     });
             });
 
@@ -59,12 +61,12 @@
                 }
                 else
                 {
-                    endpointDetails = ResultsHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
+                    endpointDetails = ResultsFileExtensions.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
                 }
             }
             catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
             {
-                endpointDetails = ResultsHelper.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
+                endpointDetails = ResultsFileExtensions.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
             }
 
             var groupedDetails = endpointDetails?.GroupBy(input => input.Url);

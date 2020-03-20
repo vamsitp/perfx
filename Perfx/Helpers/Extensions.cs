@@ -15,7 +15,7 @@
 
     using Microsoft.Extensions.Logging;
 
-    public static class Utils
+    public static class Extensions
     {
         private const int MaxBarLength = 100;
         private const string VerticalChar = "│"; // "┃"
@@ -246,16 +246,6 @@
 
                 ConsoleRenderer.RenderDocument(doc);
             }
-        }
-
-        public static string GetFullPath(this string fileName)
-        {
-            if (fileName == null)
-            {
-                return null;
-            }
-
-            return Path.IsPathRooted(fileName) ? fileName : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx), fileName);
         }
 
         public static void ShowThreads(this ILogger logger, bool consoleOutput = false)

@@ -31,9 +31,12 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 >     "AppInsightsAppId": "",
 >     "AppInsightsApiKey": ""
 >     "Endpoints": [
->         "https://YOUR-API.COM/route1",
->         "https://YOUR-API.COM/route2"
+>         "https://YOUR-{env}-API.COM/route1",
+>         "https://YOUR-{env}-API.COM/route2"
 >     ],
+>     "FormatArgs": {
+>         "env": "dev"
+>     }
 >     "Iterations": 5,
 >     "OutputFormat": "Excel", // "Csv", "Json"
 >     "ReadResponseHeadersOnly": false,

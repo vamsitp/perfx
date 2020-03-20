@@ -103,7 +103,7 @@
                     {
                         if (!File.Exists(Settings.AppSettingsFile))
                         {
-                            foreach (var prop in settings.Properties.Where(p => p.Name != nameof(settings.Properties) && p.Name != nameof(settings.Token)))
+                            foreach (var prop in settings.Properties)
                             {
                                 var value = prop.GetValue(settings) ?? string.Empty;
                                 ColorConsole.Write($"{prop.Name}".Green(), $"({prop.PropertyType}): ");
@@ -160,7 +160,7 @@
                             results = await perf.Execute(iterations, stopToken);
                             ColorConsole.Write("> ".Green(), "Fetch", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
                             var result = Console.ReadLine();
-                            if (result.StartsWith("y", StringComparison.OrdinalIgnoreCase))
+                            if (result?.StartsWith("y", StringComparison.OrdinalIgnoreCase) == true)
                             {
                                 ColorConsole.WriteLine();
                                 await ExecuteAppInsights(results, result, perf, stopToken);

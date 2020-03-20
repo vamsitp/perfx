@@ -1,22 +1,15 @@
 ﻿namespace Perfx
 {
-    using System;
     using System.Collections.Generic;
+    using System.Dynamic;
     using System.IO;
+    using System.Linq;
     using System.Reflection;
 
     using Newtonsoft.Json;
 
     public class Settings
     {
-        [JsonIgnore]
-        public readonly static string AppSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx),  $"{nameof(Perfx)}.json");
-
-        [JsonIgnore]
-        public readonly static string DefaultSettingsFile = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx), $"{nameof(Perfx)}.Defaults.json");
-
-        private PropertyInfo[] properties;
-
         public string UserId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Authority { get; set; } = string.Empty;
@@ -32,25 +25,19 @@
         public string PluginClassName { get; set; }
 
         [JsonIgnore]
+        public ExpandoObject FormatArgs { get; set; }
+
+        [JsonIgnore]
         public string Token { get; set; }
 
         [JsonIgnore]
-        public PropertyInfo[] Properties
-        {
-            get
-            {
-                if (properties == null)
-                {
-                    properties = this.GetType().GetProperties(BindingFlags.Public | BindingFlags.Instance);
-                }
+        public List<PropertyInfo> Properties { get; } = typeof(Settings).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null).ToList();
 
-                return properties;
-            }
-            set
-            {
-                properties = value;
-            }
-        }
+        [JsonIgnore]
+        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.json".GetFullPath();
+
+        [JsonIgnore]
+        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Defaults.json".GetFullPath();
 
         public void Save()
         {

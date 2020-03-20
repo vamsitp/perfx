@@ -9,9 +9,12 @@
   "AppInsightsAppId": "",
   "AppInsightsApiKey": "",
   "Endpoints": [
-    "https://your-api.com/route1",
-    "https://your-api.com/route2"
+    "https://your-{env}-api.com/route1",
+    "https://your-{env}-api.com/route2"
   ],
+  "FormatArgs": {
+    "env": "dev"
+  },
   "Iterations": 5,
   "OutputFormat": "Excel", // "Csv", "Json"
   "ReadResponseHeadersOnly": false,

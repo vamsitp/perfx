@@ -16,7 +16,7 @@
     using CsvHelper.Configuration.Attributes;
     using Newtonsoft.Json;
 
-    public static class ResultsHelper
+    public static class ResultsFileExtensions
     {
         private const string ResultsJsonFileName = "Perfx_Results.Json";
         private const string ResultsCsvFileName = "Perfx_Results.csv";
