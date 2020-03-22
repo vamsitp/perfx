@@ -8,11 +8,10 @@
     <title>Perfx documentation</title>
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Maven+Pro:wght@400;500&family=Open+Sans:wght@400;600&family=Roboto+Slab&display=swap"
-          rel="stylesheet">
-    <link rel="stylesheet" href="assets/scribbler-global.css">
-    <link rel="stylesheet" href="assets/scribbler-doc.css">
-    <link rel="stylesheet" href="assets/ocean.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code&family=Maven+Pro:wght@400;500&family=Open+Sans:wght@400;600&family=Roboto+Slab&display=swap">
+    <link rel="stylesheet" href="https://vamsitp.github.io/assets/scribbler-global.css">
+    <link rel="stylesheet" href="https://vamsitp.github.io/assets/scribbler-doc.css">
+    <link rel="stylesheet" href="https://vamsitp.github.io/assets/ocean.css">
     <link rel="author" href="humans.txt">
 </head>
 
@@ -49,12 +48,15 @@
                     An <i>extensible</i> Azure API Performance benchmarking tool (for <i>Developers</i>) based on App-Insights
                     (request-duration).
                 </p>
+                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot.png" class="responsive shadow">
+                <br /><br />
+                <blockquote> If App-Insights is configured, the <i>durations</i> are taken from <i>Request</i>-logs; else, from local <i>timestamps</i></blockquote>
                 <hr />
             </section>
             <section class="js-section">
                 <h4 class="section__title">installation</h4>
                 <pre>
-                <code class="lang-bash">
+                <code class="cmd">
  # Install from nuget.org
  dotnet tool install -g perfx --no-cache
 
@@ -69,6 +71,7 @@
           </code>
         </pre>
                 <blockquote>
+                    <p>If you don't have .NET Core 3.1 installed, <a href="https://dotnet.microsoft.com/download/dotnet-core/3.1"><u>download and install</u></a> it.</p>
                     <p>If the <i>Tool</i> is not accessible post installation, add <code>%USERPROFILE%\.dotnet\tools</code> to the PATH env-var.</p>
                 </blockquote>
                 <hr />
@@ -87,16 +90,16 @@
    "Authority": "https://login.microsoftonline.com/YOUR_COMPANY.onmicrosoft.com",
    "ClientId": "",
    "ApiScopes": [
-       "api://YOUR-API-SCOPES"
+     "api://YOUR-API-SCOPES"
    ],
    "AppInsightsAppId": "",
    "AppInsightsApiKey": ""
    "Endpoints": [
-       "https://YOUR-{env}-API.COM/route1",
-       "https://YOUR-{env}-API.COM/route2"
+     "https://YOUR-{env}-API.COM/route1",
+     "https://YOUR-{env}-API.COM/route2"
    ],
    "FormatArgs": {
-       "env": "dev"
+     "env": "dev"
    }
    "Iterations": 5,
    "OutputFormat": "Excel",
@@ -107,109 +110,116 @@
           </code>
         </pre>
                 <h5>details</h5>
-                <table id="config" class="table table-dark">
-                    <tr>
-                        <th>Key</th>
-                        <th>Type</th>
-                        <th>Value</th>
-                        <th>Default</th>
-                    </tr>
-                    <tr>
-                        <td>UserId</td>
-                        <td><code>string</code></td>
-                        <td>Azure AD User-ID</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Password</td>
-                        <td><code>string</code></td>
-                        <td>Azure AD Password</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Authority</td>
-                        <td><code>string</code></td>
-                        <td>Azure AD Authority</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>ClientId</td>
-                        <td><code>string</code></td>
-                        <td>Azure AD Application/Client ID</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>ApiScopes</td>
-                        <td><code>string[]</code></td>
-                        <td>Azure AD API Scope</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>AppInsightsAppId</td>
-                        <td><code>string</code></td>
-                        <td>Azure Application Insights App-ID</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>AppInsightsApiKey</td>
-                        <td><code>string</code></td>
-                        <td>Azure Application Insights API-Key</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Endpoints</td>
-                        <td><code>string[]</code></td>
-                        <td>URLs to test</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>FormatArgs</td>
-                        <td><code>string-object pairs</code></td>
-                        <td>Macros to be replaced in the Endpoints</td>
-                        <td></td>
-                    </tr>
-                    <tr>
-                        <td>Iterations</td>
-                        <td><code>int</code></td>
-                        <td># of iterations to run for each Endpoint</td>
-                        <td>5</td>
-                    </tr>
-                    <tr>
-                        <td>OutputFormat</td>
-                        <td><code>string</code></td>
-                        <td>The output format in which the results would be saved<br />Values: Excel / Csv / Json</td>
-                        <td>Excel</td>
-                    </tr>
-                    <tr>
-                        <td>ReadResponseHeadersOnly</td>
-                        <td><code>bool</code></td>
-                        <td>
-                            Specifies if the HttpClient should assume completion as soon as a response is available and headers are
-                            read (content is not read yet)
-                        </td>
-                        <td>false</td>
-                    </tr>
-                    <tr>
-                        <td>InputsFile</td>
-                        <td><code>string</code></td>
-                        <td>
-                            File (under <i>'Documents/Perfx'</i> folder) containing additional information for each of the Endpoints
-                        </td>
-                        <td>
-                            <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx_Inputs.xlsx?raw=true"
-                               style="color:lightseagreen">Perfx_Inputs.xlsx</a>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>PluginClassName</td>
-                        <td><code>string</code></td>
-                        <td>
-                            One of the classes that implements <code>IPlugin</code> interface (only used when there are multiple
-                            implementations in the dlls placed under <i>'Documents/Perfx/Plugins'</i> folder)
-                        </td>
-                        <td></td>
-                    </tr>
-                </table>
+                <div class="container table-responsive" style="margin-left:-1em;padding-right:0em;">
+                    <table id="config" class="table table-sm table-hover">
+                        <thead class="thead-dark">
+                            <tr>
+                                <th>KEY</th>
+                                <th>TYPE</th>
+                                <th>VALUE</th>
+                                <th>DEFAULT</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>UserId</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD User-ID</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Password</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Password</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Authority</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Authority</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>ClientId</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Application/Client ID</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>ApiScopes</td>
+                                <td><code>string[]</code></td>
+                                <td>Azure AD API Scope</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>AppInsightsAppId</td>
+                                <td><code>string</code></td>
+                                <td>Azure Application Insights App-ID</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>AppInsightsApiKey</td>
+                                <td><code>string</code></td>
+                                <td>Azure Application Insights API-Key</td>
+                                <td></td>
+                            </tr>
+                            <tr class="table-success">
+                                <td style="font-weight:bolder">Endpoints</td>
+                                <td style="font-weight:bolder"><code>string[]</code></td>
+                                <td style="font-weight:bolder">URLs to test</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>FormatArgs</td>
+                                <td><code>string-object pairs</code></td>
+                                <td>Macros to be replaced in the Endpoints</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Iterations</td>
+                                <td><code>int</code></td>
+                                <td># of iterations to run for each Endpoint</td>
+                                <td>5</td>
+                            </tr>
+                            <tr>
+                                <td>OutputFormat</td>
+                                <td><code>string</code></td>
+                                <td>The output format in which the results would be saved<br />Values: Excel / Csv / Json</td>
+                                <td>Excel</td>
+                            </tr>
+                            <tr>
+                                <td>ReadResponseHeadersOnly</td>
+                                <td><code>bool</code></td>
+                                <td>
+                                    Specifies if the HttpClient should assume completion as soon as a response is available and headers are
+                                    read (content is not read yet)
+                                </td>
+                                <td>false</td>
+                            </tr>
+                            <tr class="table-info">
+                                <td>InputsFile</td>
+                                <td><code>string</code></td>
+                                <td>
+                                    File (under <i>'Documents/Perfx'</i> folder) containing additional information for each of the Endpoints
+                                </td>
+                                <td>
+                                    <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx_Inputs.xlsx?raw=true"
+                                       style="color:lightseagreen">Perfx_Inputs.xlsx</a>
+                                </td>
+                            </tr>
+                            <tr class="table-secondary">
+                                <td>PluginClassName</td>
+                                <td><code>string</code></td>
+                                <td>
+                                    One of the classes that implements <code>IPlugin</code> interface (only used when there are multiple
+                                    implementations in the dlls placed under <i>'Documents/Perfx/Plugins'</i> folder)
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <br />
                 <h5>logging</h5>
                 <p>
                     You can (optionally) populate the following JSON and save it to your <i>'Documents/Perfx'</i> folder with the
@@ -218,25 +228,26 @@
                 <pre>
                 <code class="lang-json">
  {
-     "Logging": {
-         "LogLevel": {
-             "Default": "Warning"
-         },
-         "Console": {
-             "IncludeScopes": true,
-             "LogLevel": {
-                 "Default": "Warning" //,"System.Net.Http.HttpClient": "Information"
-             }
-         },
-         "Debug": {
-             "LogLevel": {
-                 "Default": "Information"
-             }
-         }
+   "Logging": {
+      "LogLevel": {
+        "Default": "Warning"
+        },
+       "Console": {
+        "IncludeScopes": true,
+        "LogLevel": {
+         "Default": "Warning"
+       }
+     },
+     "Debug": {
+       "LogLevel": {
+         "Default": "Information"
+       }
      }
+   }
  }
           </code>
         </pre>
+                <blockquote><code>"System.Net.Http.HttpClient": "Information"</code></blockquote>
                 <hr />
             </section>
             <section class="js-section">
@@ -251,7 +262,7 @@
                     entry is considered for the specific iteration. If the number of entries/rows for an <i>Endpoint</i> do not match up
                     with the number of iterations, the first entry is taken into consideration for the subsequent iterations
                 </p>
-                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot3.png" class="shadow" width="840px">
+                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot3.png" class="responsive shadow" width="840px">
                 <hr />
             </section>
             <section class="js-section">
@@ -261,9 +272,9 @@
                     <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv</code> / <code>Perfx_Results.json</code> (depending on the specified <code>OutputFormat</code> in
                     <code>Perfx.Settings.json</code>
                 </p>
-                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot4.png" class="shadow" width="840px">
+                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot4.png" class="responsive shadow" width="840px">
                 <br /><br />
-                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot5.png" class="shadow" width="840px">
+                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot5.png" class="responsive shadow" width="840px">
                 <hr />
             </section>
             <section class="js-section">
@@ -276,9 +287,12 @@
                     <li>Enter <code>q</code> to quit</li>
                     <li>Enter <code>?</code> to print this help</li>
                 </ul>
-                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot1.png" class="shadow">
-                <br /><br />
-                <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot2.png" class="shadow" width="840px">
+                <div class="hero__terminal">
+                    <pre>
+                        <!-- Place your demo code here -->
+                    <code class="shell-session demo cmd" style="background:rgb(35, 35, 35)">dotnet tool install -g perfx</code>
+                    </pre>
+                </div>
                 <hr />
             </section>
             <section class="js-section">
@@ -287,12 +301,12 @@
                     <li>Create a <i>.NET Standard</i> project and add reference to <code>Prefx.Core</code> project</li>
                     <li>Add a class that implements <code>IPlugin</code> interface</li>
                     <pre>
-                        <code>
+                    <code>
  public Task<string> GetAuthToken(Settings settings)
  {
-     //  NOTE: By default Perfx uses IPublicClientApplication.AcquireTokenSilent
-     //  If you want to override that behavior and provide a custom implementation, go ahead...
-     //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+     // NOTE: By default Perfx uses IPublicClientApplication.AcquireTokenSilent
+     // If you want to override that behavior and provide a custom implementation, go ahead...
+     // If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
      var userId = settings.UserId;
      var pwd = settings.Password;
 
@@ -303,9 +317,9 @@
 
  public Task<List<Endpoint>> GetEndpointDetails(Settings settings)
  {
-     //  NOTE: By default Perfx uses Documents/Perfx/Perfx_Inputs.xlsx
-     //  If you want to override that behavior and provide a custom implementation, go ahead...
-     //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+     // NOTE: By default Perfx uses Documents/Perfx/Perfx_Inputs.xlsx
+     // If you want to override that behavior and provide a custom implementation, go ahead...
+     // If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
      var endpointDetails = new List<Endpoint>();
      foreach (var endpoint in settings.Endpoints.Select((e, i) => (url: e, index: i)))
      {
@@ -325,9 +339,10 @@
  }
                         </code>
                     </pre>
-                    <li>Update the <code>csproj</code> file as follows:
-    <pre>
-    <code class="lang-xml">
+                    <li>
+                        Update the <code>csproj</code> file as follows:
+                        <pre>
+                        <code class="lang-xml">
  ...
  &lt;TargetFramework&gt;netcoreapp3.1&lt;/TargetFramework&gt;
  &lt;CopyLocalLockFileAssemblies&gt;true&lt;/CopyLocalLockFileAssemblies&gt;
@@ -339,19 +354,19 @@
  ...
                             </code>
                         </pre>
-</li>
+                    </li>
                     <li>Build the project and copy the build-output to <code>Documents/Perfx/Plugins</code> folder</li>
                     <li>Optionally, if you have multiple <code>IPlugin</code> implementations, you can also update the <i>value</i> of <code>PluginClassName</code> with the specific implementation-class-full-name (e.g. <code>MyPluginAssembly.MyPlugin1</code>)</li>
                 </ul>
-                <blockquote><b>Sample</b>: <a href="https://github.com/vamsitp/perfx/tree/master/Samples/Perfx.SamplePlugin" target="_blank"><code>Perfx.SamplePlugin</code</a></blockquote>
+                <blockquote><b>Sample</b>: <a href="https://github.com/vamsitp/perfx/tree/master/Samples/Perfx.SamplePlugin" target="_blank"><code>Perfx.SamplePlugin</code></a></blockquote>
             </section>
         </article>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/gh/google/code-prettify@master/loader/run_prettify.js"></script>
+    <script src="https://vamsitp.github.io/assets/highlight.pack.js"></script>
     <script>hljs.initHighlightingOnLoad();</script>
-    <script src="assets/scribbler.js"></script>
+    <script src="https://vamsitp.github.io/assets/scribbler.js"></script>
+    <script src="assets/scroll.js"></script>
 </body>
 
 </html>

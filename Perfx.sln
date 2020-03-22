@@ -8,7 +8,6 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Sln Items", "_Sln Items", "{C226D509-7EA6-4E1E-806D-1110B2280B66}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		docs\index.html = docs\index.html
 		LICENSE = LICENSE
 		Notices.md = Notices.md
 		Samples\Perfx.Settings.json = Samples\Perfx.Settings.json
@@ -20,6 +19,11 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.SamplePlugin", "Samples\Perfx.SamplePlugin\Perfx.SamplePlugin.csproj", "{83D297DE-ACFD-4495-86BF-79233655B1AA}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Sample", "Sample", "{E5B5CD14-2ED9-4484-8092-25000C9B155D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{E1C208D2-F4F5-4F92-821D-03E1B419F9FD}"
+	ProjectSection(SolutionItems) = preProject
+		docs\index.html = docs\index.html
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
