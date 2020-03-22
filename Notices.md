@@ -8,4 +8,4 @@
  | 6  | [Newtonsoft.Json](https://www.newtonsoft.com/json)                                                       | 12.0.3   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
  | 7  | [ByteSize](https://github.com/omar/ByteSize)                                                             | 2.0.0    | [MIT](https://licenses.nuget.org/MIT)                                                     | 
  | 8  | [ClosedXML](https://github.com/ClosedXML/ClosedXML)                                                      | 0.94.2   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
-
+ | 9  | [Scribbler (Docs)](https://tympanus.net/codrops/?p=33686)                                                |          |                                                                                           |
