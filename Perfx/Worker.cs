@@ -145,12 +145,17 @@
                                 }
                                 else
                                 {
-                                    settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
+                                    //// TODO
+                                    // if (!Guid.TryParse(settings.TenantId, out var tenantId))
+                                    // {
+                                    //     settings.TenantId = AuthHelper.GetTenantId(settings.TenantName);
+                                    // }
+                                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
                                 }
                             }
                             catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
                             {
-                                settings.Token = await AuthHelper.GetAuthTokenSilentAsync(settings);
+                                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
                             }
                         }
 

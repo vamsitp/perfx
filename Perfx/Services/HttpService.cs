@@ -67,7 +67,6 @@
                 }
             }
 
-            record.timestamp = DateTime.Now;
             using (var request = new HttpRequestMessage(new HttpMethod(details.Method), record.full_url))
             {
                 var content = record.details.Body?.Split(':', 2);
@@ -76,7 +75,6 @@
                     using (var httpContent = new StringContent(content[1]?.Trim(), Encoding.UTF8, content[0]?.Trim()))
                     {
                         request.Content = httpContent;
-                        var taskWatch = Stopwatch.StartNew();
                         await ProcessRequest(record, request, stopToken);
                     }
                 }
@@ -93,6 +91,7 @@
         {
             HttpResponseMessage response = null;
             var completion = this.settings.ReadResponseHeadersOnly ? HttpCompletionOption.ResponseHeadersRead : HttpCompletionOption.ResponseContentRead;
+            record.timestamp = DateTime.Now;
             var taskWatch = Stopwatch.StartNew();
             try
             {
@@ -134,6 +133,14 @@
             {
                 response?.Dispose();
             }
+        }
+
+        public async Task<T> GetAsync<T>(string url)
+        {
+            var response = await this.client.GetAsync(url);
+            var result = await response.Content.ReadAsStringAsync();
+            var json = JsonConvert.DeserializeObject<T>(result);
+            return json;
         }
 
         protected virtual void Dispose(bool disposing)

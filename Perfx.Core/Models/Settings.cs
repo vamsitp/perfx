@@ -12,7 +12,7 @@
     {
         public string UserId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Authority { get; set; } = string.Empty;
+        public string Authority { get; set; } = string.Empty; // => $"https://login.microsoftonline.com/{this.TenantName.ToLowerInvariant().Replace(".onmicrosoft.com", string.Empty)}.onmicrosoft.com";
         public string ClientId { get; set; } = string.Empty;
         public IEnumerable<string> ApiScopes { get; set; }
         public string AppInsightsAppId { get; set; } = string.Empty;

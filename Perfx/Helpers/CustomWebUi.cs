@@ -5,8 +5,6 @@
     using System.Threading.Tasks;
     using System.Windows;
 
-    using ColoredConsole;
-
     using Microsoft.IdentityModel.Clients.ActiveDirectory.Extensibility;
     using Microsoft.Toolkit.Wpf.UI.Controls;
 
@@ -25,8 +23,11 @@
 
         private void AcquireAuthorizationCodeAsync(Uri authorizationUri, TaskCompletionSource<Uri> tcs)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
+            // WebView2 not available yet
             var webView = new WebView();
-            var w = new Window
+#pragma warning restore CS0618 // Type or member is obsolete
+            var window = new Window
             {
                 Title = "Sign in to your account",
                 WindowStyle = WindowStyle.ToolWindow,
@@ -36,22 +37,21 @@
                 WindowStartupLocation = WindowStartupLocation.CenterScreen
             };
 
-            w.Loaded += (_, __) => webView.Navigate(authorizationUri);
-
+            window.Loaded += (_, __) => webView.Navigate(authorizationUri);
             webView.NavigationCompleted += (_, e) =>
             {
                 System.Diagnostics.Debug.WriteLine(e.Uri);
                 if (e.Uri.Query.Contains("code="))
                 {
                     tcs.SetResult(e.Uri);
-                    w.DialogResult = true;
-                    w.Close();
+                    window.DialogResult = true;
+                    window.Close();
                 }
                 if (e.Uri.Query.Contains("error="))
                 {
                     tcs.SetException(new Exception(e.Uri.Query));
-                    w.DialogResult = false;
-                    w.Close();
+                    window.DialogResult = false;
+                    window.Close();
                 }
             };
             webView.UnsupportedUriSchemeIdentified += (_, e) =>
@@ -59,22 +59,22 @@
                 if (e.Uri.Query.Contains("code="))
                 {
                     tcs.SetResult(e.Uri);
-                    w.DialogResult = true;
-                    w.Close();
+                    window.DialogResult = true;
+                    window.Close();
                 }
                 else
                 {
                     tcs.SetException(new Exception($"Unknown error: {e.Uri}"));
-                    w.DialogResult = false;
-                    w.Close();
+                    window.DialogResult = false;
+                    window.Close();
                 }
             };
 
-            w.Activate();
-            w.BringIntoView();
-            w.Topmost = true;
-            w.Focus();
-            if (w.ShowDialog() != true && !tcs.Task.IsCompleted)
+            window.Activate();
+            window.BringIntoView();
+            window.Topmost = true;
+            window.Focus();
+            if (window.ShowDialog() != true && !tcs.Task.IsCompleted)
             {
                 tcs.SetException(new Exception("canceled"));
             }
