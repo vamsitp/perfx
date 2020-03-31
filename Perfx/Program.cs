@@ -1,6 +1,7 @@
 ﻿namespace Perfx
 {
     using System;
+    using System.IO;
     using System.Linq;
     using System.Text;
     using System.Threading.Tasks;
@@ -37,15 +38,15 @@
                             {
                                 config
                                     .SetBasePath(string.Empty.GetFullPath())
-                                    .AddJsonFile(Settings.AppSettingsFile, optional: true, reloadOnChange: true)
-                                    .AddJsonFile(Settings.DefaultSettingsFile, optional: true, reloadOnChange: true);
+                                    .AddJsonFile(GetAppSettingsFile(args), optional: true, reloadOnChange: true)
+                                    .AddJsonFile(Settings.DefaultLogSettingsFile, optional: true, reloadOnChange: true);
                                 configuration = config.Build();
                             })
                             .ConfigureServices((hostContext, services) =>
                             {
                                 services
                                     .Configure<Settings>(configuration)
-                                    .PostConfigure<Settings>(config => { if (args?.Length > 0 && int.TryParse(args.FirstOrDefault(), out var iterations)) config.Iterations = iterations; })
+                                    .PostConfigure<Settings>(config => { config.AppSettingsFile = GetAppSettingsFile(args); })
                                     .AddScoped<BenchmarkService>()
                                     .AddScoped<HttpService>()
                                     .AddHostedService<Worker>()
@@ -98,6 +99,22 @@
             {
                 ColorConsole.WriteLine(ex.Message.White().OnRed());
             }
+        }
+
+        private static string GetAppSettingsFile(string[] args)
+        {
+            if (args?.Length > 0)
+            {
+                var file = args.FirstOrDefault().GetFullPathEx();
+                if (File.Exists(file))
+                {
+                    return file;
+                }
+
+                ColorConsole.WriteLine("Unable to load ".DarkGray(), file.Gray());
+            }
+
+            return Settings.DefaultAppSettingsFile;
         }
     }
 }

@@ -10,6 +10,14 @@
 
     public class Settings
     {
+        [JsonIgnore]
+        private static Dictionary<OutputFormat, string> OutputExtensions = new Dictionary<OutputFormat, string>
+        {
+            { OutputFormat.Excel, "_Results.xlsx" },
+            { OutputFormat.Csv, "_Results.csv" },
+            { OutputFormat.Json, "_Results.json" }
+        };
+
         public string UserId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string Authority { get; set; } = string.Empty; // => $"https://login.microsoftonline.com/{this.TenantName.ToLowerInvariant().Replace(".onmicrosoft.com", string.Empty)}.onmicrosoft.com";
@@ -25,6 +33,9 @@
         public string PluginClassName { get; set; }
 
         [JsonIgnore]
+        public string OutputFile => Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormat];
+
+        [JsonIgnore]
         public ExpandoObject FormatArgs { get; set; }
 
         [JsonIgnore]
@@ -34,14 +45,17 @@
         public List<PropertyInfo> Properties { get; } = typeof(Settings).GetProperties(BindingFlags.Public | BindingFlags.Instance).Where(p => p.GetCustomAttribute<JsonIgnoreAttribute>() == null).ToList();
 
         [JsonIgnore]
-        public readonly static string AppSettingsFile = $"{nameof(Perfx)}.Settings.json".GetFullPath();
+        public string AppSettingsFile { get; set; } = DefaultAppSettingsFile;
 
         [JsonIgnore]
-        public readonly static string DefaultSettingsFile = $"{nameof(Perfx)}.Logging.json".GetFullPath();
+        public readonly static string DefaultAppSettingsFile = $"{nameof(Perfx)}.Settings.json".GetFullPath();
+
+        [JsonIgnore]
+        public readonly static string DefaultLogSettingsFile = $"{nameof(Perfx)}.Logging.json".GetFullPath();
 
         public void Save()
         {
-            File.WriteAllText(AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
+            File.WriteAllText(this.AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
             // (this as IConfigurationRoot).Reload();
         }
     }

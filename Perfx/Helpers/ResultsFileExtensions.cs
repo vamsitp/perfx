@@ -10,37 +10,36 @@
     using System.Reflection;
 
     using ClosedXML.Excel;
+
     using ColoredConsole;
+
     using CsvHelper;
     using CsvHelper.Configuration;
     using CsvHelper.Configuration.Attributes;
+
     using Newtonsoft.Json;
 
     public static class ResultsFileExtensions
     {
-        private const string ResultsJsonFileName = "Perfx_Results.Json";
-        private const string ResultsCsvFileName = "Perfx_Results.csv";
-        private const string ResultsExcelFileName = "Perfx_Results.xlsx";
-
         private static readonly string[] ExcelColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
 
-        public static void Save<T>(this IEnumerable<T> results, OutputFormat outputFormat)
+        public static void Save<T>(this IEnumerable<T> results, Settings settings)
         {
-            if (outputFormat == OutputFormat.Excel)
+            if (settings.OutputFormat == OutputFormat.Excel)
             {
-                SaveToExcel(results);
+                SaveToExcel(results, settings.OutputFile);
             }
-            else if (outputFormat == OutputFormat.Csv)
+            else if (settings.OutputFormat == OutputFormat.Csv)
             {
-                SaveToCsv(results);
+                SaveToCsv(results, settings.OutputFile);
             }
             else
             {
-                SaveToJson(results);
+                SaveToJson(results, settings.OutputFile);
             }
         }
 
-        public static void SaveToJson<T>(this IEnumerable<T> results, string fileName = ResultsJsonFileName)
+        public static void SaveToJson<T>(this IEnumerable<T> results, string fileName)
         {
             if (fileName.Overwrite())
             {
@@ -48,7 +47,7 @@
             }
         }
 
-        public static void SaveToCsv<T>(this IEnumerable<T> results, string fileName = ResultsCsvFileName)
+        public static void SaveToCsv<T>(this IEnumerable<T> results, string fileName)
         {
             if (fileName.Overwrite())
             {
@@ -62,7 +61,7 @@
             }
         }
 
-        public static void SaveToExcel<T>(this IEnumerable<T> results, string fileName = ResultsExcelFileName)
+        public static void SaveToExcel<T>(this IEnumerable<T> results, string fileName)
         {
             if (fileName.Overwrite())
             {
@@ -79,23 +78,23 @@
             }
         }
 
-        public static List<T> Read<T>(this OutputFormat outputFormat)
+        public static List<T> Read<T>(this Settings settings)
         {
-            if (outputFormat == OutputFormat.Excel)
+            if (settings.OutputFormat == OutputFormat.Excel)
             {
-                return ReadFromExcel<T>() ?? ReadFromCsv<T>();
+                return ReadFromExcel<T>(settings.OutputFile) ?? ReadFromCsv<T>(settings.OutputFile);
             }
-            else if (outputFormat == OutputFormat.Csv)
+            else if (settings.OutputFormat == OutputFormat.Csv)
             {
-                return ReadFromCsv<T>();
+                return ReadFromCsv<T>(settings.OutputFile);
             }
             else
             {
-                return ReadFromJson<T>();
+                return ReadFromJson<T>(settings.OutputFile);
             }
         }
 
-        public static List<T> ReadFromJson<T>(string fileName = ResultsJsonFileName)
+        public static List<T> ReadFromJson<T>(string fileName)
         {
             var file = fileName.GetFullPath();
             if (File.Exists(file))
@@ -106,7 +105,7 @@
             return null;
         }
 
-        public static List<T> ReadFromCsv<T>(string fileName = ResultsCsvFileName)
+        public static List<T> ReadFromCsv<T>(string fileName)
         {
             var file = fileName.GetFullPath();
             if (File.Exists(file))
@@ -124,7 +123,7 @@
             return null;
         }
 
-        public static List<T> ReadFromExcel<T>(string filename = ResultsExcelFileName, string sheet = "Perfx_Runs")
+        public static List<T> ReadFromExcel<T>(string filename, string sheet = "Perfx_Runs")
         {
             var results = filename.ToDataTable(sheet)?.ToList<T>();
             return results;

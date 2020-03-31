@@ -74,7 +74,7 @@
                     {
                         if (results == null)
                         {
-                            results = this.settings.OutputFormat.Read<Result>();
+                            results = this.settings.Read<Result>();
                         }
 
                         if (results?.Count > 0)
@@ -83,7 +83,7 @@
                             {
                                 var benchmark = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                                 await ExecuteAppInsights(results, key, stopToken);
-                                results.Save(this.settings.OutputFormat);
+                                results.Save(this.settings);
                                 results.DrawStats();
                             }
                         }
@@ -92,7 +92,7 @@
                     {
                         if (results == null)
                         {
-                            results = this.settings.OutputFormat.Read<Result>();
+                            results = this.settings.Read<Result>();
                         }
 
                         if (results?.Count > 0)
@@ -103,7 +103,7 @@
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!File.Exists(Settings.AppSettingsFile))
+                        if (!File.Exists(settings.AppSettingsFile))
                         {
                             foreach (var prop in settings.Properties)
                             {
@@ -173,7 +173,7 @@
                                 await ExecuteAppInsights(results, result, stopToken);
                             }
 
-                            results.Save(this.settings.OutputFormat);
+                            results.Save(this.settings);
                             results.DrawStats();
                         }
                     }

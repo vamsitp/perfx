@@ -1,4 +1,4 @@
-﻿namespace Perfx.Services
+﻿namespace Perfx
 {
     using System;
     using System.Collections.Generic;
