@@ -80,27 +80,30 @@
                 <h4 class="section__title">configuration</h4>
                 <p>
                     Populate the following JSON and save it to your <b><code>Documents/Perfx</code></b> folder with the
-                    name: <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx.Settings.json" target="_blank"><b><code>Perfx.Settings.json</code></b></a>
+                    name: <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx.Settings.json" target="_blank"><b><code>Perfx.Settings.json</code><br />(or something like <code>MyApp1.Settings.json</code>)</br></a>
                 </p>
                 <pre>
                 <code class="lang-json">
  {
+   "Tenant": "YOUR_COMPANY_NAME",
    "UserId": "",
    "Password": "",
-   "Authority": "https://login.microsoftonline.com/YOUR_COMPANY.onmicrosoft.com",
    "ClientId": "",
+   "ClientSecret": "",
+   "ResourceUrl": "",
+   "ReplyUrl": "",
    "ApiScopes": [
      "api://YOUR-API-SCOPES"
    ],
-   "AppInsightsAppId": "",
-   "AppInsightsApiKey": ""
-   "Endpoints": [
-     "https://YOUR-{env}-API.COM/route1",
-     "https://YOUR-{env}-API.COM/route2"
-   ],
    "FormatArgs": {
-     "env": "dev"
-   }
+     "api": "https://YOUR-{env}-API.COM"
+   },
+   "Endpoints": [
+     "{api}/route1",
+     "{api}/route2"
+   ],
+   "AppInsightsAppId": "",
+   "AppInsightsApiKey": "",
    "Iterations": 5,
    "OutputFormat": "Excel",
    "ReadResponseHeadersOnly": false,
@@ -122,45 +125,57 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>Tenant</td>
+                                <td><code>string</code></td>
+                                <td>Azure Tenant Name/ID<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td></td>
+                            </tr>
+                            <tr>
                                 <td>UserId</td>
                                 <td><code>string</code></td>
-                                <td>Azure AD User-ID</td>
+                                <td>Azure AD User-ID<br />Used in case of User-Creds silent-authentication only</td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>Password</td>
                                 <td><code>string</code></td>
-                                <td>Azure AD Password</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td>Authority</td>
-                                <td><code>string</code></td>
-                                <td>Azure AD Authority</td>
+                                <td>Azure AD Password<br />Used in case of User-Creds silent-authentication only</td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>ClientId</td>
                                 <td><code>string</code></td>
-                                <td>Azure AD Application/Client ID</td>
+                                <td>Azure AD Application/Client ID<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>ClientSecret</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Application/Client Secret<br />Used in case of Client-Creds authentication only</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>ResourceUrl</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Application Resource Url<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td><code>ClientId</code></td>
+                            </tr>
+                            <tr>
+                                <td>ReplyUrl</td>
+                                <td><code>string</code></td>
+                                <td>Azure AD Application Reply/Redirect Url<br />Used in case of User-Creds interactive-authentication only</td>
                                 <td></td>
                             </tr>
                             <tr>
                                 <td>ApiScopes</td>
                                 <td><code>string[]</code></td>
-                                <td>Azure AD API Scope</td>
-                                <td></td>
+                                <td>Azure AD API Scopes<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td>api://<code>ClientId</code>/.default</td>
                             </tr>
                             <tr>
-                                <td>AppInsightsAppId</td>
-                                <td><code>string</code></td>
-                                <td>Azure Application Insights App-ID</td>
-                                <td></td>
-                            </tr>
-                            <tr>
-                                <td>AppInsightsApiKey</td>
-                                <td><code>string</code></td>
-                                <td>Azure Application Insights API-Key</td>
+                                <td>FormatArgs</td>
+                                <td><code>string-object pairs</code></td>
+                                <td>Macros to be replaced in the Endpoints</td>
                                 <td></td>
                             </tr>
                             <tr class="table-success">
@@ -170,9 +185,15 @@
                                 <td></td>
                             </tr>
                             <tr>
-                                <td>FormatArgs</td>
-                                <td><code>string-object pairs</code></td>
-                                <td>Macros to be replaced in the Endpoints</td>
+                                <td>AppInsightsAppId</td>
+                                <td><code>string</code></td>
+                                <td>Azure Application Insights App-ID to fetch the request-duration-logs from</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>AppInsightsApiKey</td>
+                                <td><code>string</code></td>
+                                <td>Azure Application Insights API-Key to fetch the request-duration-logs from</td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -219,6 +240,14 @@
                         </tbody>
                     </table>
                 </div>
+                <blockquote>
+                    <b>Order of Authentication</b>:
+                    <ul>
+                        <li>If <code>Password</code> is provided <code>></code> <i>Silent</i> User-credentials authentication flow<br /><code>AcquireTokenByUsernamePassword(scopes, username, password</code>)</li>
+                        <li>If <code>ClientSecret</code> is provided <code>></code> Client-credentials authentication flow<br /><code>AcquireTokenAsync(resource, clientCredential)</code></li>
+                        <li>If <code>ReplyUrl</code> is provided <code>></code> <i>Interactive</i> User-credentials authentication flow<br /><code>AcquireTokenAsync(resource, clientId, redirectUri, parameters)</code></li>
+                    </ul>
+                </blockquote>
                 <br />
                 <h5>logging</h5>
                 <p>
@@ -254,7 +283,7 @@
                 <h4 class="section__title">inputs</h4>
                 <p>
                     Additional details (e.g. <code>http-method</code> (defaults to <code>GET</code>) / <code>headers</code> / <code>body</code> / <code>query-params</code>) for the <i>Endpoints</i>
-                    defined the <code>Perfx.Settings.json</code> under <code>Documents/Perfx</code> can be provided in <code>Perfx_Inputs.xlsx</code>
+                    defined the <code>Perfx.Settings.json</code> (default) under <code>Documents/Perfx</code> can be provided in <code>Perfx_Inputs.xlsx</code>
                     under the same folder (or using the <i>Plugin</i> model outlined below)
                 </p>
                 <p>
@@ -268,9 +297,9 @@
             <section class="js-section">
                 <h4 class="section__title">outputs</h4>
                 <p>
-                    Results are saved to your <code>Documents/Perfx</code> with the name:
-                    <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv</code> / <code>Perfx_Results.json</code> (depending on the specified <code>OutputFormat</code> in
-                    <code>Perfx.Settings.json</code>
+                    Results are saved to your <code>Documents/Perfx</code> with the name of the input <i>settings</i> JSON file (default is <code>Perfx.Settings.json</code>).<br />
+                    e.g. <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv</code> / <code>Perfx_Results.json</code> (depending on the specified <code>OutputFormat</code> in
+                    the settings file
                 </p>
                 <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot4.png" class="responsive shadow" width="840px">
                 <br /><br />
@@ -279,6 +308,7 @@
             </section>
             <section class="js-section">
                 <h4 class="section__title">usage</h4>
+                <b>perfx</b> <code>[MyApp1.Settings.json]</code><br />
                 <ul>
                     <li>Enter <code>r:10</code> to run the benchmarks (<code>10 times</code>)</li>
                     <li>Enter <code>s</code> to print the stats/details for the previous run</li>

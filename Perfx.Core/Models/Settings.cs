@@ -1,5 +1,6 @@
 ﻿namespace Perfx
 {
+    using System;
     using System.Collections.Generic;
     using System.Dynamic;
     using System.IO;
@@ -10,6 +11,9 @@
 
     public class Settings
     {
+        private const string OnMicrosoft = ".onmicrosoft.com";
+        private string tenant;
+
         [JsonIgnore]
         private static Dictionary<OutputFormat, string> OutputExtensions = new Dictionary<OutputFormat, string>
         {
@@ -18,10 +22,31 @@
             { OutputFormat.Json, "_Results.json" }
         };
 
+        public string Tenant
+        {
+            get
+            {
+                return this.tenant;
+            }
+
+            set
+            {
+                if (Guid.TryParse(value, out var tenantId))
+                {
+                    this.tenant = value;
+                }
+                else
+                {
+                    this.tenant = value.ToLowerInvariant().Replace(OnMicrosoft, string.Empty) + OnMicrosoft;
+                }
+            }
+        }
         public string UserId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
-        public string Authority { get; set; } = string.Empty; // => $"https://login.microsoftonline.com/{this.TenantName.ToLowerInvariant().Replace(".onmicrosoft.com", string.Empty)}.onmicrosoft.com";
         public string ClientId { get; set; } = string.Empty;
+        public string ClientSecret { get; set; } = string.Empty;
+        public string ResourceUrl { get; set; } = string.Empty;
+        public string ReplyUrl { get; set; } = string.Empty;
         public IEnumerable<string> ApiScopes { get; set; }
         public string AppInsightsAppId { get; set; } = string.Empty;
         public string AppInsightsApiKey { get; set; } = string.Empty;
@@ -31,6 +56,9 @@
         public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
+
+        [JsonIgnore]
+        public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";
 
         [JsonIgnore]
         public string OutputFile => Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormat];

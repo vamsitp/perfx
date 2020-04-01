@@ -35,6 +35,7 @@
         protected override async Task ExecuteAsync(CancellationToken stopToken)
         {
             var tenant = string.Empty;
+            ColorConsole.WriteLine("Settings".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray());
             PrintHelp();
             List<Result> results = null;
             if (!Directory.Exists(string.Empty.GetFullPath()))
@@ -135,28 +136,25 @@
                             }
                         }
 
-                        if (!string.IsNullOrEmpty(settings.UserId) && !string.IsNullOrEmpty(settings.Password))
+                        try
                         {
-                            try
+                            if (this.plugin != null)
                             {
-                                if (this.plugin != null)
-                                {
-                                    settings.Token = await this.plugin.GetAuthToken(settings);
-                                }
-                                else
-                                {
-                                    //// TODO
-                                    // if (!Guid.TryParse(settings.TenantId, out var tenantId))
-                                    // {
-                                    //     settings.TenantId = AuthHelper.GetTenantId(settings.TenantName);
-                                    // }
-                                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
-                                }
+                                settings.Token = await this.plugin.GetAuthToken(settings);
                             }
-                            catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
+                            else
                             {
-                                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
+                                ////// TODO
+                                //// if (!Guid.TryParse(settings.Tenant, out var tenantId))
+                                //// {
+                                ////     settings.Tenant = await AuthHelper.GetTenantId(settings.Tenant);
+                                //// }
+                                await SetAuthToken();
                             }
+                        }
+                        catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
+                        {
+                            await SetAuthToken();
                         }
 
                         using (var scope = serviceScopeFactory.CreateScope())
@@ -190,6 +188,22 @@
             }
 
             // Clean-up on cancellation
+        }
+
+        private async Task SetAuthToken()
+        {
+            if (!string.IsNullOrWhiteSpace(settings.Password))
+            {
+                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
+            }
+            else if (!string.IsNullOrWhiteSpace(settings.ClientSecret))
+            {
+                settings.Token = await AuthHelper.GetAuthTokenByClientCredentialsAsync(settings);
+            }
+            else if (!string.IsNullOrWhiteSpace(settings.ReplyUrl))
+            {
+                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsInteractiveAsync(settings);
+            }
         }
 
         private async Task ExecuteAppInsights(List<Result> results, string key, CancellationToken stopToken)

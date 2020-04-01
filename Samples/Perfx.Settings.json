@@ -1,20 +1,26 @@
 {
+  "Tenant": "your-org",
   "UserId": "",
   "Password": "",
-  "Authority": "https://login.microsoftonline.com/your-api.com.onmicrosoft.com",
   "ClientId": "",
+  "ClientSecret": "",
+  "ResourceUrl": "",
+  "ReplyUrl": "",
   "ApiScopes": [
     "api://"
   ],
+  "FormatArgs": {
+    "api": "https://your-dev-api.com/api",
+    "odata": "https://your-dev-api.com/odata"
+  },
+  "Endpoints": [
+    "{api}/route1",
+    "{api}/route2",
+    "{odata}/route3?$top=1",
+    "{odata}/route4"
+  ],
   "AppInsightsAppId": "",
   "AppInsightsApiKey": "",
-  "Endpoints": [
-    "https://your-{env}-api.com/route1",
-    "https://your-{env}-api.com/route2"
-  ],
-  "FormatArgs": {
-    "env": "dev"
-  },
   "Iterations": 5,
   "OutputFormat": "Excel", // "Csv", "Json"
   "ReadResponseHeadersOnly": false,
