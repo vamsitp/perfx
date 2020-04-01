@@ -114,7 +114,8 @@
                 ColorConsole.WriteLine("Unable to load ".DarkGray(), file.Gray());
             }
 
-            return Settings.DefaultAppSettingsFile;
+            var settingsFile = Directory.EnumerateFiles(string.Empty.GetFullPath(), "*.Settings.json").Where(f => !f.Equals(Settings.DefaultAppSettingsFile, StringComparison.OrdinalIgnoreCase) && !f.Contains("_Results.json", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
+            return settingsFile ?? Settings.DefaultAppSettingsFile;
         }
     }
 }

@@ -25,33 +25,34 @@
 
         public static void Save<T>(this IEnumerable<T> results, Settings settings)
         {
+            var outputFile = settings.OutputFile.GetFullPath();
             if (settings.OutputFormat == OutputFormat.Excel)
             {
-                SaveToExcel(results, settings.OutputFile);
+                SaveToExcel(results, outputFile);
             }
             else if (settings.OutputFormat == OutputFormat.Csv)
             {
-                SaveToCsv(results, settings.OutputFile);
+                SaveToCsv(results, outputFile);
             }
             else
             {
-                SaveToJson(results, settings.OutputFile);
+                SaveToJson(results, outputFile);
             }
         }
 
-        public static void SaveToJson<T>(this IEnumerable<T> results, string fileName)
+        public static void SaveToJson<T>(this IEnumerable<T> results, string file)
         {
-            if (fileName.Overwrite())
+            if (file.Overwrite())
             {
-                File.WriteAllText(fileName.GetFullPath(), JsonConvert.SerializeObject(results, Formatting.Indented));
+                File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented));
             }
         }
 
-        public static void SaveToCsv<T>(this IEnumerable<T> results, string fileName)
+        public static void SaveToCsv<T>(this IEnumerable<T> results, string file)
         {
-            if (fileName.Overwrite())
+            if (file.Overwrite())
             {
-                using (var reader = File.CreateText(fileName.GetFullPath()))
+                using (var reader = File.CreateText(file))
                 {
                     using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
                     {
@@ -61,9 +62,9 @@
             }
         }
 
-        public static void SaveToExcel<T>(this IEnumerable<T> results, string fileName)
+        public static void SaveToExcel<T>(this IEnumerable<T> results, string file)
         {
-            if (fileName.Overwrite())
+            if (file.Overwrite())
             {
                 using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
                 {
@@ -73,30 +74,30 @@
                     CreateRunsSheet(wb, results);
                     CreateStatsSheet(wb, results);
 
-                    wb.SaveAs(fileName.GetFullPath());
+                    wb.SaveAs(file);
                 }
             }
         }
 
         public static List<T> Read<T>(this Settings settings)
         {
+            var outputFile = settings.OutputFile.GetFullPath();
             if (settings.OutputFormat == OutputFormat.Excel)
             {
-                return ReadFromExcel<T>(settings.OutputFile) ?? ReadFromCsv<T>(settings.OutputFile);
+                return ReadFromExcel<T>(outputFile) ?? ReadFromCsv<T>(outputFile);
             }
             else if (settings.OutputFormat == OutputFormat.Csv)
             {
-                return ReadFromCsv<T>(settings.OutputFile);
+                return ReadFromCsv<T>(outputFile);
             }
             else
             {
-                return ReadFromJson<T>(settings.OutputFile);
+                return ReadFromJson<T>(outputFile);
             }
         }
 
-        public static List<T> ReadFromJson<T>(string fileName)
+        public static List<T> ReadFromJson<T>(string file)
         {
-            var file = fileName.GetFullPath();
             if (File.Exists(file))
             {
                 return JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(file));
@@ -105,9 +106,8 @@
             return null;
         }
 
-        public static List<T> ReadFromCsv<T>(string fileName)
+        public static List<T> ReadFromCsv<T>(string file)
         {
-            var file = fileName.GetFullPath();
             if (File.Exists(file))
             {
                 var textReader = new StreamReader(file);
@@ -123,18 +123,17 @@
             return null;
         }
 
-        public static List<T> ReadFromExcel<T>(string filename, string sheet = "Perfx_Runs")
+        public static List<T> ReadFromExcel<T>(string file, string sheet = "Perfx_Runs")
         {
-            var results = filename.ToDataTable(sheet)?.ToList<T>();
+            var results = file.ToDataTable(sheet)?.ToList<T>();
             return results;
         }
 
-        private static bool Overwrite(this string fileName)
+        private static bool Overwrite(this string file)
         {
-            var filePath = fileName.GetFullPath();
-            if (File.Exists(filePath))
+            if (File.Exists(file))
             {
-                ColorConsole.Write("\n> ".Red(), "Overwrite ", filePath.DarkYellow(), "?", " (Y/N) ".Red());
+                ColorConsole.Write("\n> ".Red(), "Overwrite ", file.DarkYellow(), "?", " (Y/N) ".Red());
                 var quit = Console.ReadKey();
                 ColorConsole.WriteLine();
                 return quit.Key == ConsoleKey.Y;
@@ -286,16 +285,15 @@
         //}
 
         // Credit: https://stackoverflow.com/a/53546001
-        public static DataTable ToDataTable(this string fileName, dynamic worksheet)
+        public static DataTable ToDataTable(this string file, dynamic worksheet)
         {
-            var filePath = fileName.GetFullPath();
-            if (!File.Exists(filePath))
+            if (!File.Exists(file))
             {
                 return null;
             }
 
             var dt = new DataTable();
-            using (var workBook = new XLWorkbook(fileName.GetFullPath()))
+            using (var workBook = new XLWorkbook(file))
             {
                 IXLWorksheet workSheet = workBook.Worksheets.Contains(worksheet) ? workBook.Worksheet(worksheet) : workBook.Worksheet(1);
                 var firstRow = true;

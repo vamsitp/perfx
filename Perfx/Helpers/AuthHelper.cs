@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Concurrent;
+    using System.Collections.Generic;
     using System.Linq;
     using System.Net.Http;
     using System.Security;
@@ -27,7 +28,8 @@
 
         public static async Task<string> GetAuthTokenByUserCredentialsSilentAsync(Settings input)
         {
-            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.UserId) || string.IsNullOrWhiteSpace(input.Password) || input.ApiScopes?.Any() != true)
+            var apiScopes = GetApiScopes(input);
+            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.UserId) || string.IsNullOrWhiteSpace(input.Password) || apiScopes?.Any() != true)
             {
                 throw new ArgumentException($"To use the User-credentials silent-flow, please provide valid Tenant, ClientId, UserId, Password, ApiScopes in '{input.AppSettingsFile}'");
             }
@@ -38,7 +40,7 @@
             AuthenticationResult result = null;
             if (accounts?.Any() == true)
             {
-                result = await app.AcquireTokenSilent(input.ApiScopes, accounts.FirstOrDefault()).ExecuteAsync();
+                result = await app.AcquireTokenSilent(apiScopes, accounts.FirstOrDefault()).ExecuteAsync();
             }
             else
             {
@@ -50,7 +52,7 @@
                     {
                         securePassword.AppendChar(c);
                     }
-                    result = await app.AcquireTokenByUsernamePassword(input.ApiScopes, input.UserId, securePassword).ExecuteAsync();
+                    result = await app.AcquireTokenByUsernamePassword(apiScopes, input.UserId, securePassword).ExecuteAsync();
                 }
                 catch (MsalException mex)
                 {
@@ -67,7 +69,8 @@
 
         public static async Task<string> GetAuthTokenByUserCredentialsInteractiveAsync(Settings input)
         {
-            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.ResourceUrl) || string.IsNullOrWhiteSpace(input.ReplyUrl))
+            var resource = GetResourceUrl(input);
+            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(resource) || string.IsNullOrWhiteSpace(input.ReplyUrl))
             {
                 throw new ArgumentException($"To use the User-credentials interactive-flow, please provide valid Tenant, ClientId, ResourceUrl, ReplyUrl in '{input.AppSettingsFile}'");
             }
@@ -82,12 +85,12 @@
                     ColorConsole.Write("Authenticating...\n");
                     try
                     {
-                        result = await ctx.AcquireTokenAsync(input.ResourceUrl, input.ClientId, new Uri(input.ReplyUrl), promptBehavior);
+                        result = await ctx.AcquireTokenAsync(resource, input.ClientId, new Uri(input.ReplyUrl), promptBehavior);
                     }
                     catch (UnauthorizedAccessException)
                     {
                         // If the token has expired, prompt the user with a login prompt
-                        result = await ctx.AcquireTokenAsync(input.ResourceUrl, input.ClientId, new Uri(input.ReplyUrl), promptBehavior);
+                        result = await ctx.AcquireTokenAsync(resource, input.ClientId, new Uri(input.ReplyUrl), promptBehavior);
                     }
 
                     return result?.AccessToken;
@@ -101,27 +104,29 @@
         // https://blog.jpries.com/2020/01/03/getting-started-with-the-power-bi-api-querying-the-power-bi-rest-api-directly-with-c/
         public static async Task<string> GetAuthTokenByClientCredentialsAsync(Settings input)
         {
-            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.ClientSecret) || string.IsNullOrWhiteSpace(input.ResourceUrl))
+            var resource = GetResourceUrl(input);
+            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.ClientSecret) || string.IsNullOrWhiteSpace(resource))
             {
                 throw new ArgumentException($"To use the Client-credentials flow, please provide valid Tenant, ClientId, ClientSecret, ResourceUrl in '{input.AppSettingsFile}'");
             }
 
             AuthenticationContext authContext = new AuthenticationContext(input.Authority);
-            var token = await authContext.AcquireTokenAsync(input.ResourceUrl, new Microsoft.IdentityModel.Clients.ActiveDirectory.ClientCredential(input.ClientId, input.ClientSecret));
+            var token = await authContext.AcquireTokenAsync(resource, new Microsoft.IdentityModel.Clients.ActiveDirectory.ClientCredential(input.ClientId, input.ClientSecret));
             return token.AccessToken;
         }
 
         // Credit: https://stackoverflow.com/a/39590155
         public static async Task<string> GetAuthTokenByUserCredentialsRawAsync(Settings input)
         {
-            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.ClientSecret) || string.IsNullOrWhiteSpace(input.ResourceUrl))
+            var resource = GetResourceUrl(input);
+            if (string.IsNullOrWhiteSpace(input.Tenant) || string.IsNullOrWhiteSpace(input.ClientId) || string.IsNullOrWhiteSpace(input.ClientSecret) || string.IsNullOrWhiteSpace(resource))
             {
                 throw new ArgumentException($"To use the User-credentials raw-flow, please provide valid Tenant, ClientId, ClientSecret, UserId, Password, ResourceUrl in '{input.AppSettingsFile}'");
             }
 
             var client = new HttpClient();
             string tokenEndpoint = $"https://login.microsoftonline.com/{input.Tenant}/oauth2/token";
-            var body = $"resource={input.ResourceUrl}&client_id={input.ClientId}&client_secret={input.ClientSecret}&grant_type=password&username={input.UserId}&password={input.Password}";
+            var body = $"resource={resource}&client_id={input.ClientId}&client_secret={input.ClientSecret}&grant_type=password&username={input.UserId}&password={input.Password}";
             var stringContent = new StringContent(body, Encoding.UTF8, "application/x-www-form-urlencoded");
             var result = await client.PostAsync(tokenEndpoint, stringContent).ContinueWith(response =>
             {
@@ -143,6 +148,16 @@
             }
 
             return tenant;
+        }
+
+        private static string GetResourceUrl(Settings input)
+        {
+            return string.IsNullOrWhiteSpace(input.ResourceUrl) ? input.ClientId : input.ResourceUrl;
+        }
+
+        private static IEnumerable<string> GetApiScopes(Settings input)
+        {
+            return input.ApiScopes?.Any() == true ? input.ApiScopes : new string[] { $"api://{input.ClientId}/.default" };
         }
 
         private static AuthenticationContext GetAuthenticationContext(string tenant)
