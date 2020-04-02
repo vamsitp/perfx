@@ -31,6 +31,7 @@
             // Credit: https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-3.1
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
             IConfiguration configuration = null;
+            var appSettingsFile = GetAppSettingsFile(args);
             var builder = Host
                             .CreateDefaultBuilder(args)
                             //.ConfigureHostConfiguration(configHost => { })
@@ -38,7 +39,7 @@
                             {
                                 config
                                     .SetBasePath(string.Empty.GetFullPath())
-                                    .AddJsonFile(GetAppSettingsFile(args), optional: true, reloadOnChange: true)
+                                    .AddJsonFile(appSettingsFile, optional: true, reloadOnChange: true)
                                     .AddJsonFile(Settings.DefaultLogSettingsFile, optional: true, reloadOnChange: true);
                                 configuration = config.Build();
                             })
@@ -46,7 +47,7 @@
                             {
                                 services
                                     .Configure<Settings>(configuration)
-                                    .PostConfigure<Settings>(config => { config.AppSettingsFile = GetAppSettingsFile(args); })
+                                    .PostConfigure<Settings>(config => { config.AppSettingsFile = appSettingsFile; })
                                     .AddScoped<BenchmarkService>()
                                     .AddScoped<HttpService>()
                                     .AddHostedService<Worker>()
@@ -110,8 +111,16 @@
                 {
                     return file;
                 }
+                else
+                {
+                    file = args.FirstOrDefault().GetFullPathEx("Settings.json");
+                    if (File.Exists(file))
+                    {
+                        return file;
+                    }
+                }
 
-                ColorConsole.WriteLine("Unable to load ".DarkGray(), file.Gray());
+                ColorConsole.WriteLine("Could not find ", file.DarkGray(), " or ", file.Replace(".Settings", string.Empty).DarkGray());
             }
 
             var settingsFile = Directory.EnumerateFiles(string.Empty.GetFullPath(), "*.Settings.json").Where(f => !f.Equals(Settings.DefaultAppSettingsFile, StringComparison.OrdinalIgnoreCase) && !f.Contains("_Results.json", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();

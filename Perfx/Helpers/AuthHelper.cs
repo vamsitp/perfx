@@ -52,6 +52,7 @@
                     {
                         securePassword.AppendChar(c);
                     }
+
                     result = await app.AcquireTokenByUsernamePassword(apiScopes, input.UserId, securePassword).ExecuteAsync();
                 }
                 catch (MsalException mex)

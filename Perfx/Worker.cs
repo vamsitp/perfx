@@ -35,7 +35,9 @@
         protected override async Task ExecuteAsync(CancellationToken stopToken)
         {
             var tenant = string.Empty;
-            ColorConsole.WriteLine("https://vamsitp.github.io/perfx".Green(), "\n--------------------------------------------------------------".Green(), "\nSettings".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray());
+            ColorConsole.WriteLine("https://vamsitp.github.io/perfx".Green(),
+                "\n--------------------------------------------------------------".Green(),
+                "\nLoaded".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray());
             PrintHelp();
             List<Result> results = null;
             if (!Directory.Exists(string.Empty.GetFullPath()))
