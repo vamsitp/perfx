@@ -59,7 +59,7 @@
                     {
                         aiLogs.ForEach(ai =>
                         {
-                            var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
+                            var result = results.SingleOrDefault(r => ai.operation_ParentId.Contains(r.op_Id, StringComparison.OrdinalIgnoreCase));
                             result.ai_ms = ai.duration;
                             result.ai_op_Id = ai.operation_Id;
                         // TODO: Rest of the props

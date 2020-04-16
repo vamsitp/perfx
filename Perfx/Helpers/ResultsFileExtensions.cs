@@ -44,7 +44,7 @@
         {
             if (file.Overwrite(overwrite))
             {
-                File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented));
+                File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
             }
         }
 

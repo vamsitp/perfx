@@ -9,7 +9,7 @@ namespace Perfx.Tests
     public class WorkerTests
     {
         [Fact]
-        public void TestMethod1()
+        public void ExecuteAsync_StateUnderTest_ExpectedBehavior()
         {
             // Arrange
             var mocker = new Fixture();

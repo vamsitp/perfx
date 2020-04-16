@@ -19,15 +19,17 @@
         private Settings settings;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
+        private readonly IHostApplicationLifetime appLifetime;
         private readonly IPlugin plugin;
         private readonly LogDataService logDataService;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services, IHostApplicationLifetime appLifetime)
         {
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
+            this.appLifetime = appLifetime;
             this.plugin = services.GetService<IPlugin>();
             this.logDataService = logDataService;
         }
@@ -37,14 +39,14 @@
             var tenant = string.Empty;
             ColorConsole.WriteLine("https://vamsitp.github.io/perfx".Green(),
                 "\n--------------------------------------------------------------".Green(),
-                "\nLoaded".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray(), " (", PathExtensions.BasePath ,")");
+                "\nLoaded".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray(), " (", PathExtensions.BasePath.DarkGray() ,")");
             if (!this.settings.QuiteMode)
             {
                 PrintHelp();
             }
             else
             {
-                ColorConsole.WriteLine("Running in ", nameof(this.settings.QuiteMode).Green(), " ...");
+                ColorConsole.WriteLine("Running in ", nameof(this.settings.QuiteMode).DarkGray(), " ...");
             }
 
             List<Result> results = null;
@@ -197,8 +199,7 @@
                 }
             }
             while (!stopToken.IsCancellationRequested && !this.settings.QuiteMode);
-
-            // Clean-up on cancellation
+            this.appLifetime.StopApplication();
         }
 
         private async Task SetAuthToken()

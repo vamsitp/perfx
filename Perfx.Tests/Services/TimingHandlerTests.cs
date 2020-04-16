@@ -9,7 +9,7 @@ namespace Perfx.Tests.Services
     public class TimingHandlerTests
     {
         [Fact]
-        public void TestMethod1()
+        public void SendAsync_StateUnderTest_ExpectedBehavior()
         {
             // Arrange
             var mocker = new Fixture();
