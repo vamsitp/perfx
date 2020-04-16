@@ -204,17 +204,20 @@
 
         private async Task SetAuthToken()
         {
-            if (!string.IsNullOrWhiteSpace(settings.Password))
+            if (!string.IsNullOrWhiteSpace(settings.Tenant))
             {
-                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
-            }
-            else if (!string.IsNullOrWhiteSpace(settings.ClientSecret))
-            {
-                settings.Token = await AuthHelper.GetAuthTokenByClientCredentialsAsync(settings);
-            }
-            else if (!string.IsNullOrWhiteSpace(settings.ReplyUrl))
-            {
-                settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsInteractiveAsync(settings);
+                if (!string.IsNullOrWhiteSpace(settings.Password))
+                {
+                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
+                }
+                else if (!string.IsNullOrWhiteSpace(settings.ClientSecret))
+                {
+                    settings.Token = await AuthHelper.GetAuthTokenByClientCredentialsAsync(settings);
+                }
+                else if (!string.IsNullOrWhiteSpace(settings.ReplyUrl))
+                {
+                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsInteractiveAsync(settings);
+                }
             }
         }
 

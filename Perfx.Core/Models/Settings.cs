@@ -28,7 +28,6 @@
             {
                 return this.tenant;
             }
-
             set
             {
                 if (Guid.TryParse(value, out var tenantId))
@@ -37,7 +36,7 @@
                 }
                 else
                 {
-                    this.tenant = value.ToLowerInvariant().Replace(OnMicrosoft, string.Empty) + OnMicrosoft;
+                    this.tenant = string.IsNullOrWhiteSpace(value) ? value : (value.ToLowerInvariant().Replace(OnMicrosoft, string.Empty) + OnMicrosoft);
                 }
             }
         }
