@@ -111,7 +111,7 @@
                             foreach (var prop in settings.Properties)
                             {
                                 var value = prop.GetValue(settings) ?? string.Empty;
-                                ColorConsole.Write($"{prop.Name}".Green(), $"({prop.PropertyType}): ");
+                                ColorConsole.Write($"{prop.Name}".Green(), $" ({prop.PropertyType}): ");
                                 var val = Console.ReadLine();
                                 if (!string.IsNullOrEmpty(val) && value.ToString() != val.Trim())
                                 {

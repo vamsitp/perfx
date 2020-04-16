@@ -127,7 +127,7 @@
                             <tr>
                                 <td>Tenant</td>
                                 <td><code>string</code></td>
-                                <td>Azure Tenant Name/ID<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td>Azure Tenant Name/ID<br />Used in case of User-Creds / Client-Creds authentication</td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -145,7 +145,7 @@
                             <tr>
                                 <td>ClientId</td>
                                 <td><code>string</code></td>
-                                <td>Azure AD Application/Client ID<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td>Azure AD Application/Client ID<br />Used in case of User-Creds / Client-Creds authentication</td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -157,7 +157,7 @@
                             <tr>
                                 <td>ResourceUrl</td>
                                 <td><code>string</code></td>
-                                <td>Azure AD Application Resource Url<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td>Azure AD Application Resource Url<br />Used in case of User-Creds / Client-Creds authentication</td>
                                 <td><code>ClientId</code></td>
                             </tr>
                             <tr>
@@ -169,7 +169,7 @@
                             <tr>
                                 <td>ApiScopes</td>
                                 <td><code>string[]</code></td>
-                                <td>Azure AD API Scopes<br />Used in case of User-Creds or Client-Creds authentication</td>
+                                <td>Azure AD API Scopes<br />Used in case of User-Creds / Client-Creds authentication</td>
                                 <td>api://<code>ClientId</code>/.default</td>
                             </tr>
                             <tr>
@@ -308,7 +308,12 @@
             </section>
             <section class="js-section">
                 <h4 class="section__title">usage</h4>
-                <b>perfx</b> <code>[MyApp1.Settings.json]</code><br />
+                <pre style="margin-top:10px"><code> perfx [MyApp1.Settings.json]</code></pre><br />
+                <blockquote> If the <i>Current-directory</i> contains a <code>Perfx</code> folder, the tools uses that (for input/output)</blockquote>
+                <blockquote> Else, it falls back to the <code>Pefx</code> folder under <i>My Documents</i></blockquote>
+                <br />
+                <blockquote> If no argument is supplied, <code>Perfx.Settings.json</code> is used as input by default</blockquote>
+                <br />
                 <ul>
                     <li>Enter <code>r:10</code> to run the benchmarks (<code>10 times</code>)</li>
                     <li>Enter <code>s</code> to print the stats/details for the previous run</li>
