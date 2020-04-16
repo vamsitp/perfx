@@ -32,8 +32,7 @@
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
             IConfiguration configuration = null;
             var appSettingsFile = GetAppSettingsFile(args);
-            ColorConsole.WriteLine(appSettingsFile.Yellow());
-            ColorConsole.WriteLine(appSettingsFile.SetBasePath().Yellow());
+            appSettingsFile.SetBasePath();
             var builder = Host
                             .CreateDefaultBuilder(args)
                             //.ConfigureHostConfiguration(configHost => { })

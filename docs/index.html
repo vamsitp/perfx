@@ -125,6 +125,12 @@
                         </thead>
                         <tbody>
                             <tr>
+                                <td>QuiteMode</td>
+                                <td><code>bool</code></td>
+                                <td>Just run (based on the information specified in the <i>Settings</i> file) and exit (useful in DevOps-CI pipelines)</td>
+                                <td></td>
+                            </tr>
+                            <tr>
                                 <td>Tenant</td>
                                 <td><code>string</code></td>
                                 <td>Azure Tenant Name/ID<br />Used in case of User-Creds / Client-Creds authentication</td>
@@ -309,7 +315,7 @@
             <section class="js-section">
                 <h4 class="section__title">usage</h4>
                 <pre style="margin-top:10px"><code> perfx [MyApp1.Settings.json]</code></pre><br />
-                <blockquote> If the <i>Current-directory</i> contains a <code>Perfx</code> folder, the tools uses that (for input/output)</blockquote>
+                                                                                             <blockquote> If the specified <i>path</i> or the <i>current-dir</i> contains a valid <i>Settings</i> file, the tool uses/creates the <code>Perfx</code> folder under that path (for processing inputs/outputs)</blockquote>
                 <blockquote> Else, it falls back to the <code>Pefx</code> folder under <i>My Documents</i></blockquote>
                 <br />
                 <blockquote> If no argument is supplied, <code>Perfx.Settings.json</code> is used as input by default</blockquote>

@@ -39,34 +39,41 @@
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
-                ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", results.Count.ToString().Green(), "]");
-                var found = false;
-                var i = 0;
-                List<Log> aiLogs = null;
-                do
+                try
                 {
-                    i++;
-                    aiLogs = (await this.GetLogs(results.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
-                    found = aiLogs?.Count >= results.Count;
-                    ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
-                    await Task.Delay(1000);
-                }
-                while (!stopToken.IsCancellationRequested && found == false && i < retries);
-
-                if (aiLogs?.Count > 0)
-                {
-                    aiLogs.ForEach(ai =>
+                    ColorConsole.Write(" App-Insights ".White().OnDarkGreen(), "[", results.Count.ToString().Green(), "]");
+                    var found = false;
+                    var i = 0;
+                    List<Log> aiLogs = null;
+                    do
                     {
-                        var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
-                        result.ai_ms = ai.duration;
-                        result.ai_op_Id = ai.operation_Id;
+                        i++;
+                        aiLogs = (await this.GetLogs(results.Select(t => t.op_Id), stopToken, timeframe))?.ToList();
+                        found = aiLogs?.Count >= results.Count;
+                        ColorConsole.Write((aiLogs?.Count > 0 ? $"{aiLogs?.Count.ToString()}" : string.Empty), ".".Green());
+                        await Task.Delay(1000);
+                    }
+                    while (!stopToken.IsCancellationRequested && found == false && i < retries);
+
+                    if (aiLogs?.Count > 0)
+                    {
+                        aiLogs.ForEach(ai =>
+                        {
+                            var result = results.SingleOrDefault(t => t.op_Id.Equals(ai.operation_ParentId, StringComparison.OrdinalIgnoreCase));
+                            result.ai_ms = ai.duration;
+                            result.ai_op_Id = ai.operation_Id;
                         // TODO: Rest of the props
                     });
-                    ColorConsole.WriteLine();
+                        ColorConsole.WriteLine();
+                    }
+                    else
+                    {
+                        ColorConsole.WriteLine("\nNo logs found!".Yellow());
+                    }
                 }
-                else
+                catch (Exception ex)
                 {
-                    ColorConsole.WriteLine("\nNo logs found!".Yellow());
+                    ColorConsole.WriteLine(ex.Message.White().OnRed());
                 }
             }
         }

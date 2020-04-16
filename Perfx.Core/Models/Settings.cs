@@ -41,6 +41,7 @@
                 }
             }
         }
+
         public string UserId { get; set; } = string.Empty;
         public string Password { get; set; } = string.Empty;
         public string ClientId { get; set; } = string.Empty;
@@ -56,6 +57,7 @@
         public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
+        public bool QuiteMode { get; set; }
 
         [JsonIgnore]
         public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";

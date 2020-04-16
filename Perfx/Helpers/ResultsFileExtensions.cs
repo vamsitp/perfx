@@ -28,29 +28,29 @@
             var outputFile = settings.OutputFile.GetFullPath();
             if (settings.OutputFormat == OutputFormat.Excel)
             {
-                SaveToExcel(results, outputFile);
+                SaveToExcel(results, outputFile, settings.QuiteMode);
             }
             else if (settings.OutputFormat == OutputFormat.Csv)
             {
-                SaveToCsv(results, outputFile);
+                SaveToCsv(results, outputFile, settings.QuiteMode);
             }
             else
             {
-                SaveToJson(results, outputFile);
+                SaveToJson(results, outputFile, settings.QuiteMode);
             }
         }
 
-        public static void SaveToJson<T>(this IEnumerable<T> results, string file)
+        public static void SaveToJson<T>(this IEnumerable<T> results, string file, bool overwrite)
         {
-            if (file.Overwrite())
+            if (file.Overwrite(overwrite))
             {
                 File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented));
             }
         }
 
-        public static void SaveToCsv<T>(this IEnumerable<T> results, string file)
+        public static void SaveToCsv<T>(this IEnumerable<T> results, string file, bool overwrite)
         {
-            if (file.Overwrite())
+            if (file.Overwrite(overwrite))
             {
                 using (var reader = File.CreateText(file))
                 {
@@ -62,9 +62,9 @@
             }
         }
 
-        public static void SaveToExcel<T>(this IEnumerable<T> results, string file)
+        public static void SaveToExcel<T>(this IEnumerable<T> results, string file, bool overwrite)
         {
-            if (file.Overwrite())
+            if (file.Overwrite(overwrite))
             {
                 using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
                 {
@@ -129,9 +129,9 @@
             return results;
         }
 
-        private static bool Overwrite(this string file)
+        private static bool Overwrite(this string file, bool overwrite)
         {
-            if (File.Exists(file))
+            if (!overwrite && File.Exists(file))
             {
                 ColorConsole.Write("\n> ".Red(), "Overwrite ", file.DarkYellow(), "?", " (Y/N) ".Red());
                 var quit = Console.ReadKey();

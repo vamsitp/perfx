@@ -8,7 +8,7 @@
         // https://yetanotherchris.dev/csharp/6-ways-to-get-the-current-directory-in-csharp/
         private static readonly string CurrDir = Path.Combine(Environment.CurrentDirectory, nameof(Perfx));
         private static readonly string MyDocsDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), nameof(Perfx));
-        private static string BasePath = Directory.Exists(CurrDir) ? CurrDir : MyDocsDir;
+        public static string BasePath { get; private set; } = Directory.Exists(CurrDir) ? CurrDir : MyDocsDir;
 
         public static string SetBasePath(this string inputPath)
         {

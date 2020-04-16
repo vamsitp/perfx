@@ -37,20 +37,28 @@
             var tenant = string.Empty;
             ColorConsole.WriteLine("https://vamsitp.github.io/perfx".Green(),
                 "\n--------------------------------------------------------------".Green(),
-                "\nLoaded".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray());
-            PrintHelp();
+                "\nLoaded".Gray(), ": ".Green(), this.settings.AppSettingsFile.DarkGray(), " (", PathExtensions.BasePath ,")");
+            if (!this.settings.QuiteMode)
+            {
+                PrintHelp();
+            }
+            else
+            {
+                ColorConsole.WriteLine("Running in ", nameof(this.settings.QuiteMode).Green(), " ...");
+            }
+
             List<Result> results = null;
             if (!Directory.Exists(string.Empty.GetFullPath()))
             {
                 Directory.CreateDirectory(string.Empty.GetFullPath());
             }
 
-            while (!stopToken.IsCancellationRequested)
+            do
             {
                 try
                 {
                     ColorConsole.Write("\n> ".Green());
-                    var key = Console.ReadLine()?.Trim();
+                    var key = this.settings.QuiteMode ? "r" : Console.ReadLine()?.Trim();
                     if (string.IsNullOrWhiteSpace(key))
                     {
                         PrintHelp();
@@ -106,7 +114,7 @@
                     }
                     else if (key.StartsWith("r", StringComparison.OrdinalIgnoreCase))
                     {
-                        if (!File.Exists(settings.AppSettingsFile))
+                        if (!this.settings.QuiteMode && !File.Exists(settings.AppSettingsFile))
                         {
                             foreach (var prop in settings.Properties)
                             {
@@ -123,7 +131,7 @@
                             settings.Save();
                         }
 
-                        if (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0))
+                        if (!this.settings.QuiteMode && (settings.Endpoints == null || (settings.Endpoints != null && settings.Endpoints.Count() == 0)))
                         {
                             ColorConsole.WriteLine("\n> ".Green(), "Enter the Urls to benchmark (comma-separated): ");
                             var urls = Console.ReadLine();
@@ -166,7 +174,7 @@
                             int? iterations = split.Length > 1 && int.TryParse(split[1]?.Trim(), out var r) ? r : default(int?);
                             results = await benchmark.Execute(iterations, stopToken);
                             ColorConsole.Write("> ".Green(), "Fetch", $" [{results.Count}]".Green(), " durations", " from App-Insights?", " (Y/N) ".Green());
-                            var result = Console.ReadLine();
+                            var result = this.settings.QuiteMode ? "y" : Console.ReadLine();
                             if (result?.StartsWith("y", StringComparison.OrdinalIgnoreCase) == true)
                             {
                                 ColorConsole.WriteLine();
@@ -188,6 +196,7 @@
                     ColorConsole.WriteLine(ex.Message.White().OnRed());
                 }
             }
+            while (!stopToken.IsCancellationRequested && !this.settings.QuiteMode);
 
             // Clean-up on cancellation
         }
