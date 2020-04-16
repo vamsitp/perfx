@@ -32,6 +32,8 @@
             // Credit: https://thecodebuzz.com/using-httpclientfactory-in-net-core-console-application/
             IConfiguration configuration = null;
             var appSettingsFile = GetAppSettingsFile(args);
+            ColorConsole.WriteLine(appSettingsFile.Yellow());
+            ColorConsole.WriteLine(appSettingsFile.SetBasePath().Yellow());
             var builder = Host
                             .CreateDefaultBuilder(args)
                             //.ConfigureHostConfiguration(configHost => { })
@@ -124,7 +126,7 @@
             }
 
             var settingsFile = Directory.EnumerateFiles(string.Empty.GetFullPath(), "*.Settings.json").Where(f => !f.Equals(Settings.DefaultAppSettingsFile, StringComparison.OrdinalIgnoreCase) && !f.Contains("_Results.json", StringComparison.OrdinalIgnoreCase)).FirstOrDefault();
-            return settingsFile ?? Settings.DefaultAppSettingsFile;
+            return File.Exists(Settings.DefaultAppSettingsFile) ? Settings.DefaultAppSettingsFile : settingsFile;
         }
     }
 }
