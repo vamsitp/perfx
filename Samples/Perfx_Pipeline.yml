@@ -1,0 +1,48 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- none
+
+pool:
+  vmImage: 'windows-latest'
+
+steps:
+
+- script: |
+    dotnet tool install perfx -g --no-cache
+    dotnet tool list -g
+  displayName: "Install Perfx"
+  continueOnError: true
+
+- script: |
+    %USERPROFILE%\.dotnet\tools\perfx.exe "$(Build.SourcesDirectory)\Perfx.Settings.json"
+  displayName: "Run Perfx"
+  continueOnError: true
+
+- powershell: |
+    # Get-Content Perfx_Results.csv | ConvertFrom-CSV | ConvertTo-HTML
+    Import-Csv "$(Build.SourcesDirectory)\Perfx\Perfx_Results.csv" | Format-Table -AutoSize -GroupBy url
+  displayName: "Print Perfx results"
+  continueOnError: true
+
+- powershell: |
+    Import-Csv "$(Build.SourcesDirectory)\Perfx\Perfx_Stats.csv" | Format-Table -AutoSize
+  displayName: "Print Perfx stats"
+  continueOnError: true
+
+- task: CopyFiles@2
+  displayName: Copy Perfx output
+  inputs:
+    contents: '$(Build.SourcesDirectory)\Perfx\Perfx_*.*'
+    targetFolder: $(Build.ArtifactStagingDirectory)
+    overWrite: true
+    flattenFolders: true
+
+- task: PublishPipelineArtifact@1
+  displayName: Publish Perfx output
+  inputs:
+    targetPath: $(Build.ArtifactStagingDirectory)
+    artifact: 'Perfx_$(Build.BuildNumber)'

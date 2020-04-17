@@ -304,7 +304,7 @@
                 <h4 class="section__title">outputs</h4>
                 <p>
                     Results are saved to your <code>Documents/Perfx</code> with the name of the input <i>settings</i> JSON file (default is <code>Perfx.Settings.json</code>).<br />
-                    e.g. <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv</code> / <code>Perfx_Results.json</code> (depending on the specified <code>OutputFormat</code> in
+                    e.g. <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv & Perfx_Stats.csv</code> / <code>Perfx_Results.json & Perfx_Stats.json</code> (depending on the specified <code>OutputFormat</code> in
                     the settings file
                 </p>
                 <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot4.png" class="responsive shadow" width="840">
@@ -315,10 +315,20 @@
             <section class="js-section">
                 <h4 class="section__title">usage</h4>
                 <pre style="margin-top:10px"><code> perfx [MyApp1.Settings.json]</code></pre><br />
-                                                                                             <blockquote> If the specified <i>path</i> or the <i>current-dir</i> contains a valid <i>Settings</i> file, the tool uses/creates the <code>Perfx</code> folder under that path (for processing inputs/outputs)</blockquote>
-                <blockquote> Else, it falls back to the <code>Pefx</code> folder under <i>My Documents</i></blockquote>
-                <br />
-                <blockquote> If no argument is supplied, <code>Perfx.Settings.json</code> is used as input by default</blockquote>
+                <blockquote>
+                    <ul>
+                        <li>
+                            If the specified <i>path</i> or the <i>current-dir</i> contains a valid <i>Settings</i> file, the tool uses/creates the <code>Perfx</code> folder under that path (for processing inputs/outputs);
+                            else, it falls back to the <code>Pefx</code> folder under <i>My Documents</i>
+                        </li>
+                        <li>
+                            If no argument is supplied, <code>Perfx.Settings.json</code> is used as input by default
+                        </li>
+                        <li>
+                            Set <i>QuiteMode</i> to <code>true</code> in the <i>Settings</i> file to run once and exit (e.g. <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx_Pipeline.yml">DevOps Pipelines</a>)
+                        </li>
+                    </ul>
+                </blockquote>
                 <br />
                 <ul>
                     <li>Enter <code>r:10</code> to run the benchmarks (<code>10 times</code>)</li>

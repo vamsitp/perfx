@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Sln Items", "_Sln Items", 
 		LICENSE = LICENSE
 		Notices.md = Notices.md
 		Samples\Perfx.Settings.json = Samples\Perfx.Settings.json
+		Samples\Perfx_Pipeline.yml = Samples\Perfx_Pipeline.yml
 		README.md = README.md
 	EndProjectSection
 EndProject
@@ -25,7 +26,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{E1C208D2-F
 		docs\index.html = docs\index.html
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Perfx.Tests", "Perfx.Tests\Perfx.Tests.csproj", "{4AD5F812-6457-4E7D-B1C9-F66BE02C7958}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.Tests", "Perfx.Tests\Perfx.Tests.csproj", "{4AD5F812-6457-4E7D-B1C9-F66BE02C7958}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

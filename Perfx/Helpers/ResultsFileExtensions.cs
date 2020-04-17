@@ -45,6 +45,8 @@
             if (file.Overwrite(overwrite))
             {
                 File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
+                var stats = results.GetStats<T>(file);
+                File.WriteAllText(stats.statsFile, JsonConvert.SerializeObject(stats.stats, Formatting.Indented, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
             }
         }
 
@@ -57,6 +59,15 @@
                     using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
                     {
                         csvWriter.WriteRecords(results);
+                    }
+                }
+
+                var stats = results.GetStats<T>(file);
+                using (var reader = File.CreateText(stats.statsFile))
+                {
+                    using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                    {
+                        csvWriter.WriteRecords(stats.stats);
                     }
                 }
             }
@@ -129,6 +140,26 @@
             return results;
         }
 
+        public static (string statsFile, List<Run> stats) GetStats<T>(this IEnumerable<T> results, string file)
+        {
+            return (file.Replace("Results", "Stats"), results.GetStats<T>());
+        }
+
+        public static List<Run> GetStats<T>(this IEnumerable<T> results)
+        {
+            var stats = new List<Run>();
+            foreach (var group in results.Cast<Result>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
+            {
+                if (group.Key != null)
+                {
+                    var run = new Run(group.ToList(), group.Key);
+                    stats.Add(run);
+                }
+            }
+
+            return stats;
+        }
+
         private static bool Overwrite(this string file, bool overwrite)
         {
             if (!overwrite && File.Exists(file))
@@ -180,15 +211,7 @@
         private static IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results)
         {
             IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
-            var stats = new List<Run>();
-            foreach (var group in results.Cast<Result>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
-            {
-                if (group.Key != null)
-                {
-                    var run = new Run(group.ToList(), group.Key);
-                    stats.Add(run);
-                }
-            }
+            var stats = results.GetStats();
 
             var statsDataTable = stats.AsEnumerable().ToDataTable();
             var statsTable = wsStats.Cell(1, 1).InsertTable(statsDataTable, "Stats");
