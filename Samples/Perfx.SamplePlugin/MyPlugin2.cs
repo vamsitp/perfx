@@ -11,7 +11,7 @@
     {
         public Task<string> GetAuthToken(Settings settings)
         {
-            //  NOTE: By default Perfx uses IPublicClientApplication.AcquireTokenSilent
+            // NOTE: By default Perfx uses IPublicClientApplication's AcquireTokenSilent/AcquireTokenByUsernamePassword/AcquireTokenAsync (see 'Order of Authentication' note in the docs)
             //  If you want to override that behavior and provide a custom implementation, go ahead...
             //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
             var userId = settings.UserId;

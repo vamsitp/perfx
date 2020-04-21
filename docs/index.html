@@ -249,6 +249,7 @@
                 <blockquote>
                     <b>Order of Authentication</b>:
                     <ul>
+                        <li>If <code>Tenant</code> is <i>null</i> or <i>empty</i> <code>></code> <i>No</i> Authentication</li>
                         <li>If <code>Password</code> is provided <code>></code> <i>Silent</i> User-credentials authentication flow<br /><code>AcquireTokenByUsernamePassword(scopes, username, password</code>)</li>
                         <li>If <code>ClientSecret</code> is provided <code>></code> Client-credentials authentication flow<br /><code>AcquireTokenAsync(resource, clientCredential)</code></li>
                         <li>If <code>ReplyUrl</code> is provided <code>></code> <i>Interactive</i> User-credentials authentication flow<br /><code>AcquireTokenAsync(resource, clientId, redirectUri, parameters)</code></li>
@@ -348,6 +349,7 @@
             </section>
             <section class="js-section">
                 <h4 class="section__title"><a href="https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support#simple-plugin-with-no-dependencies" target="_blank">plugins</a></h4>
+                <div>Plugins are useful to override the default behavior (Authentication / Endpoint details)</div><br />
                 <ul>
                     <li>Create a <i>.NET Standard</i> project and add reference to <code>Prefx.Core</code> project</li>
                     <li>Add a class that implements <code>IPlugin</code> interface</li>
@@ -355,7 +357,7 @@
                     <code>
  public Task<string> GetAuthToken(Settings settings)
  {
-     // NOTE: By default Perfx uses IPublicClientApplication.AcquireTokenSilent
+     // NOTE: By default Perfx uses IPublicClientApplication's AcquireTokenSilent/AcquireTokenByUsernamePassword/AcquireTokenAsync (see 'Order of Authentication' note in the docs)
      // If you want to override that behavior and provide a custom implementation, go ahead...
      // If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
      var userId = settings.UserId;
@@ -406,7 +408,7 @@
                             </code>
                         </pre>
                     </li>
-                    <li>Build the project and copy the build-output to <code>Documents/Perfx/Plugins</code> folder</li>
+                    <li>Build the project and copy the build-output to <code>Documents/Perfx/Plugins</code> folder (<i>Documents</i> can be some other <i>base-folder</i> depending on your usage)</li>
                     <li>Optionally, if you have multiple <code>IPlugin</code> implementations, you can also update the <i>value</i> of <code>PluginClassName</code> with the specific implementation-class-full-name (e.g. <code>MyPluginAssembly.MyPlugin1</code>)</li>
                 </ul>
                 <blockquote><b>Sample</b>: <a href="https://github.com/vamsitp/perfx/tree/master/Samples/Perfx.SamplePlugin" target="_blank"><code>Perfx.SamplePlugin</code></a></blockquote>
