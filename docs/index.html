@@ -349,13 +349,13 @@
             </section>
             <section class="js-section">
                 <h4 class="section__title"><a href="https://docs.microsoft.com/en-us/dotnet/core/tutorials/creating-app-with-plugin-support#simple-plugin-with-no-dependencies" target="_blank">plugins</a></h4>
-                <div>Plugins are useful to override the default behavior (Authentication / Endpoint details)</div><br />
+                <div>Plugins are useful to override the default behavior (Authentication / Endpoint details / Read / Save)</div><br />
                 <ul>
                     <li>Create a <i>.NET Standard</i> project and add reference to <code>Prefx.Core</code> project</li>
-                    <li>Add a class that implements <code>IPlugin</code> interface</li>
+                    <li>Add a class that implements <code>IPlugin</code> interface (which in turn implements <code>IOutput</code> interface)</li>
                     <pre>
                     <code>
- public Task<string> GetAuthToken(Settings settings)
+ public Task<string> IPlugin.GetAuthToken(Settings settings)
  {
      // NOTE: By default Perfx uses IPublicClientApplication's AcquireTokenSilent/AcquireTokenByUsernamePassword/AcquireTokenAsync (see 'Order of Authentication' note in the docs)
      // If you want to override that behavior and provide a custom implementation, go ahead...
@@ -368,7 +368,7 @@
      return Task.FromResult("someToken1");
  }
 
- public Task<List<Endpoint>> GetEndpointDetails(Settings settings)
+ public Task<List<Endpoint>> IPlugin.GetEndpointDetails(Settings settings)
  {
      // NOTE: By default Perfx uses Documents/Perfx/Perfx_Inputs.xlsx
      // If you want to override that behavior and provide a custom implementation, go ahead...
@@ -390,6 +390,22 @@
 
      return Task.FromResult(endpointDetails);
  }
+
+public Task IOutput.Save<T>(IEnumerable<T> results, Settings settings)
+{
+    //  If you want to override that behavior and provide a custom implementation, go ahead...
+    //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+    // Do something and return true
+    return Task.FromResult(false);
+}
+
+public Task<IList<T>> IOutput.Read<T>(Settings settings)
+{
+    //  If you want to override that behavior and provide a custom implementation, go ahead...
+    //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+    // Do and return something
+    return Task.FromResult(default(IList<T>));
+}
                         </code>
                     </pre>
                     <li>

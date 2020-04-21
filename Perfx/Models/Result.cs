@@ -30,7 +30,7 @@
         public string ai_op_Id { get; set; }
 
         [Ignore, JsonIgnore]
-        public string full_url => this.url.TrimEnd('/') + (string.IsNullOrWhiteSpace(this.details.Query) ? string.Empty : ("/" + this.details.Query.TrimStart('/')));
+        public string full_url => this.url + (string.IsNullOrWhiteSpace(this.details.Query) ? string.Empty : this.details.Query);
 
         [Ignore, JsonIgnore]
         public Endpoint details { get; set; }

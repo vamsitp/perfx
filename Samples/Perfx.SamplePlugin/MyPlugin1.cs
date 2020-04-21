@@ -43,6 +43,22 @@
             return Task.FromResult(endpointDetails);
         }
 
+        public Task Save<T>(IEnumerable<T> results, Settings settings)
+        {
+            //  If you want to override that behavior and provide a custom implementation, go ahead...
+            //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+            // Do something and return true
+            return Task.FromResult(false);
+        }
+
+        public Task<IList<T>> Read<T>(Settings settings)
+        {
+            //  If you want to override that behavior and provide a custom implementation, go ahead...
+            //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation
+            // Do and return something
+            return Task.FromResult(default(IList<T>));
+        }
+
         ////public Task<dynamic> ProcessRequest(dynamic record, CancellationToken stopToken = default)
         ////{
         ////    // Get the response whichever way you like from the record details ('record' is of type 'Perfx.Result') and...

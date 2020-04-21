@@ -141,7 +141,7 @@
             return color;
         }
 
-        public static void DrawTable(this List<Result> results)
+        public static void DrawTable(this IList<Result> results)
         {
             // Credit: https://stackoverflow.com/a/49032729
             // https://github.com/Athari/CsConsoleFormat/blob/master/Alba.CsConsoleFormat.Tests/Elements/Containers/GridTests.cs
@@ -178,14 +178,14 @@
             ConsoleRenderer.RenderDocument(doc);
         }
 
-        public static void DrawStats(this List<Result> results)
+        public static void DrawStats(this IList<Result> results)
         {
             results.DrawTable();
             results.DrawChart();
             results.DrawPercentilesTable();
         }
 
-        public static void DrawChart(this List<Result> results)
+        public static void DrawChart(this IList<Result> results)
         {
             ColorConsole.WriteLine("\n\n", " Responses ".White().OnGreen());
             var maxIdLength = results.Max(x => x.id.ToString().Length);
@@ -197,13 +197,14 @@
                 ColorConsole.WriteLine(result.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), result.duration_ms.GetColorToken(' '), " ", result.duration_s_str, "s".Green());
             }
 
+            var minBarLength = (10 - maxDurationLength % 10) + maxDurationLength;
             ColorConsole.WriteLine(string.Empty.PadLeft(maxIdLength + 1),
                 BroderChar.DarkCyan(),
-                string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : maxDurationLength, HorizontalChar).DarkCyan(),
-                "[", "100".DarkCyan(), "]");
+                string.Empty.PadLeft(maxDurationLength > MaxBarLength ? MaxBarLength + 2 : minBarLength, HorizontalChar).DarkCyan(),
+                "[", $"{(maxDurationLength > MaxBarLength ? MaxBarLength : minBarLength)}".DarkCyan(), "]");
         }
 
-        public static void DrawPercentilesTable(this List<Result> results)
+        public static void DrawPercentilesTable(this IList<Result> results)
         {
             ColorConsole.WriteLine("\n", " Statistics ".White().OnGreen());
             var runs = new List<Run>();
@@ -308,6 +309,39 @@
             {
                 await Task.WhenAll(enumerable.Select(item => action(item)));
             }
+        }
+
+        public static (string statsFile, List<Run> stats) GetStats<T>(this IEnumerable<T> results, string file)
+        {
+            return (file.Replace("Results", "Stats"), results.GetStats<T>());
+        }
+
+        public static List<Run> GetStats<T>(this IEnumerable<T> results)
+        {
+            var stats = new List<Run>();
+            foreach (var group in results.Cast<Result>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
+            {
+                if (group.Key != null)
+                {
+                    var run = new Run(group.ToList(), group.Key);
+                    stats.Add(run);
+                }
+            }
+
+            return stats;
+        }
+
+        public static bool Overwrite(this string file, bool overwrite)
+        {
+            if (!overwrite && File.Exists(file))
+            {
+                ColorConsole.Write("\n> ".Red(), "Overwrite ", file.DarkYellow(), "?", " (Y/N) ".Red());
+                var quit = Console.ReadKey();
+                ColorConsole.WriteLine();
+                return quit.Key == ConsoleKey.Y;
+            }
+
+            return true;
         }
     }
 }

@@ -4,77 +4,23 @@
     using System.Collections.Generic;
     using System.Data;
     using System.Diagnostics;
-    using System.Globalization;
     using System.IO;
     using System.Linq;
     using System.Reflection;
+    using System.Threading.Tasks;
 
     using ClosedXML.Excel;
 
-    using ColoredConsole;
-
-    using CsvHelper;
-    using CsvHelper.Configuration;
     using CsvHelper.Configuration.Attributes;
 
-    using Newtonsoft.Json;
-
-    public static class ResultsFileExtensions
+    public class ExcelOut : IOutput
     {
         private static readonly string[] ExcelColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
 
-        public static void Save<T>(this IEnumerable<T> results, Settings settings)
+        public Task Save<T>(IEnumerable<T> results, Settings settings)
         {
-            var outputFile = settings.OutputFile.GetFullPath();
-            if (settings.OutputFormat == OutputFormat.Excel)
-            {
-                SaveToExcel(results, outputFile, settings.QuiteMode);
-            }
-            else if (settings.OutputFormat == OutputFormat.Csv)
-            {
-                SaveToCsv(results, outputFile, settings.QuiteMode);
-            }
-            else
-            {
-                SaveToJson(results, outputFile, settings.QuiteMode);
-            }
-        }
-
-        public static void SaveToJson<T>(this IEnumerable<T> results, string file, bool overwrite)
-        {
-            if (file.Overwrite(overwrite))
-            {
-                File.WriteAllText(file, JsonConvert.SerializeObject(results, Formatting.Indented, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
-                var stats = results.GetStats<T>(file);
-                File.WriteAllText(stats.statsFile, JsonConvert.SerializeObject(stats.stats, Formatting.Indented, new JsonSerializerSettings { ReferenceLoopHandling = ReferenceLoopHandling.Ignore }));
-            }
-        }
-
-        public static void SaveToCsv<T>(this IEnumerable<T> results, string file, bool overwrite)
-        {
-            if (file.Overwrite(overwrite))
-            {
-                using (var reader = File.CreateText(file))
-                {
-                    using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-                    {
-                        csvWriter.WriteRecords(results);
-                    }
-                }
-
-                var stats = results.GetStats<T>(file);
-                using (var reader = File.CreateText(stats.statsFile))
-                {
-                    using (var csvWriter = new CsvWriter(reader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-                    {
-                        csvWriter.WriteRecords(stats.stats);
-                    }
-                }
-            }
-        }
-
-        public static void SaveToExcel<T>(this IEnumerable<T> results, string file, bool overwrite)
-        {
+            var file = settings.OutputFile.GetFullPath();
+            var overwrite = settings.QuiteMode;
             if (file.Overwrite(overwrite))
             {
                 using (var wb = new XLWorkbook { ReferenceStyle = XLReferenceStyle.Default, CalculateMode = XLCalculateMode.Auto })
@@ -86,97 +32,34 @@
                     CreateStatsSheet(wb, results);
 
                     wb.SaveAs(file);
-                }
-            }
-        }
-
-        public static List<T> Read<T>(this Settings settings)
-        {
-            var outputFile = settings.OutputFile.GetFullPath();
-            if (settings.OutputFormat == OutputFormat.Excel)
-            {
-                return ReadFromExcel<T>(outputFile) ?? ReadFromCsv<T>(outputFile);
-            }
-            else if (settings.OutputFormat == OutputFormat.Csv)
-            {
-                return ReadFromCsv<T>(outputFile);
-            }
-            else
-            {
-                return ReadFromJson<T>(outputFile);
-            }
-        }
-
-        public static List<T> ReadFromJson<T>(string file)
-        {
-            if (File.Exists(file))
-            {
-                return JsonConvert.DeserializeObject<List<T>>(File.ReadAllText(file));
-            }
-
-            return null;
-        }
-
-        public static List<T> ReadFromCsv<T>(string file)
-        {
-            if (File.Exists(file))
-            {
-                var textReader = new StreamReader(file);
-                using (var csvReader = new CsvReader(textReader, new CsvConfiguration(CultureInfo.InvariantCulture)))
-                {
-                    csvReader.Configuration.HeaderValidated = null;
-                    csvReader.Configuration.MissingFieldFound = null;
-                    var results = csvReader.GetRecords<T>().ToList();
-                    return results;
+                    return Task.FromResult(true);
                 }
             }
 
-            return null;
+            return Task.FromResult(false);
         }
 
-        public static List<T> ReadFromExcel<T>(string file, string sheet = "Perfx_Runs")
+        public Task<IList<T>> Read<T>(Settings settings)
         {
-            var results = file.ToDataTable(sheet)?.ToList<T>();
-            return results;
+            return this.Read<T>(settings.OutputFile, "Perfx_Runs");
         }
 
-        public static (string statsFile, List<Run> stats) GetStats<T>(this IEnumerable<T> results, string file)
+        public Task<IList<T>> Read<T>(string file, string sheet)
         {
-            return (file.Replace("Results", "Stats"), results.GetStats<T>());
-        }
-
-        public static List<Run> GetStats<T>(this IEnumerable<T> results)
-        {
-            var stats = new List<Run>();
-            foreach (var group in results.Cast<Result>().GroupBy(x => x.url + (string.IsNullOrWhiteSpace(x.ai_op_Id) ? string.Empty : " (ai)")))
+            var filePath = Path.IsPathRooted(file) ? file : file.GetFullPath();
+            if (File.Exists(filePath))
             {
-                if (group.Key != null)
-                {
-                    var run = new Run(group.ToList(), group.Key);
-                    stats.Add(run);
-                }
+                var results = this.ToList<T>(this.ToDataTable(filePath, sheet));
+                return Task.FromResult(results);
             }
 
-            return stats;
+            return Task.FromResult(default(IList<T>));
         }
 
-        private static bool Overwrite(this string file, bool overwrite)
-        {
-            if (!overwrite && File.Exists(file))
-            {
-                ColorConsole.Write("\n> ".Red(), "Overwrite ", file.DarkYellow(), "?", " (Y/N) ".Red());
-                var quit = Console.ReadKey();
-                ColorConsole.WriteLine();
-                return quit.Key == ConsoleKey.Y;
-            }
-
-            return true;
-        }
-
-        private static IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> results)
+        private IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> results)
         {
             IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
-            var dataTable = results.ToDataTable();
+            var dataTable = this.ToDataTable(results);
             var table = ws.Cell(1, 1).InsertTable(dataTable, "Runs");
             table.Theme = XLTableTheme.TableStyleLight8;
 
@@ -208,12 +91,12 @@
             return ws;
         }
 
-        private static IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results)
+        private IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results)
         {
             IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
             var stats = results.GetStats();
 
-            var statsDataTable = stats.AsEnumerable().ToDataTable();
+            var statsDataTable = this.ToDataTable(stats.AsEnumerable());
             var statsTable = wsStats.Cell(1, 1).InsertTable(statsDataTable, "Stats");
             statsTable.Theme = XLTableTheme.TableStyleLight8;
 
@@ -241,7 +124,7 @@
             return wsStats;
         }
 
-        private static void SetFormat(IXLRange numbers, int multiplier = 1)
+        private void SetFormat(IXLRange numbers, int multiplier = 1)
         {
             numbers.AddConditionalFormat().WhenGreaterThan(8 * multiplier).Font.SetFontColor(XLColor.OrangeRed);
             numbers.AddConditionalFormat().WhenGreaterThan(5 * multiplier).Font.SetFontColor(XLColor.MediumRedViolet);
@@ -250,7 +133,7 @@
         }
 
         // Credit: https://stackoverflow.com/questions/18100783/how-to-convert-a-list-into-data-table
-        public static DataTable ToDataTable<T>(this IEnumerable<T> items)
+        public DataTable ToDataTable<T>(IEnumerable<T> items)
         {
             // var properties = TypeDescriptor.GetProperties(typeof(T)).Cast<PropertyDescriptor>().Where(p => !p.Attributes.Cast<Attribute>().Any(a => a.GetType() == typeof(IgnoreAttribute)));
             var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
@@ -281,7 +164,7 @@
             return table;
         }
 
-        //public static DataTable ToDataTable<T>(this T item)
+        //public DataTable ToDataTable<T>(T item)
         //{
         //    var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
         //    var table = new DataTable();
@@ -308,7 +191,7 @@
         //}
 
         // Credit: https://stackoverflow.com/a/53546001
-        public static DataTable ToDataTable(this string file, dynamic worksheet)
+        public DataTable ToDataTable(string file, dynamic worksheet)
         {
             if (!File.Exists(file))
             {
@@ -363,7 +246,7 @@
             }
         }
 
-        private static List<T> ToList<T>(this DataTable dt)
+        private IList<T> ToList<T>(DataTable dt)
         {
             if (dt == null)
             {
@@ -373,14 +256,14 @@
             var data = new List<T>();
             foreach (var row in dt.Rows.Cast<DataRow>())
             {
-                var item = row.ToItem<T>();
+                var item = this.ToItem<T>(row);
                 data.Add(item);
             }
 
             return data;
         }
 
-        private static T ToItem<T>(this DataRow dr)
+        private T ToItem<T>(DataRow dr)
         {
             var properties = typeof(T).GetProperties().Where(p => p.GetCustomAttribute<IgnoreAttribute>() == null);
             var instance = Activator.CreateInstance<T>();

@@ -11,16 +11,18 @@
 
     using Microsoft.Extensions.DependencyInjection;
     using Microsoft.Extensions.Options;
-    using Perfx;
+
     using SmartFormat;
 
     public class BenchmarkService : IDisposable
     {
+        private const string Inputs = "Inputs";
+
         private static int leftPadding;
+        private readonly ExcelOut excelOutput;
 
         private readonly IPlugin plugin;
         private readonly HttpService httpService;
-
         private bool disposedValue = false;
         private Settings settings;
 
@@ -30,6 +32,7 @@
             this.settings = settingsMonitor.CurrentValue;
             settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
             this.plugin = services.GetService<IPlugin>();
+            this.excelOutput = new ExcelOut();
             leftPadding = (this.settings.Endpoints.Count().ToString() + this.settings.Endpoints.Count().ToString()).Length + 6;
         }
 
@@ -74,9 +77,9 @@
             return this.settings.FormatArgs == null ? url : Smart.Format(url, this.settings.FormatArgs);
         }
 
-        private async Task<List<Endpoint>> GetEndpointDetails()
+        private async Task<IList<Endpoint>> GetEndpointDetails()
         {
-            List<Endpoint> endpointDetails;
+            IList<Endpoint> endpointDetails;
 
             try
             {
@@ -86,12 +89,12 @@
                 }
                 else
                 {
-                    endpointDetails = ResultsFileExtensions.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
+                    endpointDetails = await this.excelOutput.Read<Endpoint>(settings.InputsFile, Inputs);
                 }
             }
             catch (Exception ex) when (ex is NotImplementedException || ex is NotSupportedException)
             {
-                endpointDetails = ResultsFileExtensions.ReadFromExcel<Endpoint>(settings.InputsFile, "Inputs");
+                endpointDetails = await this.excelOutput.Read<Endpoint>(settings.InputsFile, Inputs);
             }
 
             return endpointDetails;

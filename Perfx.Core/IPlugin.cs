@@ -1,10 +1,9 @@
 ﻿namespace Perfx
 {
     using System.Collections.Generic;
-    using System.Threading;
     using System.Threading.Tasks;
 
-    public interface IPlugin
+    public interface IPlugin : IOutput
     {
         // TODO: Use SecurePassword?
         Task<string> GetAuthToken(Settings settings);

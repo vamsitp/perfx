@@ -17,21 +17,41 @@
     public class Worker : BackgroundService
     {
         private Settings settings;
+        private IOutput output;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
         private readonly IHostApplicationLifetime appLifetime;
+        private readonly IEnumerable<IOutput> outputs;
         private readonly IPlugin plugin;
         private readonly LogDataService logDataService;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services, IHostApplicationLifetime appLifetime)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services, IHostApplicationLifetime appLifetime, IEnumerable<IOutput> outputs)
         {
             this.settings = settingsMonitor.CurrentValue;
-            settingsMonitor.OnChange(changedSettings => this.settings = changedSettings);
+            settingsMonitor.OnChange(changedSettings => { this.settings = changedSettings; this.output = null; });
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
             this.appLifetime = appLifetime;
+            this.outputs = outputs;
             this.plugin = services.GetService<IPlugin>();
             this.logDataService = logDataService;
+        }
+
+        private IOutput Output
+        {
+            get
+            {
+                if (output == null)
+                {
+                    output = this.outputs.SingleOrDefault(o => o.GetType().Name.Contains(settings.OutputFormat));
+                    if (output == null)
+                    {
+                        return this.plugin;
+                    }
+                }
+
+                return output;
+            }
         }
 
         protected override async Task ExecuteAsync(CancellationToken stopToken)
@@ -49,7 +69,7 @@
                 ColorConsole.WriteLine("Running in ", nameof(this.settings.QuiteMode).DarkGray(), " ...");
             }
 
-            List<Result> results = null;
+            IList<Result> results = null;
             if (!Directory.Exists(string.Empty.GetFullPath()))
             {
                 Directory.CreateDirectory(string.Empty.GetFullPath());
@@ -87,7 +107,7 @@
                     {
                         if (results == null)
                         {
-                            results = this.settings.Read<Result>();
+                            results = await this.Output.Read<Result>(this.settings);
                         }
 
                         if (results?.Count > 0)
@@ -96,7 +116,7 @@
                             {
                                 var benchmark = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                                 await ExecuteAppInsights(results, key, stopToken);
-                                results.Save(this.settings);
+                                await this.Output.Save(results, this.settings);
                                 results.DrawStats();
                             }
                         }
@@ -105,7 +125,7 @@
                     {
                         if (results == null)
                         {
-                            results = this.settings.Read<Result>();
+                            results = await this.Output.Read<Result>(this.settings);
                         }
 
                         if (results?.Count > 0)
@@ -183,7 +203,7 @@
                                 await ExecuteAppInsights(results, result, stopToken);
                             }
 
-                            results.Save(this.settings);
+                            await this.Output.Save(results, this.settings);
                             results.DrawStats();
                         }
                     }
@@ -221,7 +241,7 @@
             }
         }
 
-        private async Task ExecuteAppInsights(List<Result> results, string key, CancellationToken stopToken)
+        private async Task ExecuteAppInsights(IList<Result> results, string key, CancellationToken stopToken)
         {
             var split = key.Split(new[] { ':', '=', '-', '/' }, 3);
             var timeframe = split.Length > 1 ? split[1]?.Trim() : "60m";

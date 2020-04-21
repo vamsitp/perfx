@@ -15,11 +15,11 @@
         private string tenant;
 
         [JsonIgnore]
-        private static Dictionary<OutputFormat, string> OutputExtensions = new Dictionary<OutputFormat, string>
+        private static Dictionary<string, string> OutputExtensions = new Dictionary<string, string>
         {
-            { OutputFormat.Excel, "_Results.xlsx" },
-            { OutputFormat.Csv, "_Results.csv" },
-            { OutputFormat.Json, "_Results.json" }
+            { Perfx.OutputFormat.Excel.ToString(), "_Results.xlsx" },
+            { Perfx.OutputFormat.Csv.ToString(), "_Results.csv" },
+            { Perfx.OutputFormat.Json.ToString(), "_Results.json" }
         };
 
         public string Tenant
@@ -53,7 +53,7 @@
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
-        public OutputFormat OutputFormat { get; set; } = OutputFormat.Excel;
+        public string OutputFormat { get; set; } = Perfx.OutputFormat.Excel.ToString();
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
         public bool QuiteMode { get; set; }
@@ -62,7 +62,7 @@
         public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";
 
         [JsonIgnore]
-        public string OutputFile => Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormat];
+        public string OutputFile => OutputExtensions.ContainsKey(this.OutputFormat) ? (Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormat]) : string.Empty;
 
         [JsonIgnore]
         public ExpandoObject FormatArgs { get; set; }

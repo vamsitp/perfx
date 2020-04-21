@@ -35,7 +35,7 @@
             this.logger = logger;
         }
 
-        public async Task ExecuteAppInsights(List<Result> results, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
+        public async Task ExecuteAppInsights(IList<Result> results, string timeframe = "60m", int retries = 60, CancellationToken stopToken = default)
         {
             if (!string.IsNullOrWhiteSpace(settings.AppInsightsAppId) && !string.IsNullOrWhiteSpace(settings.AppInsightsApiKey))
             {
