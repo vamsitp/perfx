@@ -28,8 +28,11 @@
                     wb.Style.Font.FontName = "Segoe UI";
                     wb.Style.Font.FontSize = 10;
 
-                    CreateRunsSheet(wb, results);
-                    CreateStatsSheet(wb, results);
+                    var durationSla = (results.FirstOrDefault() as Result).sla_dur_s;
+                    var sizeSla = (results.FirstOrDefault() as Result).sla_size_kb;
+
+                    CreateRunsSheet(wb, results, durationSla, sizeSla);
+                    CreateStatsSheet(wb, results, durationSla, sizeSla);
 
                     wb.SaveAs(file);
                     return Task.FromResult(true);
@@ -56,7 +59,7 @@
             return Task.FromResult(default(IList<T>));
         }
 
-        private IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> results)
+        private IXLWorksheet CreateRunsSheet<T>(XLWorkbook wb, IEnumerable<T> results, double durationSla, double sizeSla)
         {
             IXLWorksheet ws = wb.Worksheets.Add("Perfx_Runs");
             var dataTable = this.ToDataTable(results);
@@ -70,13 +73,13 @@
             result.AddConditionalFormat().WhenContains("200").Font.SetFontColor(XLColor.SeaGreen);
 
             var size = ws.Range(ExcelColumnNames[dataTable.Columns["size_b"].Ordinal] + rowCount);
-            SetFormat(size, 1000);
+            SetFormat(size, sizeSla);
 
             var localms = ws.Range(ExcelColumnNames[dataTable.Columns["local_ms"].Ordinal] + rowCount);
-            SetFormat(localms, 1000);
+            SetFormat(localms, durationSla);
 
             var aims = ws.Range(ExcelColumnNames[dataTable.Columns["ai_ms"].Ordinal] + rowCount);
-            SetFormat(aims, 1000);
+            SetFormat(aims, durationSla);
 
             try
             {
@@ -91,7 +94,7 @@
             return ws;
         }
 
-        private IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results)
+        private IXLWorksheet CreateStatsSheet<T>(IXLWorkbook wb, IEnumerable<T> results, double durationSla, double sizeSla)
         {
             IXLWorksheet wsStats = wb.Worksheets.Add("Perfx_Stats");
             var stats = results.GetStats();
@@ -103,10 +106,10 @@
             var statsRowCount = (statsDataTable.Rows.Count + 1).ToString();
 
             var durations = wsStats.Range("B2:I" + statsRowCount);
-            SetFormat(durations);
+            SetFormat(durations, durationSla);
 
             var sizes = wsStats.Range("J2:K" + statsRowCount);
-            SetFormat(sizes, 100);
+            SetFormat(sizes, sizeSla);
 
             wsStats.Range("L2:L" + statsRowCount).Style.Font.SetFontColor(XLColor.SeaGreen);
             wsStats.Range("M2:M" + statsRowCount).Style.Font.SetFontColor(XLColor.OrangeRed);
@@ -124,12 +127,12 @@
             return wsStats;
         }
 
-        private void SetFormat(IXLRange numbers, int multiplier = 1)
+        private void SetFormat(IXLRange numbers, double sla)
         {
-            numbers.AddConditionalFormat().WhenGreaterThan(8 * multiplier).Font.SetFontColor(XLColor.OrangeRed);
-            numbers.AddConditionalFormat().WhenGreaterThan(5 * multiplier).Font.SetFontColor(XLColor.MediumRedViolet);
-            numbers.AddConditionalFormat().WhenGreaterThan(2 * multiplier).Font.SetFontColor(XLColor.RoyalBlue);
-            numbers.AddConditionalFormat().WhenEqualOrLessThan(2 * multiplier).Font.SetFontColor(XLColor.SeaGreen);
+            numbers.AddConditionalFormat().WhenGreaterThan(8 * sla).Font.SetFontColor(XLColor.OrangeRed);
+            numbers.AddConditionalFormat().WhenGreaterThan(4 * sla).Font.SetFontColor(XLColor.MediumRedViolet);
+            numbers.AddConditionalFormat().WhenGreaterThan(2 * sla).Font.SetFontColor(XLColor.RoyalBlue);
+            numbers.AddConditionalFormat().WhenEqualOrLessThan(2 * sla).Font.SetFontColor(XLColor.SeaGreen);
         }
 
         // Credit: https://stackoverflow.com/questions/18100783/how-to-convert-a-list-into-data-table

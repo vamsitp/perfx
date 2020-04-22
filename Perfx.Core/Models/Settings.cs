@@ -56,7 +56,8 @@
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
         public bool QuiteMode { get; set; }
-        public double ExpectedSla { get; set; } = 5;
+        public double ResponseTimeSla { get; set; } = 5;
+        public double ResponseSizeSla { get; set; } = 200;
 
         [JsonIgnore]
         public List<Output> Outputs => this.GetOutputs();

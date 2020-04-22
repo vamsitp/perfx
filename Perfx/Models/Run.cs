@@ -19,6 +19,8 @@
         {
             this.results = results;
             this.url = url;
+            this.sla_dur_s = results.FirstOrDefault().sla_dur_s;
+            this.sla_size_kb = results.FirstOrDefault().sla_size_kb;
         }
 
         public string url { get; set; }
@@ -34,6 +36,8 @@
         public double size_max_kb => this.ok_results_size_kb.Count > 1 ? Math.Round(this.ok_results_size_kb.Max(), 2) : this.ok_results_size_kb.FirstOrDefault();
         public double ok_200 => (int)Math.Round(((double)(this.ok_results.Count() / this.results.Count())) * 100);
         public double other_xxx => 100 - this.ok_200;
+        public double sla_dur_s { get; set; }
+        public double sla_size_kb { get; set; }
 
         [Ignore, JsonIgnore]
         public IEnumerable<Result> results { get; set; }

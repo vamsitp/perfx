@@ -45,13 +45,15 @@
             {
                 return Enumerable.Range(0, iterations ?? this.settings.Iterations).Select(i =>
                     {
-                        var epWithSla = endpoint.Split(new[] { "::" }, 2, StringSplitOptions.None);
+                        var epWithSla = this.GetFormattedUrl(endpoint).Split(new[] { "::" }, 2, StringSplitOptions.None);
+                        var slas = epWithSla.Length > 1 && !string.IsNullOrEmpty(epWithSla.FirstOrDefault()) ? epWithSla.FirstOrDefault().Split(new[] { "|" }, 2, StringSplitOptions.None) : null;
                         var result = new Result
                         {
                             id = float.Parse($"{groupIndex + 1}.{i + 1}"),
                             op_Id = Guid.NewGuid().ToString(),
-                            url = this.GetFormattedUrl(epWithSla.LastOrDefault()),
-                            exp_sla_s = epWithSla.Length > 1 ? double.Parse(epWithSla.FirstOrDefault()) : this.settings.ExpectedSla
+                            url = epWithSla.LastOrDefault(),
+                            sla_dur_s = slas?.Length > 0 && !string.IsNullOrEmpty(slas.FirstOrDefault()) ? double.Parse(slas.FirstOrDefault()) : this.settings.ResponseTimeSla,
+                            sla_size_kb = slas?.Length > 1 && !string.IsNullOrEmpty(slas.LastOrDefault()) ? double.Parse(slas.LastOrDefault()) : this.settings.ResponseSizeSla
                         };
                         return result;
                     });
@@ -143,11 +145,11 @@
         private void Log(Result result)
         {
             var id = result.id.ToString();
-            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), result.full_url.Green(), "\n",
+            ColorConsole.WriteLine($"{id} ".PadLeft(leftPadding - 4), result.full_url.Green(), $" (".White(), $"sla: {result.sla_dur_s}s".DarkGray(), " / ".White(), $"{result.sla_size_kb}Kb".DarkGray(), ")".White(), "\n",
                 "opid".PadLeft(leftPadding).Green(), ": ", result.op_Id, "\n",
-                "stat".PadLeft(leftPadding).Green(), ": ", result.result.GetColorToken(" "), " ", result.result, "\n",
-                "time".PadLeft(leftPadding).Green(), ": ", result.local_ms.GetColorToken(" "), " ", result.local_ms_str, "ms".Green(), " (~", result.local_s_str, "s".Green(), ") ", "\n",
-                "size".PadLeft(leftPadding).Green(), ": ", result.size_b.GetColorToken(" "), " ", result.size_num_str, result.size_unit.Green(),  "\n");
+                "stat".PadLeft(leftPadding).Green(), ": ", result.result.GetColorTokenForStatusCode(" "), " ", result.result, "\n",
+                "time".PadLeft(leftPadding).Green(), ": ", result.local_ms.GetColorTokenForDuration(result.sla_dur_s,  " "), " ", result.local_ms_str, "ms".Green(), " (~", result.local_s_str, "s".Green(), ") ", "\n",
+                "size".PadLeft(leftPadding).Green(), ": ", result.size_b.GetColorTokenForSize(result.sla_size_kb, " "), " ", result.size_num_str, result.size_unit.Green(),  "\n");
         }
 
         protected virtual void Dispose(bool disposing)

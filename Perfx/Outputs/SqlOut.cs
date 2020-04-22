@@ -33,6 +33,7 @@
                     var connString = this.GetConnString(settings);
 
                     // Bulk-insert Stats
+                    ColorConsole.WriteLine("\n> ".Green(), "Saving output to: ", StatsTable.DarkGray());
                     var stats = results.GetStats<T>();
                     var statsCopyParams = new List<string>();
                     statsCopyParams.AddRange(AddStatsCols);
@@ -51,6 +52,7 @@
                     resultsList.ForEach(r => r.run_Id = statIds.SingleOrDefault(s => r.url.StartsWith(s.url)).id);
 
                     // Bulk-insert Results
+                    ColorConsole.WriteLine("\n> ".Green(), "Saving output to: ", ResultsTable.DarkGray(), "\n");
                     var resultsCopyParams = new List<string>();
                     resultsCopyParams.AddRange(AddResultsCols);
                     resultsCopyParams.AddRange((resultsList.FirstOrDefault()).Properties.Select(p => p.Name));

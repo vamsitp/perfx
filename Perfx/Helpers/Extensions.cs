@@ -80,23 +80,23 @@
             }
         }
 
-        public static ConsoleColor GetColor(this double duration, int divider = 1000)
+        public static ConsoleColor GetColor(this double durationOrSize, double expectedSla, int divider = 1000)
         {
-            var sec = Math.Round(duration / divider);
+            var actual = durationOrSize / divider;
             var color = ConsoleColor.White;
-            if (sec <= 2)
+            if (actual <= expectedSla)
             {
                 color = ConsoleColor.DarkGreen;
             }
-            else if (sec > 2 && sec <= 5)
+            else if (actual > expectedSla && actual <= expectedSla * 2)
             {
                 color = ConsoleColor.DarkYellow;
             }
-            else if (sec > 5 && sec <= 8)
+            else if (actual > expectedSla * 2 && actual <= expectedSla * 4)
             {
                 color = ConsoleColor.Magenta;
             }
-            else if (sec > 8)
+            else if (actual > expectedSla * 4)
             {
                 color = ConsoleColor.Red;
             }
@@ -104,36 +104,36 @@
             return color;
         }
 
-        public static ColorToken GetColorToken(this double duration, char padChar = '.', int max = MaxBarLength)
+        public static ColorToken GetColorTokenForDuration(this double duration, double expectedSla, char padChar = '.', int max = MaxBarLength)
         {
             var sec = (int)Math.Round(duration / 1000);
             var bar = string.Empty.PadLeft(sec >= 1 ? (sec > max ? max : sec) : 1, padChar);
-            return duration.GetColorToken(bar);
+            return duration.GetColorTokenForDuration(expectedSla, bar);
         }
 
-        public static ColorToken GetColorToken(this double duration, string barText)
+        public static ColorToken GetColorTokenForDuration(this double duration, double expectedSla, string barText)
         {
-            var coloredBar = barText.On(duration.GetColor());
+            var coloredBar = barText.On(duration.GetColor(expectedSla));
             return coloredBar;
         }
 
-        public static ColorToken GetColorToken(this string result, string barText = null)
+        public static ColorToken GetColorTokenForStatusCode(this string result, string barText = null)
         {
-            return barText == null ? result.Color(result.GetColor()) : barText.On(result.GetColor());
+            return barText == null ? result.Color(result.GetColorForStatusCode()) : barText.On(result.GetColorForStatusCode());
         }
 
-        public static ConsoleColor GetColor(this string result)
+        public static ConsoleColor GetColorForStatusCode(this string result)
         {
             return result.Contains("200") ? ConsoleColor.DarkGreen : (result.Contains(": ") ? ConsoleColor.DarkYellow : ConsoleColor.Red);
         }
 
 
-        public static ColorToken GetColorToken(this long? size, string barText)
+        public static ColorToken GetColorTokenForSize(this long? size, double expectedSize, string barText)
         {
-            return barText.On(size.GetColor());
+            return barText.On(size.GetColorForSize(expectedSize));
         }
 
-        public static ConsoleColor GetColor(this long? size)
+        public static ConsoleColor GetColorForSize(this long? size, double expectedSize)
         {
             if (!size.HasValue)
             {
@@ -142,19 +142,19 @@
 
             var kb = ByteSizeLib.ByteSize.FromBytes(size.Value).KiloBytes;
             var color = ConsoleColor.White;
-            if (kb <= 200)
+            if (kb <= expectedSize)
             {
                 color = ConsoleColor.DarkGreen;
             }
-            else if (kb > 200 && kb <= 500)
+            else if (kb > expectedSize && kb <= expectedSize * 2)
             {
                 color = ConsoleColor.DarkYellow;
             }
-            else if (kb > 500 && kb <= 800)
+            else if (kb > expectedSize * 2 && kb <= expectedSize * 4)
             {
                 color = ConsoleColor.Magenta;
             }
-            else if (kb > 800)
+            else if (kb > expectedSize * 4)
             {
                 color = ConsoleColor.Red;
             }
@@ -187,10 +187,10 @@
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { result.url } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, Children = { result.query } },
                                     new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.op_Id } },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.result }, Color = result.result.GetColor() },
-                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.size_str }, Color = result.size_b.GetColor() },
-                                    new Cell { Stroke = rowThickness, Color = result.ai_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.ai_s_str + "s" } },
-                                    new Cell { Stroke = rowThickness, Color = result.local_ms.GetColor(), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.local_s_str + "s" } }
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.result }, Color = result.result.GetColorForStatusCode() },
+                                    new Cell { Stroke = rowThickness, TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.size_str }, Color = result.size_b.GetColorForSize(result.sla_size_kb) },
+                                    new Cell { Stroke = rowThickness, Color = result.ai_ms.GetColor(result.sla_dur_s), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.ai_s_str + "s" } },
+                                    new Cell { Stroke = rowThickness, Color = result.local_ms.GetColor(result.sla_dur_s), TextWrap = TextWrap.NoWrap, TextAlign = TextAlign.Center, Children = { result.local_s_str + "s" } }
                                 })
                             }
                         }
@@ -214,8 +214,8 @@
             foreach (var result in results)
             {
                 ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan());
-                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), result.op_Id.DarkGray(), " / ", result.size_str.Color(result.size_b.GetColor()), " / ", result.result.GetColorToken(), " / ".Green(), result.full_url.DarkGray());
-                ColorConsole.WriteLine(result.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), result.duration_ms.GetColorToken(' '), " ", result.duration_s_str, "s".Green());
+                ColorConsole.WriteLine(VerticalChar.PadLeft(maxIdLength + 2).DarkCyan(), result.op_Id.DarkGray(), " / ", result.result.GetColorTokenForStatusCode(), " / ", result.full_url.DarkGray());
+                ColorConsole.WriteLine(result.id.ToString().PadLeft(maxIdLength).Green(), " ", VerticalChar.DarkCyan(), result.duration_ms.GetColorTokenForDuration(' '), " ", result.duration_s_str, "s".Green(), " / ", result.size_str.Color(result.size_b.GetColorForSize(result.sla_size_kb)), $" (".White(), $"sla: {result.sla_dur_s}s".DarkGray(), " / ".White(), $"{result.sla_size_kb}Kb".DarkGray(), ")".White());
             }
 
             var minBarLength = (10 - maxDurationLength % 10) + maxDurationLength;
@@ -255,16 +255,18 @@
                                 Children =
                                 {
                                     run.Properties.Select(prop => new Cell { Stroke = headerThickness, TextAlign = TextAlign.Center, Color = ConsoleColor.Black, Background = ConsoleColor.Gray, Children = { $" {prop.Name} " } }),
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_min_s.GetColor(1), Children = { run.dur_min_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_max_s.GetColor(1), Children = { run.dur_max_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_mean_s.GetColor(1), Children = { run.dur_mean_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_median_s.GetColor(1), Children = { run.dur_median_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_std_dev_s.GetColor(1), Children = { run.dur_std_dev_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_90_perc_s.GetColor(1), Children = { run.dur_90_perc_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_95_perc_s.GetColor(1), Children = { run.dur_95_perc_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_99_perc_s.GetColor(1), Children = { run.dur_99_perc_s } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_min_kb.GetColor(100), Children = { run.size_min_kb } },
-                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_max_kb.GetColor(100), Children = { run.size_max_kb } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkGray, Children = { run.sla_dur_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkGray, Children = { run.sla_size_kb } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_min_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_min_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_max_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_max_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_mean_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_mean_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_median_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_median_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_std_dev_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_std_dev_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_90_perc_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_90_perc_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_95_perc_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_95_perc_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.dur_99_perc_s.GetColor(run.sla_dur_s, 1), Children = { run.dur_99_perc_s } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_min_kb.GetColor(run.sla_size_kb, 1), Children = { run.size_min_kb } },
+                                    new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = run.size_max_kb.GetColor(run.sla_size_kb, 1), Children = { run.size_max_kb } },
                                     new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkGreen, Children = { run.ok_200 + "%"} },
                                     new Cell { Stroke = rowThickness, TextAlign = TextAlign.Center, TextWrap = TextWrap.NoWrap, Color = ConsoleColor.DarkYellow, Children = { run.other_xxx + "%"} },
                                 }
@@ -361,6 +363,10 @@
                 ColorConsole.WriteLine();
                 return quit.Key == ConsoleKey.Y;
             }
+            else
+            {
+                ColorConsole.WriteLine("\n> ".Green(), "Saving output to: ", file.DarkGray());
+            }
 
             return true;
         }
@@ -377,7 +383,7 @@
             {
                 try
                 {
-                    result = result && await output.Save(results, settings);
+                    result = await output.Save(results, settings) && result;
                 }
                 catch (Exception ex)
                 {

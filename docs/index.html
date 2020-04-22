@@ -189,8 +189,9 @@
                                 <td style="font-weight:bolder"><code>string[]</code></td>
                                 <td style="font-weight:bolder">
                                     URLs to test<br />
-                                    To override the default <i>ExpectedSLA</i>, prefix the endpoint with <code>expected-SLA-in-seconds::</code><br />
-                                    e.g. <code>2.5::https://my-api/...</code><br />(where 2.5 seconds is the expected SLA for the specific endpoint)
+                                    To override the default <i>ResponseTimeSla</i>/<i>ResponseSizeSla</i> prefix the endpoint with <code>expected-duration-sla-in-seconds|expected-size-sla-in-kilo-bytes::</code><br />
+                                    e.g. <code>2.5::https://my-api/...</code><br />(where 2.5 seconds is the expected SLA for the specific endpoint)<br />
+                                    e.g. <code>2.5|200::https://my-api/...</code><br /> (where 2.5 seconds is the expected duration SLA and 200 Kb is the expected size SLA for the specific endpoint)
                                 </td>
                                 <td></td>
                             </tr>
@@ -216,16 +217,22 @@
                                 <td>OutputFormats</td>
                                 <td><code>string[]</code></td>
                                 <td>
-                                    The output formats in which the results would be saved<br />Values: Excel / Csv / Json / Sql<br />
+                                    The output formats in which the results would be saved<br />Values: Excel / Csv / Json / <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx_Tables.sql?raw=true">Sql</a><br />
                                     To provide the conn-strings or custom output-file-names, suffix it with <code>::conn-string</code><br />
                                     e.g. <code>Sql::Data Source=(localdb)...</code> or <code>Excel::My_Run_Results.xlsx</code>
                                 </td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td>ExpectedSla</td>
+                                <td>ResponseTimeSla</td>
                                 <td><code>float</code></td>
-                                <td>The common expected SLA in seconds (generic for all Endpoints)</td>
+                                <td>The expected response-time SLA in seconds (generic for all Endpoints)</td>
+                                <td>5</td>
+                            </tr>
+                            <tr>
+                                <td>ResponseSizeSla</td>
+                                <td><code>float</code></td>
+                                <td>The expected response-size SLA in Kb (generic for all Endpoints)</td>
                                 <td>5</td>
                             </tr>
                             <tr>
@@ -319,7 +326,7 @@
                 <h4 class="section__title">outputs</h4>
                 <p>
                     Results are saved to your <code>Documents/Perfx</code> with the name of the input <i>settings</i> JSON file (default is <code>Perfx.Settings.json</code>).<br />
-                    e.g. <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv & Perfx_Stats.csv</code> / <code>Perfx_Results.json & Perfx_Stats.json</code> (depending on the specified <code>OutputFormat</code> in
+                    e.g. <code>Perfx_Results.xlsx</code> / <code>Perfx_Results.csv & Perfx_Stats.csv</code> / <code>Perfx_Results.json & Perfx_Stats.json</code> / <code>[dbo.][Perfx_Results] & [dbo].[Perfx_Stats] </code> <a href="https://github.com/vamsitp/perfx/blob/master/Samples/Perfx_Tables.sql?raw=true">Sql tables</a> (depending on the specified <code>OutputFormat</code> in
                     the settings file
                 </p>
                 <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot4.png" class="responsive shadow" width="840">

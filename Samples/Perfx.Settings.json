@@ -12,19 +12,24 @@
   ],
   "FormatArgs": {
     "api": "https://your-dev-api.com/api",
-    "odata": "https://your-dev-api.com/odata"
+    "odata": "2.5|10::https://your-dev-api.com/odata" // All odata requests prefixed with response-time-sla|response-size-sla::
   },
   "Endpoints": [
     "{api}/route1",
-    "{api}/route2",
+    "3|25::{api}/route2", // Specific request prefixed with response-time-sla|response-size-sla::
     "{odata}/route3?$top=1",
     "{odata}/route4"
   ],
+  "ResponseTimeSla": 5, // Seconds
+  "ResponseSizeSla": 100, // Kb
+  "Iterations": 5,
+  "OutputFormats": [
+    "Excel",
+    "Sql::Conn-string..."
+  ],
   "AppInsightsAppId": "",
   "AppInsightsApiKey": "",
-  "Iterations": 5,
-  "OutputFormat": "Excel", // "Csv", "Json"
   "ReadResponseHeadersOnly": false,
-  "InputsFile": "Perfx_Inputs.xlsx", // Headers: One on each line (Excel: ALT + ENTER)
-  "PluginClassName": null // MyPluginAssembly.MyPlugin1
+  "InputsFile": "Perfx_Inputs.xlsx",
+  "PluginClassName": null
 }
