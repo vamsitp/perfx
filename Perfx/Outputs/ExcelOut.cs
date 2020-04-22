@@ -19,7 +19,7 @@
 
         public Task<bool> Save<T>(IEnumerable<T> results, Settings settings)
         {
-            var file = settings.OutputFile.GetFullPath();
+            var file = this.GetConnString(settings).GetFullPath();
             var overwrite = settings.QuiteMode;
             if (file.Overwrite(overwrite))
             {
@@ -41,7 +41,7 @@
 
         public Task<IList<T>> Read<T>(Settings settings)
         {
-            return this.Read<T>(settings.OutputFile, "Perfx_Runs");
+            return this.Read<T>(this.GetConnString(settings), "Perfx_Runs");
         }
 
         public Task<IList<T>> Read<T>(string file, string sheet)

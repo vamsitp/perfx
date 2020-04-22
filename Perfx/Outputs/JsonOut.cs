@@ -10,7 +10,7 @@
     {
         public Task<bool> Save<T>(IEnumerable<T> results, Settings settings)
         {
-            var file = settings.OutputFile.GetFullPath();
+            var file = this.GetConnString(settings).GetFullPath();
             var overwrite = settings.QuiteMode;
             if (file.Overwrite(overwrite))
             {
@@ -25,7 +25,7 @@
 
         public Task<IList<T>> Read<T>(Settings settings)
         {
-            var file = settings.OutputFile.GetFullPath();
+            var file = this.GetConnString(settings).GetFullPath();
             if (File.Exists(file))
             {
                 return Task.FromResult(JsonConvert.DeserializeObject<IList<T>>(File.ReadAllText(file)));

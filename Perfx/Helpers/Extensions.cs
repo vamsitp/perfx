@@ -364,5 +364,28 @@
 
             return true;
         }
+
+        public static string GetConnString(this IOutput output, Settings settings)
+        {
+            return settings.Outputs.FirstOrDefault(x => output.GetType().Name.StartsWith(x.Format.ToString()))?.ConnString;
+        }
+
+        public static async Task<bool> Save(this IEnumerable<IOutput> outputs, IList<Result> results, Settings settings)
+        {
+            var result = true;
+            foreach (var output in outputs)
+            {
+                try
+                {
+                    result = result && await output.Save(results, settings);
+                }
+                catch (Exception ex)
+                {
+                    ColorConsole.WriteLine(ex.Message.White().OnRed());
+                }
+            }
+
+            return result;
+        }
     }
 }

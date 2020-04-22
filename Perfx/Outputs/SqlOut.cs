@@ -30,19 +30,20 @@
             {
                 try
                 {
+                    var connString = this.GetConnString(settings);
+
                     // Bulk-insert Stats
                     var stats = results.GetStats<T>();
                     var statsCopyParams = new List<string>();
                     statsCopyParams.AddRange(AddStatsCols);
                     statsCopyParams.AddRange(stats.FirstOrDefault().Properties.Select(p => p.Name));
-                    using var sqlCopyStats = new SqlBulkCopy(settings.OutputConnString) { DestinationTableName = StatsTable, BatchSize = 1000 };
+                    using var sqlCopyStats = new SqlBulkCopy(connString) { DestinationTableName = StatsTable, BatchSize = 1000 };
                     statsCopyParams.ForEach(p => sqlCopyStats.ColumnMappings.Add(p, p));
                     using var statsReader = ObjectReader.Create(stats);
                     await sqlCopyStats.WriteToServerAsync(statsReader);
 
                     // Get the inserted-Ids
-                    var builder = new SqlConnectionStringBuilder(settings.OutputConnString);
-                    using var conn = new SqlConnection(builder.ConnectionString);
+                    using var conn = new SqlConnection(connString);
                     var statIds = await conn.QueryAsync<dynamic>(string.Format(StatsSql, stats.Count));
 
                     // Map the run-Ids to results
@@ -53,7 +54,7 @@
                     var resultsCopyParams = new List<string>();
                     resultsCopyParams.AddRange(AddResultsCols);
                     resultsCopyParams.AddRange((resultsList.FirstOrDefault()).Properties.Select(p => p.Name));
-                    using var sqlCopyResults = new SqlBulkCopy(settings.OutputConnString) { DestinationTableName = ResultsTable, BatchSize = 1000 };
+                    using var sqlCopyResults = new SqlBulkCopy(connString) { DestinationTableName = ResultsTable, BatchSize = 1000 };
                     resultsCopyParams.ForEach(p => sqlCopyResults.ColumnMappings.Add(p, p));
                     using var resultsReader = ObjectReader.Create(resultsList);
                     await sqlCopyResults.WriteToServerAsync(resultsReader);
@@ -73,7 +74,7 @@
         {
             try
             {
-                var builder = new SqlConnectionStringBuilder(settings.OutputConnString);
+                var builder = new SqlConnectionStringBuilder(this.GetConnString(settings));
                 using var conn = new SqlConnection(builder.ConnectionString);
                 var results = await conn.QueryAsync<T>(ResultsSql);
                 return results.ToList(); // TODO: Populate details property

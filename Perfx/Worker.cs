@@ -17,40 +17,40 @@
     public class Worker : BackgroundService
     {
         private Settings settings;
-        private IOutput output;
+        private IEnumerable<IOutput> outputs;
         private readonly IServiceScopeFactory serviceScopeFactory;
         private readonly ILogger<Worker> logger;
         private readonly IHostApplicationLifetime appLifetime;
-        private readonly IEnumerable<IOutput> outputs;
+        private readonly IEnumerable<IOutput> allOutputs;
         private readonly IPlugin plugin;
         private readonly LogDataService logDataService;
 
-        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services, IHostApplicationLifetime appLifetime, IEnumerable<IOutput> outputs)
+        public Worker(IServiceScopeFactory serviceScopeFactory, IOptionsMonitor<Settings> settingsMonitor, LogDataService logDataService, ILogger<Worker> logger, IServiceProvider services, IHostApplicationLifetime appLifetime, IEnumerable<IOutput> allOutputs)
         {
             this.settings = settingsMonitor.CurrentValue;
-            settingsMonitor.OnChange(changedSettings => { this.settings = changedSettings; this.output = null; });
+            settingsMonitor.OnChange(changedSettings => { this.settings = changedSettings; this.outputs = null; });
             this.serviceScopeFactory = serviceScopeFactory;
             this.logger = logger;
             this.appLifetime = appLifetime;
-            this.outputs = outputs;
+            this.allOutputs = allOutputs;
             this.plugin = services.GetService<IPlugin>();
             this.logDataService = logDataService;
         }
 
-        private IOutput Output
+        private IEnumerable<IOutput> Outputs
         {
             get
             {
-                if (output == null)
+                if (outputs == null)
                 {
-                    output = this.outputs.SingleOrDefault(o => o.GetType().Name.Contains(settings.OutputFormatKey));
-                    if (output == null)
+                    outputs = this.allOutputs.Where(o => settings.Outputs.Any(x => o.GetType().Name.StartsWith(x.Format.ToString())));
+                    if (!(outputs?.Any() == true))
                     {
-                        return this.plugin;
+                        outputs = new[] { this.plugin };
                     }
                 }
 
-                return output;
+                return outputs;
             }
         }
 
@@ -107,7 +107,7 @@
                     {
                         if (results == null)
                         {
-                            results = await this.Output.Read<Result>(this.settings);
+                            results = await this.Outputs.FirstOrDefault().Read<Result>(this.settings);
                         }
 
                         if (results?.Count > 0)
@@ -116,7 +116,7 @@
                             {
                                 var benchmark = scope.ServiceProvider.GetRequiredService<BenchmarkService>();
                                 await ExecuteAppInsights(results, key, stopToken);
-                                await this.Output.Save(results, this.settings);
+                                await this.Outputs.Save(results, this.settings);
                                 results.DrawStats();
                             }
                         }
@@ -125,7 +125,7 @@
                     {
                         if (results == null)
                         {
-                            results = await this.Output.Read<Result>(this.settings);
+                            results = await this.Outputs.FirstOrDefault().Read<Result>(this.settings);
                         }
 
                         if (results?.Count > 0)
@@ -203,7 +203,7 @@
                                 await ExecuteAppInsights(results, result, stopToken);
                             }
 
-                            await this.Output.Save(results, this.settings);
+                            await this.Outputs.Save(results, this.settings);
                             results.DrawStats();
                         }
                     }

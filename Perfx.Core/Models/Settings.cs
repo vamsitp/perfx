@@ -12,9 +12,6 @@
     public class Settings
     {
         private const string OnMicrosoft = ".onmicrosoft.com";
-        private string tenant;
-
-        [JsonIgnore]
         private static Dictionary<string, string> OutputExtensions = new Dictionary<string, string>
         {
             { Perfx.OutputFormat.Excel.ToString(), "_Results.xlsx" },
@@ -22,6 +19,7 @@
             { Perfx.OutputFormat.Json.ToString(), "_Results.json" }
         };
 
+        private string tenant;
         public string Tenant
         {
             get
@@ -53,18 +51,16 @@
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
-        public string OutputFormat { get; set; } = Perfx.OutputFormat.Excel.ToString();
-        public string OutputFormatKey => this.OutputFormat.Split(new[] { ':' }, 2, StringSplitOptions.None).FirstOrDefault().Trim();
-        public string OutputConnString => this.OutputFormat.Split(new[] { ':' }, 2, StringSplitOptions.None).LastOrDefault().Trim();
+        public string[] OutputFormat { get; set; } // = new[] { Perfx.OutputFormat.Excel.ToString() };
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
         public bool QuiteMode { get; set; }
 
         [JsonIgnore]
-        public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";
+        public List<Output> Outputs => this.GetOutputs();
 
         [JsonIgnore]
-        public string OutputFile => OutputExtensions.ContainsKey(this.OutputFormatKey) ? (Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormatKey]) : string.Empty;
+        public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";
 
         [JsonIgnore]
         public ExpandoObject FormatArgs { get; set; }
@@ -89,12 +85,38 @@
             File.WriteAllText(this.AppSettingsFile, JsonConvert.SerializeObject(this, Formatting.Indented));
             // (this as IConfigurationRoot).Reload();
         }
+
+        private List<Output> GetOutputs()
+        {
+            var outputs = this.OutputFormat.Select(x => x.Split(new[] { "::" }, 2, StringSplitOptions.None));
+            return outputs.Select(o =>
+            {
+                var output = new Output { Format = (OutputFormat)Enum.Parse(typeof(OutputFormat), o.FirstOrDefault()) };
+                if (o.Length > 1)
+                {
+                    output.ConnString = o.LastOrDefault();
+                }
+                else
+                {
+                    output.ConnString = Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[o.FirstOrDefault()];
+                }
+
+                return output;
+            }).ToList();
+        }
     }
 
     public enum OutputFormat
     {
         Excel,
         Csv,
-        Json
+        Json,
+        Sql
+    }
+
+    public class Output
+    {
+        public OutputFormat Format { get; set; }
+        public string ConnString { get; set; }
     }
 }
