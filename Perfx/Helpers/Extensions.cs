@@ -21,6 +21,27 @@
         private const string VerticalChar = "│"; // "┃"
         private const char HorizontalChar = '─'; // '━'
         private const string BroderChar = "└"; // "┗"
+        private static string userName;
+
+        public static string UserName
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(userName))
+                {
+                    if (string.IsNullOrWhiteSpace(Environment.UserName))
+                    {
+                        userName = $@"{Environment.MachineName ?? string.Empty}\{Environment.GetEnvironmentVariable("USERNAME") ?? string.Empty}";
+                    }
+                    else
+                    {
+                        userName = $@"{Environment.MachineName ?? string.Empty}\{Environment.UserName}";
+                    }
+                }
+
+                return userName;
+            }
+        }
 
         // Credits: https://devblogs.microsoft.com/pfxteam/processing-tasks-as-they-complete, https://stackoverflow.com/a/58194681
         public static Task<Task<T>>[] Interleaved<T>(this IEnumerable<Task<T>> tasks)

@@ -57,6 +57,7 @@
                         .AddSingleton<IOutput, ExcelOut>()
                         .AddSingleton<IOutput, CsvOut>()
                         .AddSingleton<IOutput, JsonOut>()
+                        .AddSingleton<IOutput, SqlOut>()
                         .AddTransient<TimingHandler>()
                         .AddSingleton<JsonSerializer>()
                         .AddHttpClient(nameof(Perfx))

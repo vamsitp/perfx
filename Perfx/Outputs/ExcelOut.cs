@@ -17,7 +17,7 @@
     {
         private static readonly string[] ExcelColumnNames = new string[] { "A2:A", "B2:B", "C2:C", "D2:D", "E2:E", "F2:F", "G2:G", "H2:H", "I2:I", "J2:J", "L2:L", "M2:M", "N2:N", "O2:O", "P2:P", "Q2:Q", "R2:R", "S2:S", "T2:T", "U2:U", "V2:V", "W2:W", "X2:X", "Y2:Y", "Z2:Z" };
 
-        public Task Save<T>(IEnumerable<T> results, Settings settings)
+        public Task<bool> Save<T>(IEnumerable<T> results, Settings settings)
         {
             var file = settings.OutputFile.GetFullPath();
             var overwrite = settings.QuiteMode;

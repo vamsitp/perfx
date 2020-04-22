@@ -43,7 +43,7 @@
             {
                 if (output == null)
                 {
-                    output = this.outputs.SingleOrDefault(o => o.GetType().Name.Contains(settings.OutputFormat));
+                    output = this.outputs.SingleOrDefault(o => o.GetType().Name.Contains(settings.OutputFormatKey));
                     if (output == null)
                     {
                         return this.plugin;

@@ -8,7 +8,7 @@
 
     public class JsonOut : IOutput
     {
-        public Task Save<T>(IEnumerable<T> results, Settings settings)
+        public Task<bool> Save<T>(IEnumerable<T> results, Settings settings)
         {
             var file = settings.OutputFile.GetFullPath();
             var overwrite = settings.QuiteMode;

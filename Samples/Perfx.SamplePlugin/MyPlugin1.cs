@@ -43,7 +43,7 @@
             return Task.FromResult(endpointDetails);
         }
 
-        public Task Save<T>(IEnumerable<T> results, Settings settings)
+        public Task<bool> Save<T>(IEnumerable<T> results, Settings settings)
         {
             //  If you want to override that behavior and provide a custom implementation, go ahead...
             //  If not, throw NotImplementedException or NotSupportedException, to trigger the default implementation

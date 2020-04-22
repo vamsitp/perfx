@@ -7,6 +7,6 @@
     {
         Task<IList<T>> Read<T>(Settings settings);
 
-        Task Save<T>(IEnumerable<T> results, Settings settings);
+        Task<bool> Save<T>(IEnumerable<T> results, Settings settings);
     }
 }

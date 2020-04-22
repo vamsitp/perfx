@@ -25,6 +25,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Docs", "Docs", "{E1C208D2-F
 		Samples\Perfx.Settings.json = Samples\Perfx.Settings.json
 		Samples\Perfx_Inputs.xlsx = Samples\Perfx_Inputs.xlsx
 		Samples\Perfx_Pipeline.yml = Samples\Perfx_Pipeline.yml
+		Samples\Perfx_Tables.sql = Samples\Perfx_Tables.sql
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Perfx.Tests", "Perfx.Tests\Perfx.Tests.csproj", "{4AD5F812-6457-4E7D-B1C9-F66BE02C7958}"

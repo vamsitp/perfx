@@ -54,6 +54,8 @@
         public int Iterations { get; set; } = 5;
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
         public string OutputFormat { get; set; } = Perfx.OutputFormat.Excel.ToString();
+        public string OutputFormatKey => this.OutputFormat.Split(new[] { ':' }, 2, StringSplitOptions.None).FirstOrDefault().Trim();
+        public string OutputConnString => this.OutputFormat.Split(new[] { ':' }, 2, StringSplitOptions.None).LastOrDefault().Trim();
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
         public bool QuiteMode { get; set; }
@@ -62,7 +64,7 @@
         public string Authority => $"https://login.microsoftonline.com/{this.Tenant}";
 
         [JsonIgnore]
-        public string OutputFile => OutputExtensions.ContainsKey(this.OutputFormat) ? (Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormat]) : string.Empty;
+        public string OutputFile => OutputExtensions.ContainsKey(this.OutputFormatKey) ? (Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[this.OutputFormatKey]) : string.Empty;
 
         [JsonIgnore]
         public ExpandoObject FormatArgs { get; set; }

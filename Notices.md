@@ -7,5 +7,6 @@
  | 5  | [MathNet.Numerics](https://numerics.mathdotnet.com/)                                                     | 4.9.0    | [MIT / X11](https://numerics.mathdotnet.com/License.html)                                 | 
  | 6  | [Newtonsoft.Json](https://www.newtonsoft.com/json)                                                       | 12.0.3   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
  | 7  | [ByteSize](https://github.com/omar/ByteSize)                                                             | 2.0.0    | [MIT](https://licenses.nuget.org/MIT)                                                     | 
- | 8  | [ClosedXML](https://github.com/ClosedXML/ClosedXML)                                                      | 0.94.2   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
- | 9  | [Scribbler (Docs)](https://tympanus.net/codrops/?p=33686)                                                |          |                                                                                           |
+ | 8  | [ClosedXML](https://github.com/ClosedXML/ClosedXML)                                                      | 2.0.35   | [Apache-2.0](https://github.com/StackExchange/Dapper/blob/master/License.txt)             | 
+ | 9  | [Dapper](https://github.com/StackExchange/Dapper)                                                        | 0.94.2   | [MIT](https://licenses.nuget.org/MIT)                                                     | 
+ | 10 | [Scribbler (Docs)](https://tympanus.net/codrops/?p=33686)                                                |          |                                                                                           |
