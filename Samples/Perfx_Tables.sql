@@ -34,6 +34,7 @@ CREATE TABLE [dbo].[Perfx_Results]
     [ai_ms]         FLOAT                   NULL,
     [local_s]       FLOAT                   NULL,
     [ai_s]          FLOAT                   NULL,
+    [exp_sla_s]     FLOAT                   NULL,
     [op_Id]         NVARCHAR (100)          NULL,
     [ai_op_Id]      NVARCHAR (100)          NULL,
     [timestamp]     DATETIME2               DEFAULT CURRENT_TIMESTAMP NOT NULL,

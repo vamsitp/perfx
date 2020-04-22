@@ -26,6 +26,7 @@
         public double ai_s => Math.Round(this.ai_ms / 1000, 2);
         public string op_Id { get; set; }
         public string ai_op_Id { get; set; }
+        public double exp_sla_s { get; set; }
 
         [Ignore, JsonIgnore]
         public long run_Id { get; set; }

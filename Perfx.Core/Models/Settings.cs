@@ -51,10 +51,12 @@
         public IEnumerable<string> Endpoints { get; set; }
         public int Iterations { get; set; } = 5;
         public string InputsFile { get; set; } = "Perfx_Inputs.xlsx";
-        public string[] OutputFormat { get; set; } // = new[] { Perfx.OutputFormat.Excel.ToString() };
+        public string OutputFormat { get; set; } // for backward-compatibility; to be removed later!
+        public string[] OutputFormats { get; set; } // = new[] { Perfx.OutputFormat.Excel.ToString() };
         public bool ReadResponseHeadersOnly { get; set; } = false;
         public string PluginClassName { get; set; }
         public bool QuiteMode { get; set; }
+        public double ExpectedSla { get; set; } = 5;
 
         [JsonIgnore]
         public List<Output> Outputs => this.GetOutputs();
@@ -88,8 +90,9 @@
 
         private List<Output> GetOutputs()
         {
-            var outputs = this.OutputFormat.Select(x => x.Split(new[] { "::" }, 2, StringSplitOptions.None));
-            return outputs.Select(o =>
+            var outputFormats = this.OutputFormats?.Length > 0 ? this.OutputFormats : new[] { this.OutputFormat }; // backward-compatibility
+            var outputs = outputFormats?.Select(x => x.Split(new[] { "::" }, 2, StringSplitOptions.None));
+            return outputs?.Select(o =>
             {
                 var output = new Output { Format = (OutputFormat)Enum.Parse(typeof(OutputFormat), o.FirstOrDefault()) };
                 if (o.Length > 1)
@@ -102,7 +105,7 @@
                 }
 
                 return output;
-            }).ToList();
+            })?.ToList();
         }
     }
 

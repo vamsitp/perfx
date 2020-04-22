@@ -44,11 +44,16 @@
             var endpointRecords = this.settings.Endpoints.SelectMany((endpoint, groupIndex) =>
             {
                 return Enumerable.Range(0, iterations ?? this.settings.Iterations).Select(i =>
-                    new Result
                     {
-                        id = float.Parse($"{groupIndex + 1}.{i + 1}"),
-                        op_Id = Guid.NewGuid().ToString(),
-                        url = this.GetFormattedUrl(endpoint)
+                        var epWithSla = endpoint.Split(new[] { "::" }, 2, StringSplitOptions.None);
+                        var result = new Result
+                        {
+                            id = float.Parse($"{groupIndex + 1}.{i + 1}"),
+                            op_Id = Guid.NewGuid().ToString(),
+                            url = this.GetFormattedUrl(epWithSla.LastOrDefault()),
+                            exp_sla_s = epWithSla.Length > 1 ? double.Parse(epWithSla.FirstOrDefault()) : this.settings.ExpectedSla
+                        };
+                        return result;
                     });
             });
 
