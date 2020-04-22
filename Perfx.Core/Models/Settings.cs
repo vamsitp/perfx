@@ -94,14 +94,14 @@
             var outputs = outputFormats?.Select(x => x.Split(new[] { "::" }, 2, StringSplitOptions.None));
             return outputs?.Select(o =>
             {
-                var output = new Output { Format = (OutputFormat)Enum.Parse(typeof(OutputFormat), o.FirstOrDefault()) };
+                var output = new Output { Format = (OutputFormat)Enum.Parse(typeof(OutputFormat), o.FirstOrDefault().Trim()) };
                 if (o.Length > 1)
                 {
-                    output.ConnString = o.LastOrDefault();
+                    output.ConnString = o.LastOrDefault().Trim();
                 }
                 else
                 {
-                    output.ConnString = Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[o.FirstOrDefault()];
+                    output.ConnString = Path.GetFileNameWithoutExtension(this.AppSettingsFile).Replace(".Settings", string.Empty) + OutputExtensions[o.FirstOrDefault().Trim()];
                 }
 
                 return output;

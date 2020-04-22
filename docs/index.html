@@ -46,7 +46,7 @@
                 <br />
                 <p>
                     An <i>extensible</i> Azure API Performance benchmarking tool (for <i>Developers</i>) based on App-Insights
-                    (request-duration).
+                    (request-duration) - with multiple output-formats and customizations
                 </p>
                 <img src="https://raw.githubusercontent.com/vamsitp/perfx/master/docs/assets/images/Screenshot.png" class="responsive shadow">
                 <br /><br />
@@ -187,7 +187,11 @@
                             <tr class="table-success">
                                 <td style="font-weight:bolder">Endpoints</td>
                                 <td style="font-weight:bolder"><code>string[]</code></td>
-                                <td style="font-weight:bolder">URLs to test</td>
+                                <td style="font-weight:bolder">
+                                    URLs to test<br />
+                                    To override the default <i>ExpectedSLA</i>, prefix the endpoint with <code>expected-SLA-in-seconds::</code><br />
+                                    e.g. <code>2.5::https://my-api/...</code><br />(where 2.5 seconds is the expected SLA for the specific endpoint)
+                                </td>
                                 <td></td>
                             </tr>
                             <tr>
@@ -209,10 +213,20 @@
                                 <td>5</td>
                             </tr>
                             <tr>
-                                <td>OutputFormat</td>
-                                <td><code>string</code></td>
-                                <td>The output format in which the results would be saved<br />Values: Excel / Csv / Json</td>
-                                <td>Excel</td>
+                                <td>OutputFormats</td>
+                                <td><code>string[]</code></td>
+                                <td>
+                                    The output formats in which the results would be saved<br />Values: Excel / Csv / Json / Sql<br />
+                                    To provide the conn-strings or custom output-file-names, suffix it with <code>::conn-string</code><br />
+                                    e.g. <code>Sql::Data Source=(localdb)...</code> or <code>Excel::My_Run_Results.xlsx</code>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>ExpectedSla</td>
+                                <td><code>float</code></td>
+                                <td>The common expected SLA in seconds (generic for all Endpoints)</td>
+                                <td>5</td>
                             </tr>
                             <tr>
                                 <td>ReadResponseHeadersOnly</td>
@@ -414,6 +428,7 @@ public Task<IList<T>> IOutput.Read<T>(Settings settings)
                         <code class="lang-xml">
  ...
  &lt;TargetFramework&gt;netcoreapp3.1&lt;/TargetFramework&gt;
+ &lt;Platforms&gt;x64&lt;/Platforms&gt;
  &lt;CopyLocalLockFileAssemblies&gt;true&lt;/CopyLocalLockFileAssemblies&gt;
  ...
  &lt;ProjectReference Include=&quot;Perfx.Core.csproj&quot;&gt;
