@@ -19,6 +19,11 @@ steps:
 
 - script: |
     %USERPROFILE%\.dotnet\tools\perfx.exe "$(Build.SourcesDirectory)\Perfx.Settings.json"
+    echo exit-code: %errorlevel%
+    if %errorlevel% NEQ 0 (
+      echo Failed with %errorlevel% warnings!
+      EXIT /b 1
+    )
   displayName: "Run Perfx"
   continueOnError: true
 

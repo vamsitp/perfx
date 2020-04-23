@@ -3,7 +3,6 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Platforms>x64</Platforms>
     <LangVersion>preview</LangVersion>
     <PackAsTool>true</PackAsTool>
     <IsTool>true</IsTool>
@@ -68,7 +67,7 @@
 
   <!--https://github.com/NuGet/Home/issues/7001-->
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="powershell -Command &quot;&amp; {Get-ChildItem -Path '.\bin\x64\Debug\netcoreapp3.1' -File -Recurse | foreach-object {$_.LastWriteTime = (Get-Date)}}&quot;" />
+    <Exec Command="powershell -Command &quot;&amp; {Get-ChildItem -Path '.\bin\Debug\netcoreapp3.1' -File -Recurse | foreach-object {$_.LastWriteTime = (Get-Date)}}&quot;" />
   </Target>
 
 </Project>

@@ -366,6 +366,10 @@
                     <code class="shell-session demo cmd" style="background:rgb(35, 35, 35)">dotnet tool install -g perfx</code>
                     </pre>
                 </div>
+                <blockquote>
+                    The <code>exit-code / %errorlevel%</code> of the app will be equal to the count of results that match the following criteria:<br />
+                    90th-percentile of requests <code>></code> response-time-sla <code>(OR)</code><br />max-response-size <code>></code> response-size-sla <code>(OR)</code><br />status-codes other than 200 <code>></code> 1%
+                </blockquote>
                 <hr />
             </section>
             <section class="js-section">

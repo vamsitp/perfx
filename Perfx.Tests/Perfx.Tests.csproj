@@ -2,7 +2,6 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <Platforms>x64</Platforms>
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
