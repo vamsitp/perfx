@@ -219,6 +219,11 @@
                 }
             }
             while (!stopToken.IsCancellationRequested && !this.settings.QuiteMode);
+
+            // If 90% of requests are > the expected response-time-sla or max-response-size > response-size-sla or error-status-code > 1%
+            var warnings = results?.GetStats().Count(s => s.dur_90_perc_s > s.sla_dur_s || s.size_max_kb > s.sla_size_kb || s.other_xxx > 1) ?? 0;
+            ColorConsole.WriteLine("dur_90_perc_s > sla_dur_s ", "(OR)".White(), " size_max_kb > sla_size_kb ", "(OR)".White(), " other_xxx > 1% ".DarkGray(), ": ".Green(), warnings.ToString().Yellow());
+            Environment.ExitCode = warnings; // Check %errorlevel% after the app exists
             this.appLifetime.StopApplication();
         }
 
