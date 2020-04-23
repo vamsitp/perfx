@@ -102,13 +102,18 @@
      "{api}/route1",
      "{api}/route2"
    ],
-   "AppInsightsAppId": "",
-   "AppInsightsApiKey": "",
-   "Iterations": 5,
-   "OutputFormat": "Excel",
-   "ReadResponseHeadersOnly": false,
-   "InputsFile": "Perfx_Inputs.xlsx",
-   "PluginClassName": null
+  "ResponseTimeSla": 5,
+  "ResponseSizeSla": 200,
+  "Iterations": 5,
+  "OutputFormats": [
+    "Excel",
+    "Sql::Conn-string..."
+  ],
+  "AppInsightsAppId": "",
+  "AppInsightsApiKey": "",
+  "ReadResponseHeadersOnly": false,
+  "InputsFile": "Perfx_Inputs.xlsx",
+  "PluginClassName": null
  }
           </code>
         </pre>
@@ -211,7 +216,7 @@
                                 <td>Iterations</td>
                                 <td><code>int</code></td>
                                 <td># of iterations to run for each Endpoint</td>
-                                <td>5</td>
+                                <td><code>5</code></td>
                             </tr>
                             <tr>
                                 <td>OutputFormats</td>
@@ -227,13 +232,13 @@
                                 <td>ResponseTimeSla</td>
                                 <td><code>float</code></td>
                                 <td>The expected response-time SLA in seconds (generic for all Endpoints)</td>
-                                <td>5</td>
+                                <td><code>5</code></td>
                             </tr>
                             <tr>
                                 <td>ResponseSizeSla</td>
                                 <td><code>float</code></td>
                                 <td>The expected response-size SLA in Kb (generic for all Endpoints)</td>
-                                <td>5</td>
+                                <td><code>200</code></td>
                             </tr>
                             <tr>
                                 <td>ReadResponseHeadersOnly</td>
@@ -242,7 +247,7 @@
                                     Specifies if the HttpClient should assume completion as soon as a response is available and headers are
                                     read (content is not read yet)
                                 </td>
-                                <td>false</td>
+                                <td><code>false</code></td>
                             </tr>
                             <tr class="table-info">
                                 <td>InputsFile</td>
