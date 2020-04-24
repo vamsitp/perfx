@@ -3,7 +3,9 @@ An **extensible** Azure API Performance benchmarking tool (for *Developers*) bas
 
 ---
 
-| **`dotnet tool install -g perfx --no-cache`**
+> **`dotnet tool install -g perfx --no-cache`**
+
+![Build](https://github.com/vamsitp/perfx/workflows/Build/badge.svg?branch=master&event=status)
 
 ### REFER TO: [DOCS](https://vamsitp.github.io/perfx)
 
