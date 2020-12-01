@@ -1,4 +1,4 @@
-name: Auto Upgrade Nuget
+name: Auto Upgrade Nugets
 
 on:
   # push:
