@@ -8,7 +8,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "_Sln Items", "_Sln Items", "{C226D509-7EA6-4E1E-806D-1110B2280B66}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
-		.github\workflows\dotnetcore.yml = .github\workflows\dotnetcore.yml
+		.github\workflows\autoUpgradeNugets.yml = .github\workflows\autoUpgradeNugets.yml
 		LICENSE = LICENSE
 		Notices.md = Notices.md
 		README.md = README.md
