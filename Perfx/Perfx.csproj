@@ -57,7 +57,7 @@
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
     <PackageReference Include="Microsoft.Toolkit.Wpf.UI.Controls.WebView" Version="6.1.2" />
     <PackageReference Include="Microsoft.VisualStudio.Services.InteractiveClient" Version="16.153.0" />
-    <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
     <PackageReference Include="SmartFormat.NET" Version="2.5.3" />
     <PackageReference Include="WindowsBase" Version="4.6.1055" />
   </ItemGroup>
