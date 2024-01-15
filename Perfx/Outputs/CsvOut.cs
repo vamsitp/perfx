@@ -46,10 +46,8 @@
             if (File.Exists(file))
             {
                 var textReader = new StreamReader(file);
-                using (var csvReader = new CsvReader(textReader, new CsvConfiguration(CultureInfo.InvariantCulture)))
+                using (var csvReader = new CsvReader(textReader, new CsvConfiguration(CultureInfo.InvariantCulture) { HeaderValidated = null, MissingFieldFound = null }))
                 {
-                    csvReader.Configuration.HeaderValidated = null;
-                    csvReader.Configuration.MissingFieldFound = null;
                     IList<T> results = csvReader.GetRecords<T>().ToList();
                     return Task.FromResult(results);
                 }

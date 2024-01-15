@@ -87,7 +87,7 @@
             var response = await req.WithHeader("x-api-key", this.settings.AppInsightsApiKey)
                 .WithHeader("Accept", "application/json")
                 .WithHeader("Cache-Control", "no-store, no-cache, must-revalidate, max-age=0")
-                .PostJsonAsync(new { query }, stopToken)
+                .PostJsonAsync(new { query }, HttpCompletionOption.ResponseContentRead, stopToken)
                 .ReceiveJson<LogData>();
 
             var results = new List<Log>();

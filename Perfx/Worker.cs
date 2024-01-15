@@ -13,6 +13,8 @@
     using Microsoft.Extensions.Hosting;
     using Microsoft.Extensions.Logging;
     using Microsoft.Extensions.Options;
+    using Microsoft.Identity.Client;
+    using Microsoft.Identity.Client.Extensions.Msal;
 
     public class Worker : BackgroundService
     {
@@ -227,23 +229,69 @@
             this.appLifetime.StopApplication();
         }
 
-        private async Task SetAuthToken()
+        private async Task<AuthenticationResult> SetAuthToken()
         {
-            if (!string.IsNullOrWhiteSpace(settings.Tenant))
+            ColorConsole.Write("authenticating".DarkGray(), "... ");
+            // https://github.com/AzureAD/microsoft-authentication-library-for-dotnet/wiki/Integrated-Windows-Authentication
+            // https://learn.microsoft.com/en-in/azure/active-directory/develop/scenario-desktop-acquire-token-interactive?tabs=dotnet
+            var authority = this.settings.Authority;
+            var scopes = new string[] { "user.read" };
+            var app = PublicClientApplicationBuilder
+                 .Create(this.settings.ClientId)
+                 .WithAuthority(authority)
+                 .WithRedirectUri("http://localhost")
+                 .Build();
+
+            // https://github.com/Azure-Samples/ms-identity-dotnet-desktop-tutorial/blob/master/2-TokenCache/Console-TokenCache/Program.cs
+            var storageProperties =
+                 new StorageCreationPropertiesBuilder(CacheSettings.CacheFileName, CacheSettings.CacheDir)
+                 .WithCacheChangedEvent(this.settings.ClientId, authority)
+                 .WithLinuxKeyring(
+                     CacheSettings.LinuxKeyRingSchema,
+                     CacheSettings.LinuxKeyRingCollection,
+                     CacheSettings.LinuxKeyRingLabel,
+                     CacheSettings.LinuxKeyRingAttr1,
+                     CacheSettings.LinuxKeyRingAttr2)
+                 .WithMacKeyChain(CacheSettings.KeyChainServiceName, CacheSettings.KeyChainAccountName)
+                 .Build();
+
+            // This hooks up the cross-platform cache into MSAL
+            var cacheHelper = await MsalCacheHelper.CreateAsync(storageProperties);
+            cacheHelper.RegisterCache(app.UserTokenCache);
+
+            var accounts = await app.GetAccountsAsync();
+            AuthenticationResult result = null!;
+            var needsLogin = false;
+            if (accounts.Any())
             {
-                if (!string.IsNullOrWhiteSpace(settings.Password))
+                try
                 {
-                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsSilentAsync(settings);
+                    result = await app.AcquireTokenSilent(scopes, accounts.FirstOrDefault()).ExecuteAsync();
                 }
-                else if (!string.IsNullOrWhiteSpace(settings.ClientSecret))
+                catch (MsalUiRequiredException) // https://learn.microsoft.com/en-us/azure/active-directory/develop/msal-error-handling-dotnet#msaluirequiredexception
                 {
-                    settings.Token = await AuthHelper.GetAuthTokenByClientCredentialsAsync(settings);
-                }
-                else if (!string.IsNullOrWhiteSpace(settings.ReplyUrl))
-                {
-                    settings.Token = await AuthHelper.GetAuthTokenByUserCredentialsInteractiveAsync(settings);
+                    needsLogin = true;
                 }
             }
+            else
+            {
+                needsLogin = true;
+            }
+
+            if (needsLogin)
+            {
+                try
+                {
+                    result = await app.AcquireTokenInteractive(scopes).ExecuteAsync(CancellationToken.None);
+                }
+                catch (Exception ex)
+                {
+                    ColorConsole.WriteLine(ex.Message.White().OnRed());
+                }
+            }
+
+            settings.Token = result?.AccessToken;
+            return result;
         }
 
         private async Task ExecuteAppInsights(IList<Result> results, string key, CancellationToken stopToken)
@@ -268,5 +316,24 @@
                     "\nEnter ", "?".Green(), " to print this help"
                 });
         }
+    }
+
+    public static class CacheSettings
+    {
+        // computing the root directory is not very simple on Linux and Mac, so a helper is provided
+        private static readonly string s_cacheFilePath = Path.Combine(MsalCacheHelper.UserRootDirectory, "msal.perfx.cache");
+
+        public static readonly string CacheFileName = Path.GetFileName(s_cacheFilePath);
+        public static readonly string CacheDir = Path.GetDirectoryName(s_cacheFilePath);
+
+
+        public static readonly string KeyChainServiceName = "Perfx";
+        public static readonly string KeyChainAccountName = "MSALCache";
+
+        public static readonly string LinuxKeyRingSchema = "com.perfx.tokencache";
+        public static readonly string LinuxKeyRingCollection = MsalCacheHelper.LinuxKeyRingDefaultCollection;
+        public static readonly string LinuxKeyRingLabel = "MSAL token cache for Perfx";
+        public static readonly KeyValuePair<string, string> LinuxKeyRingAttr1 = new KeyValuePair<string, string>("Version", "1");
+        public static readonly KeyValuePair<string, string> LinuxKeyRingAttr2 = new KeyValuePair<string, string>("ProductGroup", "Perfx");
     }
 }
